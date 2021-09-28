@@ -41,7 +41,7 @@ func GetDate(year int, month int, day int) string {
 	return t.Format("20060102")
 }
 
-func ConverDate(date string) (*time.Time, error) {
+func ConvertDate(date string) (*time.Time, error) {
 	d, err := time.Parse("20060102", date)
 	if err != nil {
 		return nil, err

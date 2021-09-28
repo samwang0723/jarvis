@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"samwang0723/jarvis/helper"
-	"time"
 
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"
@@ -23,33 +22,30 @@ const (
 )
 
 type TwseStock struct {
-	url       string
-	rateLimit time.Duration
+	url string
 }
 
 func (twse *TwseStock) Fetch() (io.Reader, error) {
 	client := http.Client{}
 	req, err := http.NewRequest("GET", twse.url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("NewRequest initialize error: %v", err)
+		return nil, fmt.Errorf("NewRequest initialize error: %v\n", err)
 	}
 	req.Header = http.Header{
-		"Content-Type": []string{"text/csv;charset=utf-8"},
+		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
-
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Request error: %v", err)
-
+		return nil, fmt.Errorf("Request error: %v\n", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Status error: %v", resp.StatusCode)
+		return nil, fmt.Errorf("Status error: %v\n", resp.StatusCode)
 	}
 
 	csvfile, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Read body: %v", err)
+		return nil, fmt.Errorf("Read body: %v\n", err)
 	}
 
 	log.Printf("Download Completed (%s), URL: %s, Header: %v\n",
@@ -58,11 +54,6 @@ func (twse *TwseStock) Fetch() (io.Reader, error) {
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 
 	return reader, nil
-}
-
-func (twse *TwseStock) SetRateLimit(sec time.Duration) {
-	twse.rateLimit = sec
-	log.Println("RateLimit configure: ", sec)
 }
 
 func (twse *TwseStock) SetURL(template string, date string, queryType string) {

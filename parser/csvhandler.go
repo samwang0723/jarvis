@@ -16,7 +16,7 @@ type CsvHandler struct {
 
 func (handler *CsvHandler) Parse(config Config, in io.Reader) (map[string]interface{}, error) {
 	if handler.result == nil {
-		return nil, fmt.Errorf("Didn't initialized the result map")
+		return nil, fmt.Errorf("Didn't initialized the result map\n")
 	}
 
 	reader := csv.NewReader(in)
@@ -31,7 +31,11 @@ func (handler *CsvHandler) Parse(config Config, in io.Reader) (map[string]interf
 		}
 		if config.StartInteger && helper.IsInteger(record[0]) && config.Capacity == len(record) {
 			//log.Println(record)
-			handler.storeTwseDailyClose(record)
+			switch config.Type {
+			case TwseDailyClose:
+				handler.storeTwseDailyClose(record)
+			case TwseThreePrimary:
+			}
 		}
 	}
 	return handler.result, nil
