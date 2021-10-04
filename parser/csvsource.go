@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-type CsvHandler struct {
+type CsvSource struct {
 	Tag    string
 	result map[string]interface{}
 }
 
-func (handler *CsvHandler) Parse(config Config, in io.Reader) (map[string]interface{}, error) {
+func (handler *CsvSource) Parse(config Config, in io.Reader) (map[string]interface{}, error) {
 	if handler.result == nil {
 		return nil, fmt.Errorf("Didn't initialized the result map\n")
 	}
@@ -30,7 +30,6 @@ func (handler *CsvHandler) Parse(config Config, in io.Reader) (map[string]interf
 			continue
 		}
 		if config.StartInteger && helper.IsInteger(record[0]) && config.Capacity == len(record) {
-			//log.Println(record)
 			switch config.Type {
 			case TwseDailyClose:
 				handler.storeTwseDailyClose(record)
@@ -41,11 +40,11 @@ func (handler *CsvHandler) Parse(config Config, in io.Reader) (map[string]interf
 	return handler.result, nil
 }
 
-func (handler *CsvHandler) SetDataSource(source map[string]interface{}) {
+func (handler *CsvSource) SetDataSource(source map[string]interface{}) {
 	handler.result = source
 }
 
-func (handler *CsvHandler) storeTwseDailyClose(data []string) {
+func (handler *CsvSource) storeTwseDailyClose(data []string) {
 	id := data[0]
 	dailyclose := &dto.DailyClose{
 		StockID:      id,

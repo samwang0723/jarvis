@@ -3,11 +3,31 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/helper"
 	"samwang0723/jarvis/parser"
+	"time"
 )
+
+func BatchingDownload(ctx context.Context, rewindLimit int, rateLimit int) {
+	for i := rewindLimit; i <= 0; i++ {
+		d := helper.GetDate(0, 0, i)
+		log.Println("Request Date: ", d)
+
+		resp, err := DownloadDailyCloses(ctx, d)
+		if err != nil {
+			log.Fatalf("DownloadDailyClose error: %v\n", err)
+		}
+
+		for k, v := range resp {
+			log.Printf("%s: %v\n", k, v)
+		}
+		time.Sleep(time.Duration(rateLimit) * time.Millisecond)
+	}
+}
 
 func DownloadDailyCloses(ctx context.Context, day string) (map[string]*dto.DailyClose, error) {
 	var twse crawler.Crawler
@@ -19,7 +39,7 @@ func DownloadDailyCloses(ctx context.Context, day string) (map[string]*dto.Daily
 	}
 
 	var handler parser.Parser
-	handler = &parser.CsvHandler{Tag: day}
+	handler = &parser.CsvSource{Tag: day}
 	data := map[string]interface{}{}
 	handler.SetDataSource(data)
 	config := parser.Config{
