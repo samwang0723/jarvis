@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/helper"
 	"strings"
 )
@@ -46,7 +46,7 @@ func (handler *CsvSource) SetDataSource(source map[string]interface{}) {
 
 func (handler *CsvSource) storeTwseDailyClose(data []string) {
 	id := data[0]
-	dailyclose := &dto.DailyClose{
+	dailyclose := &entity.DailyClose{
 		StockID:      id,
 		Date:         handler.Tag,
 		TradedShares: helper.ToUint64(strings.Replace(data[2], ",", "", -1)),

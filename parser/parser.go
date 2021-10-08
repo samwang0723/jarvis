@@ -7,7 +7,7 @@ const (
 	TwseThreePrimary
 )
 
-type Parser interface {
+type IParser interface {
 	Parse(config Config, in io.Reader) (map[string]interface{}, error)
 	SetDataSource(map[string]interface{})
 }

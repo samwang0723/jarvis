@@ -29,26 +29,26 @@ func (twse *TwseStock) Fetch() (io.Reader, error) {
 	client := http.Client{}
 	req, err := http.NewRequest("GET", twse.url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("NewRequest initialize error: %v\n", err)
+		return nil, fmt.Errorf("TWSE new fetch request initialize error: %v\n", err)
 	}
 	req.Header = http.Header{
 		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Request error: %v\n", err)
+		return nil, fmt.Errorf("TWSE fetch request error: %v\n", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Status error: %v\n", resp.StatusCode)
+		return nil, fmt.Errorf("TWSE fetch status error: %v\n", resp.StatusCode)
 	}
 
 	csvfile, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Read body: %v\n", err)
+		return nil, fmt.Errorf("TWSE fetch unable to read body: %v\n", err)
 	}
 
-	log.Printf("Download Completed (%s), URL: %s, Header: %v\n",
+	log.Printf("TWSE download completed (%s), URL: %s, Header: %v\n",
 		helper.ReadableSize(len(csvfile), 2), twse.url, resp.Header)
 	raw := bytes.NewBuffer(csvfile)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())

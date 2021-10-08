@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+  mysql:
+    image: mysql:5.7
+    platform: linux/amd64
+    container_name: mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    volumes:
+      - type: bind
+        source: ./db/mysql-master.cnf
+        target: /etc/mysql/conf.d/mysql-master.cnf
+    ports:
+      - "3306:3306"
+
