@@ -6,8 +6,8 @@ import (
 )
 
 type ListStockSearchParams struct {
-	StockIDs []*string
-	Country  *string
+	StockIDs *[]string
+	Country  string
 }
 
 type IStockDAL interface {

@@ -12,9 +12,7 @@ import (
 
 func (h *handlerImpl) BatchingDownload(ctx context.Context, rewindLimit int, rateLimit int) {
 	for i := rewindLimit; i <= 0; i++ {
-		d := helper.GetDate(0, 0, i)
-		log.Println("download request date: ", d)
-
+		d := helper.ConvertDateStr(0, 0, i)
 		resp, err := downloadDailyCloses(ctx, d)
 		if err != nil {
 			log.Fatalf("download DailyClose error: %v\n", err)

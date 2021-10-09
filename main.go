@@ -5,19 +5,50 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"samwang0723/jarvis/db"
+	"samwang0723/jarvis/db/dal"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
 	"samwang0723/jarvis/services"
 	"syscall"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 func main() {
-	handler := handlers.New(services.NewService())
+	// service initialization
+	config := &db.Config{
+		User:     "jarvis",
+		Password: "password",
+		Host:     "tcp(localhost:3306)",
+		Database: "jarvis",
+	}
+	dalService := dal.New(dal.WithDB(db.GormFactory(config)))
+	dataService := services.New(services.WithDAL(dalService))
+	handler := handlers.New(dataService)
 
+	// graceful shutdown
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	handler.BatchingDownload(context.Background(), -1, 5000)
+	// executing batch download
+	//handler.BatchingDownload(context.Background(), -1, 5000)
+	req := &dto.ListDailyCloseRequest{
+		Offset: 0,
+		Limit:  10,
+		SearchParams: &dto.ListDailyCloseSearchParams{
+			StockIDs: &[]string{"2330", "3035", "3707"},
+			Start:    "20211007",
+		},
+	}
+	resp, err := handler.ListDailyClose(context.Background(), req)
+	if err != nil {
+		log.Printf("listing DailyClose failed: %s\n", err)
+	}
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	data, _ := json.Marshal(&resp.Entries)
+	log.Printf("listing DailyClose: %s\n", string(data))
 
 	<-done
 	log.Println("server stopped")

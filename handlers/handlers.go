@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/services"
 )
 
 type IHandler interface {
 	BatchingDownload(ctx context.Context, rewindLimit int, rateLimit int)
+	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 }
 
 type handlerImpl struct {

@@ -2,24 +2,24 @@ package services
 
 import (
 	"context"
-	"samwang0723/jarvis/db"
-	"samwang0723/jarvis/db/dal"
 	"samwang0723/jarvis/db/dal/idal"
+	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/entity"
 )
 
 type IService interface {
 	BatchCreateDailyClose(ctx context.Context, objs map[string]interface{}) error
+	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 }
 
 type serviceImpl struct {
-	dalService idal.IDAL
+	dal idal.IDAL
 }
 
-func NewService() IService {
-	sv := &serviceImpl{}
-	gormSession := db.GormFactory()
-	sv.dalService = dal.New(
-		dal.WithDB(gormSession),
-	)
-	return sv
+func New(opts ...Option) IService {
+	impl := &serviceImpl{}
+	for _, opt := range opts {
+		opt(impl)
+	}
+	return impl
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -10,7 +11,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func GormFactory() *gorm.DB {
+type Config struct {
+	User     string
+	Password string
+	Host     string
+	Database string
+}
+
+func GormFactory(config *Config) *gorm.DB {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -21,7 +29,7 @@ func GormFactory() *gorm.DB {
 		},
 	)
 
-	dsn := "jarvis:password@tcp(127.0.0.1:3306)/jarvis?charset=utf8&parseTime=True"
+	dsn := generateDSN(config)
 	session, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: newLogger,
 	})
@@ -29,4 +37,9 @@ func GormFactory() *gorm.DB {
 		panic("connect database error: " + err.Error())
 	}
 	return session
+}
+
+func generateDSN(config *Config) string {
+	dsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True", config.User, config.Password, config.Host, config.Database)
+	return dsn
 }

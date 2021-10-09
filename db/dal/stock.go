@@ -4,6 +4,7 @@ import (
 	"context"
 	"samwang0723/jarvis/db/dal/idal"
 	"samwang0723/jarvis/entity"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -34,6 +35,7 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 func (i *dalImpl) ListStock(ctx context.Context, offset int, limit int,
 	searchParams *idal.ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error) {
 	query := i.db.Model(&entity.Stock{})
+	query = buildQueryFromListStockSearchParams(query, searchParams)
 	err = query.Count(&totalCount).Error
 	if err != nil {
 		return nil, 0, err
@@ -46,18 +48,15 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int, limit int,
 	return objs, totalCount, nil
 }
 
-func constructQueryFromListStockSearchParams(query *gorm.DB, params *idal.ListStockSearchParams) *gorm.DB {
+func buildQueryFromListStockSearchParams(query *gorm.DB, params *idal.ListStockSearchParams) *gorm.DB {
 	if params == nil {
 		return query
 	}
-	if params.Country != nil {
-		country := *params.Country
-		if len(country) > 0 {
-			query = query.Where("country = ?", country)
-		}
+	if len(params.Country) > 0 {
+		query = query.Where("country = ?", params.Country)
 	}
-	if len(params.StockIDs) > 0 {
-		query = query.Where("stock_id IN (?)", params.StockIDs)
+	if params.StockIDs != nil {
+		query = query.Where("stock_id IN (" + strings.Join(*params.StockIDs, ",") + ")")
 	}
 	return query
 }

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
+	"samwang0723/jarvis/services/convert"
 )
 
 func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs map[string]interface{}) error {
@@ -17,7 +19,15 @@ func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs map[string
 			return fmt.Errorf("cannot cast interface to *dto.DailyClose: %v\n", reflect.TypeOf(v).Elem())
 		}
 	}
-	err := s.dalService.BatchCreateDailyClose(ctx, dailyCloses)
+	err := s.dal.BatchCreateDailyClose(ctx, dailyCloses)
 
 	return err
+}
+
+func (s *serviceImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error) {
+	objs, totalCount, err := s.dal.ListDailyClose(ctx, req.Offset, req.Limit, convert.ListDailyCloseSearchParamsDTOToDAL(req.SearchParams))
+	if err != nil {
+		return nil, 0, err
+	}
+	return objs, totalCount, nil
 }

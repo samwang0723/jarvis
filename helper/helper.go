@@ -35,18 +35,22 @@ func ToFloat32(v string) float32 {
 	return 0
 }
 
-func GetDate(year int, month int, day int) string {
+func ConvertDateStr(year int, month int, day int) string {
 	t := time.Now()
 	t = t.AddDate(year, month, day)
 	return t.Format("20060102")
 }
 
-func ConvertDate(date string) (*time.Time, error) {
+func DeserializeTime(date string) (*time.Time, error) {
 	d, err := time.Parse("20060102", date)
 	if err != nil {
 		return nil, err
 	}
 	return &d, nil
+}
+
+func ToDateStr(date time.Time) string {
+	return date.Format("20060102")
 }
 
 func ReadableSize(length int, decimals int) (out string) {
