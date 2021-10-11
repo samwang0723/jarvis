@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log"
 	"samwang0723/jarvis/crawler"
+	"samwang0723/jarvis/crawler/icrawler"
 	"samwang0723/jarvis/helper"
 	"samwang0723/jarvis/parser"
 	"time"
@@ -13,40 +14,35 @@ import (
 func (h *handlerImpl) BatchingDownload(ctx context.Context, rewindLimit int, rateLimit int) {
 	for i := rewindLimit; i <= 0; i++ {
 		d := helper.ConvertDateStr(0, 0, i)
-		resp, err := downloadDailyCloses(ctx, d)
+		twse := crawler.New()
+		twse.SetURL(icrawler.TwseDailyClose, d, icrawler.StockOnly)
+		fetchStream, err := twse.Fetch()
 		if err != nil {
-			log.Fatalf("download DailyClose error: %v\n", err)
+			log.Printf("DailyClose fetch error: %s\n", err)
+			continue
+		}
+		resp, err := parse(ctx, d, fetchStream)
+		if err != nil || len(*resp) == 0 {
+			log.Printf("DailyClose parse error: %v\n", err)
+			continue
 		}
 		err = h.dataService.BatchCreateDailyClose(ctx, resp)
 		if err != nil {
-			log.Fatalf("DailyClose persistent storage failed: %v\n", err)
+			log.Printf("DailyClose persistent storage failed: %v\n", err)
+			continue
 		}
 		time.Sleep(time.Duration(rateLimit) * time.Millisecond)
 	}
 }
 
-func downloadDailyCloses(ctx context.Context, day string) (map[string]interface{}, error) {
-	var twse crawler.ICrawler
-	twse = &crawler.TwseStock{}
-	twse.SetURL(crawler.DailyClose, day, crawler.StockOnly)
-	fetchStream, err := twse.Fetch()
-	if err != nil {
-		return nil, fmt.Errorf("DailyClose fetch error: %s\n", err)
-	}
-
-	var p parser.IParser
-	p = &parser.CsvSource{Tag: day}
-	data := map[string]interface{}{}
+func parse(ctx context.Context, day string, stream io.Reader) (*[]interface{}, error) {
+	p := parser.New()
+	data := &[]interface{}{}
 	p.SetDataSource(data)
 	config := parser.Config{
-		StartInteger: true,
-		Capacity:     17,
-		Type:         parser.TwseDailyClose,
+		ParseDay: &day,
+		Capacity: 17,
+		Type:     parser.TwseDailyClose,
 	}
-	resp, err := p.Parse(config, fetchStream)
-	if err != nil {
-		return nil, fmt.Errorf("DailyClose parse error: %s\n", err)
-	}
-
-	return resp, nil
+	return p.Parse(config, stream)
 }

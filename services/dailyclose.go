@@ -9,10 +9,10 @@ import (
 	"samwang0723/jarvis/services/convert"
 )
 
-func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs map[string]interface{}) error {
+func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.DailyClose
 	dailyCloses := []*entity.DailyClose{}
-	for _, v := range objs {
+	for _, v := range *objs {
 		if val, ok := v.(*entity.DailyClose); ok {
 			dailyCloses = append(dailyCloses, val)
 		} else {

@@ -7,13 +7,10 @@ import (
 	"os/signal"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
-	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
 	"samwang0723/jarvis/services"
 	"syscall"
 	"time"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 func main() {
@@ -33,22 +30,22 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	// executing batch download
-	//handler.BatchingDownload(context.Background(), -1, 5000)
-	req := &dto.ListDailyCloseRequest{
-		Offset: 0,
-		Limit:  10,
-		SearchParams: &dto.ListDailyCloseSearchParams{
-			StockIDs: &[]string{"2330", "3035", "3707"},
-			Start:    "20211007",
-		},
-	}
-	resp, err := handler.ListDailyClose(context.Background(), req)
-	if err != nil {
-		log.Printf("listing DailyClose failed: %s\n", err)
-	}
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	data, _ := json.Marshal(&resp.Entries)
-	log.Printf("listing DailyClose: %s\n", string(data))
+	handler.BatchingDownload(context.Background(), -6, 5000)
+	//	req := &dto.ListDailyCloseRequest{
+	//		Offset: 0,
+	//		Limit:  10,
+	//		SearchParams: &dto.ListDailyCloseSearchParams{
+	//			StockIDs: &[]string{"2330", "3035", "3707"},
+	//			Start:    "20211007",
+	//		},
+	//	}
+	//	resp, err := handler.ListDailyClose(context.Background(), req)
+	//	if err != nil {
+	//		log.Printf("listing DailyClose failed: %s\n", err)
+	//	}
+	//	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	//	data, _ := json.Marshal(&resp)
+	//	log.Printf("json response: %s\n", string(data))
 
 	<-done
 	log.Println("server stopped")

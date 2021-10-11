@@ -8,7 +8,7 @@ import (
 )
 
 type IService interface {
-	BatchCreateDailyClose(ctx context.Context, objs map[string]interface{}) error
+	BatchCreateDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 }
 

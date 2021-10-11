@@ -9,14 +9,12 @@ import (
 	"strings"
 )
 
-type CsvSource struct {
-	Tag    string
-	result map[string]interface{}
-}
-
-func (handler *CsvSource) Parse(config Config, in io.Reader) (map[string]interface{}, error) {
-	if handler.result == nil {
-		return nil, fmt.Errorf("Didn't initialized the result map\n")
+func (p *parserImpl) Parse(config Config, in io.Reader) (*[]interface{}, error) {
+	if p.result == nil {
+		return nil, fmt.Errorf("didn't initialized the result map\n")
+	}
+	if config.ParseDay == nil {
+		return nil, fmt.Errorf("parse day missing\n")
 	}
 
 	reader := csv.NewReader(in)
@@ -29,26 +27,26 @@ func (handler *CsvSource) Parse(config Config, in io.Reader) (map[string]interfa
 		} else if len(record) == 0 {
 			continue
 		}
-		if config.StartInteger && helper.IsInteger(record[0]) && config.Capacity == len(record) {
+		if helper.IsInteger(record[0]) && config.Capacity == len(record) {
 			switch config.Type {
 			case TwseDailyClose:
-				handler.storeTwseDailyClose(record)
+				*p.result = append(*p.result, twseToEntity(*config.ParseDay, record))
 			case TwseThreePrimary:
 			}
 		}
 	}
-	return handler.result, nil
+	return p.result, nil
 }
 
-func (handler *CsvSource) SetDataSource(source map[string]interface{}) {
-	handler.result = source
+func (p *parserImpl) SetDataSource(source *[]interface{}) {
+	p.result = source
 }
 
-func (handler *CsvSource) storeTwseDailyClose(data []string) {
+func twseToEntity(day string, data []string) *entity.DailyClose {
 	id := data[0]
-	dailyclose := &entity.DailyClose{
+	dailyClose := &entity.DailyClose{
 		StockID:      id,
-		Date:         handler.Tag,
+		Date:         day,
 		TradedShares: helper.ToUint64(strings.Replace(data[2], ",", "", -1)),
 		Transactions: helper.ToUint64(strings.Replace(data[3], ",", "", -1)),
 		Turnover:     helper.ToUint64(strings.Replace(data[4], ",", "", -1)),
@@ -58,5 +56,5 @@ func (handler *CsvSource) storeTwseDailyClose(data []string) {
 		Close:        helper.ToFloat32(data[8]),
 		PriceDiff:    helper.ToFloat32(fmt.Sprintf("%s%s", data[9], data[10])),
 	}
-	handler.result[id] = dailyclose
+	return dailyClose
 }
