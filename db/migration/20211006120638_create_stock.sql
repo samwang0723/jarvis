@@ -9,7 +9,7 @@ CREATE TABLE stocks (
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at datetime NULL,
-    KEY index_stock_id(stock_id, country)
+    UNIQUE KEY index_stock_id(stock_id, country)
 ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 -- +goose StatementEnd
 

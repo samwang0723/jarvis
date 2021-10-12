@@ -23,8 +23,12 @@ func New() icrawler.ICrawler {
 	return res
 }
 
-func (c *crawlerImpl) SetURL(template string, date string, queryType string) {
-	c.url = fmt.Sprintf(template, date, queryType)
+func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
+	if len(options) > 0 {
+		c.url = fmt.Sprintf(template, date, options[0])
+	} else {
+		c.url = fmt.Sprintf(template, date)
+	}
 }
 
 func (c *crawlerImpl) Fetch() (io.Reader, error) {

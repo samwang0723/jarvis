@@ -3,14 +3,18 @@ package helper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
 const (
-	TB = 1000000000000
-	GB = 1000000000
-	MB = 1000000
-	KB = 1000
+	TB             = 1000000000000
+	GB             = 1000000000
+	MB             = 1000000
+	KB             = 1000
+	TimeZone       = "Asia/Taipei"
+	TwseDateFormat = "20060102"
+	TpexDateFormat = "2006/01/02"
 )
 
 func IsInteger(v string) bool {
@@ -35,22 +39,35 @@ func ToFloat32(v string) float32 {
 	return 0
 }
 
-func ConvertDateStr(year int, month int, day int) string {
-	t := time.Now()
+func ConvertDateStr(year int, month int, day int, format string) string {
+	l, _ := time.LoadLocation(TimeZone)
+	t := time.Now().In(l)
 	t = t.AddDate(year, month, day)
-	return t.Format("20060102")
+	wkDay := t.Weekday()
+	if wkDay == time.Saturday || wkDay == time.Sunday {
+		return ""
+	}
+	s := t.Format(format)
+	if format == TpexDateFormat {
+		res := strings.Split(s, "/")
+		year, _ := strconv.Atoi(res[0])
+		s = fmt.Sprintf("%d/%s/%s", year-1911, res[1], res[2])
+	}
+	return s
 }
 
-func DeserializeTime(date string) (*time.Time, error) {
-	d, err := time.Parse("20060102", date)
+func DeserializeTime(date string, format string) (*time.Time, error) {
+	d, err := time.Parse(format, date)
 	if err != nil {
 		return nil, err
 	}
+	l, _ := time.LoadLocation(TimeZone)
+	d = d.In(l)
 	return &d, nil
 }
 
-func ToDateStr(date time.Time) string {
-	return date.Format("20060102")
+func ToDateStr(date time.Time, format string) string {
+	return date.Format(format)
 }
 
 func ReadableSize(length int, decimals int) (out string) {

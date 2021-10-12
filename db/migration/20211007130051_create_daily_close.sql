@@ -15,8 +15,9 @@ CREATE TABLE daily_closes (
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at datetime NULL,
-    KEY index_stock_id(stock_id),
-    KEY index_transactions(transactions)
+    UNIQUE KEY index_stock_id_exchange_date(stock_id, exchange_date),
+    KEY index_transactions(trade_shares),
+    KEY index_close(close)
 ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd

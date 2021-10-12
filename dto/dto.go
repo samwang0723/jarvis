@@ -20,3 +20,8 @@ type ListDailyCloseResponse struct {
 	TotalCount int                  `json:"TotalCount"`
 	Entries    []*entity.DailyClose `json:"Entries"`
 }
+
+type DownloadRequest struct {
+	RewindLimit int `json:"RewindLimit"`
+	RateLimit   int `json:"RateLimit"`
+}

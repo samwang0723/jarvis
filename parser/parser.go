@@ -10,7 +10,6 @@ const (
 
 type IParser interface {
 	Parse(config Config, in io.Reader) (*[]interface{}, error)
-	SetDataSource(source *[]interface{})
 }
 
 type parserImpl struct {
@@ -24,6 +23,8 @@ type Config struct {
 }
 
 func New() IParser {
-	res := &parserImpl{}
+	res := &parserImpl{
+		result: &[]interface{}{},
+	}
 	return res
 }

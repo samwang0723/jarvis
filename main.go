@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
 	"samwang0723/jarvis/services"
 	"syscall"
@@ -30,7 +32,12 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	// executing batch download
-	handler.BatchingDownload(context.Background(), -6, 5000)
+	req := &dto.DownloadRequest{
+		RewindLimit: -6,
+		RateLimit:   5000,
+	}
+	handler.BatchingDownload(context.Background(), req)
+	fmt.Println("downloading completed...")
 	//	req := &dto.ListDailyCloseRequest{
 	//		Offset: 0,
 	//		Limit:  10,

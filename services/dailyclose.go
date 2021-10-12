@@ -19,9 +19,23 @@ func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs *[]interfa
 			return fmt.Errorf("cannot cast interface to *dto.DailyClose: %v\n", reflect.TypeOf(v).Elem())
 		}
 	}
-	err := s.dal.BatchCreateDailyClose(ctx, dailyCloses)
 
-	return err
+	// prevent Prepared statement contains too many placeholders
+	// maxmium 1,000 records
+	var err error
+	l := len(dailyCloses)
+	for i := 0; i < l; i += 1000 {
+		end := i + 1000
+		if end > l {
+			end = l
+		}
+		err = s.dal.BatchCreateDailyClose(ctx, dailyCloses[i:end])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *serviceImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error) {

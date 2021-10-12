@@ -7,7 +7,7 @@ import (
 )
 
 type IHandler interface {
-	BatchingDownload(ctx context.Context, rewindLimit int, rateLimit int)
+	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 }
 
