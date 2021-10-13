@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"io"
 	"log"
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/crawler/icrawler"
@@ -34,6 +33,7 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 
 func twse(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{}, req *dto.DownloadRequest) {
 	c := crawler.New()
+	p := parser.New()
 	defer wg.Done()
 	for i := req.RewindLimit; i <= 0; i++ {
 		dayString := helper.ConvertDateStr(0, 0, i, helper.TwseDateFormat)
@@ -46,18 +46,23 @@ func twse(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 			log.Printf("twse DailyClose fetch error: %s\n", err)
 			continue
 		}
-		resp, err := parse(ctx, dayString, stream, parser.TwseDailyClose, 17)
-		if err != nil || len(*resp) == 0 {
-			log.Printf("twse DailyClose parse error: %v\n", err)
+		err = p.Parse(parser.Config{
+			ParseDay: &dayString,
+			Capacity: 17,
+			Type:     parser.TwseDailyClose,
+		}, stream)
+		if err != nil {
 			continue
 		}
-		respChan <- resp
+		respChan <- p.Flush()
+
 		time.Sleep(time.Duration(req.RateLimit) * time.Millisecond)
 	}
 }
 
 func tpex(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{}, req *dto.DownloadRequest) {
 	c := crawler.New()
+	p := parser.New()
 	defer wg.Done()
 	for i := req.RewindLimit; i <= 0; i++ {
 		dayString := helper.ConvertDateStr(0, 0, i, helper.TpexDateFormat)
@@ -67,25 +72,18 @@ func tpex(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 		c.SetURL(icrawler.TpexDailyClose, dayString)
 		stream, err := c.Fetch()
 		if err != nil {
-			log.Printf("tpex DailyClose fetch error: %s\n", err)
 			continue
 		}
-		resp, err := parse(ctx, dayString, stream, parser.TpexDailyClose, 19)
-		if err != nil || len(*resp) == 0 {
-			log.Printf("tpex DailyClose parse error: %v\n", err)
+		err = p.Parse(parser.Config{
+			ParseDay: &dayString,
+			Capacity: 19,
+			Type:     parser.TpexDailyClose,
+		}, stream)
+		if err != nil {
 			continue
 		}
-		respChan <- resp
+		respChan <- p.Flush()
+
 		time.Sleep(time.Duration(req.RateLimit) * time.Millisecond)
 	}
-}
-
-func parse(ctx context.Context, day string, stream io.Reader, parseType int, capacity int) (*[]interface{}, error) {
-	p := parser.New()
-	config := parser.Config{
-		ParseDay: &day,
-		Capacity: capacity,
-		Type:     parseType,
-	}
-	return p.Parse(config, stream)
 }

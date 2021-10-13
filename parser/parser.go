@@ -9,7 +9,8 @@ const (
 )
 
 type IParser interface {
-	Parse(config Config, in io.Reader) (*[]interface{}, error)
+	Parse(config Config, in io.Reader) error
+	Flush() *[]interface{}
 }
 
 type parserImpl struct {

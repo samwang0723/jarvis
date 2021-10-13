@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"samwang0723/jarvis/db/dal/idal"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/services/convert"
@@ -24,8 +25,8 @@ func (s *serviceImpl) BatchCreateDailyClose(ctx context.Context, objs *[]interfa
 	// maxmium 1,000 records
 	var err error
 	l := len(dailyCloses)
-	for i := 0; i < l; i += 1000 {
-		end := i + 1000
+	for i := 0; i < l; i += idal.MaxRow {
+		end := i + idal.MaxRow
 		if end > l {
 			end = l
 		}

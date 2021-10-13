@@ -9,13 +9,16 @@ import (
 	"strings"
 )
 
-func (p *parserImpl) Parse(config Config, in io.Reader) (*[]interface{}, error) {
+func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	if p.result == nil {
-		return nil, fmt.Errorf("didn't initialized the result map\n")
+		return fmt.Errorf("didn't initialized the result map\n")
 	}
 	if config.ParseDay == nil {
-		return nil, fmt.Errorf("parse day missing\n")
+		return fmt.Errorf("parse day missing\n")
 	}
+
+	originLen := len(*p.result)
+	updatedLen := originLen
 
 	reader := csv.NewReader(in)
 	reader.Comma = ','
@@ -32,13 +35,26 @@ func (p *parserImpl) Parse(config Config, in io.Reader) (*[]interface{}, error) 
 			switch config.Type {
 			case TwseDailyClose:
 				*p.result = append(*p.result, twseToEntity(*config.ParseDay, record))
+				updatedLen++
 			case TwseThreePrimary:
 			case TpexDailyClose:
 				*p.result = append(*p.result, tpexToEntity(*config.ParseDay, record))
+				updatedLen++
 			}
 		}
 	}
-	return p.result, nil
+
+	if updatedLen <= originLen {
+		return fmt.Errorf("empty parsing results\n")
+	}
+
+	return nil
+}
+
+func (p *parserImpl) Flush() *[]interface{} {
+	res := *p.result
+	p.result = &[]interface{}{}
+	return &res
 }
 
 func twseToEntity(day string, data []string) *entity.DailyClose {

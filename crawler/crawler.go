@@ -15,11 +15,14 @@ import (
 )
 
 type crawlerImpl struct {
-	url string
+	url    string
+	client *http.Client
 }
 
 func New() icrawler.ICrawler {
-	res := &crawlerImpl{}
+	res := &crawlerImpl{
+		client: &http.Client{},
+	}
 	return res
 }
 
@@ -32,7 +35,6 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 }
 
 func (c *crawlerImpl) Fetch() (io.Reader, error) {
-	client := http.Client{}
 	req, err := http.NewRequest("GET", c.url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new fetch request initialize error: %v\n", err)
@@ -40,7 +42,7 @@ func (c *crawlerImpl) Fetch() (io.Reader, error) {
 	req.Header = http.Header{
 		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
-	resp, err := client.Do(req)
+	resp, err := (*c.client).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch request error: %v\n", err)
 	}
