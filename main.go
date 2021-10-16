@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
+	"syscall"
+	"time"
+
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
+	log "samwang0723/jarvis/logger"
 	"samwang0723/jarvis/services"
-	"syscall"
-	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -23,6 +25,7 @@ func main() {
 		Host:     "tcp(localhost:3306)",
 		Database: "jarvis",
 	}
+	log.UpdateConfig(os.Stdout, logrus.InfoLevel, true)
 	dalService := dal.New(dal.WithDB(db.GormFactory(config)))
 	dataService := services.New(services.WithDAL(dalService))
 	handler := handlers.New(dataService)
@@ -33,11 +36,11 @@ func main() {
 
 	// executing batch download
 	req := &dto.DownloadRequest{
-		RewindLimit: -6,
+		RewindLimit: -1,
 		RateLimit:   5000,
 	}
 	handler.BatchingDownload(context.Background(), req)
-	fmt.Println("downloading completed...")
+	log.Info("downloading completed...")
 	//	req := &dto.ListDailyCloseRequest{
 	//		Offset: 0,
 	//		Limit:  10,
@@ -55,12 +58,12 @@ func main() {
 	//	log.Printf("json response: %s\n", string(data))
 
 	<-done
-	log.Println("server stopped")
+	log.Info("server stopped")
 
 	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer func() {
 		// extra handling here
 		cancel()
 	}()
-	log.Println("server exited properly")
+	log.Info("server exited properly")
 }

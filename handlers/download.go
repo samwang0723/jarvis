@@ -2,7 +2,8 @@ package handlers
 
 import (
 	"context"
-	"log"
+	log "samwang0723/jarvis/logger"
+
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/crawler/icrawler"
 	"samwang0723/jarvis/dto"
@@ -43,7 +44,7 @@ func twse(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 		c.SetURL(icrawler.TwseDailyClose, dayString, icrawler.StockOnly)
 		stream, err := c.Fetch()
 		if err != nil {
-			log.Printf("twse DailyClose fetch error: %s\n", err)
+			log.Errorf("twse DailyClose fetch error: %s\n", err)
 			continue
 		}
 		err = p.Parse(parser.Config{

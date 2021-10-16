@@ -2,13 +2,11 @@ package db
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"time"
+
+	log "samwang0723/jarvis/logger"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 type Config struct {
@@ -19,19 +17,9 @@ type Config struct {
 }
 
 func GormFactory(config *Config) *gorm.DB {
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-		logger.Config{
-			SlowThreshold:             time.Second,  // Slow SQL threshold
-			LogLevel:                  logger.Error, // Log level
-			IgnoreRecordNotFoundError: true,         // Ignore ErrRecordNotFound error for logger
-			Colorful:                  false,        // Disable color
-		},
-	)
-
 	dsn := generateDSN(config)
 	session, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+		Logger: log.Logger(),
 	})
 	if err != nil {
 		panic("connect database error: " + err.Error())

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
+
+	log "samwang0723/jarvis/logger"
+
 	"samwang0723/jarvis/crawler/icrawler"
 	"samwang0723/jarvis/helper"
 
@@ -56,8 +58,8 @@ func (c *crawlerImpl) Fetch() (io.Reader, error) {
 		return nil, fmt.Errorf("fetch unable to read body: %v\n", err)
 	}
 
-	log.Printf("download completed (%s), URL: %s, Header: %v\n",
-		helper.ReadableSize(len(csvfile), 2), c.url, resp.Header)
+	log.Infof("download completed (%s), URL: %s\n",
+		helper.ReadableSize(len(csvfile), 2), c.url)
 	raw := bytes.NewBuffer(csvfile)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	log "samwang0723/jarvis/logger"
+
 	"github.com/sony/sonyflake"
 	"gorm.io/gorm"
 )
@@ -18,7 +20,7 @@ func init() {
 	var st sonyflake.Settings
 	sf = sonyflake.NewSonyflake(st)
 	if sf == nil {
-		panic("failed to init sonyflake for distributed ID generation")
+		log.Panic("failed to init sonyflake for distributed ID generation")
 	}
 }
 
