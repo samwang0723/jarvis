@@ -56,6 +56,16 @@ func ConvertDateStr(year int, month int, day int, format string) string {
 	return s
 }
 
+func UnifiedDateStr(input string) string {
+	if strings.Contains(input, "/") {
+		i := strings.Split(input, "/")
+		year, _ := strconv.Atoi(i[0])
+		res := fmt.Sprintf("%d%s%s", year+1911, i[1], i[2])
+		return res
+	}
+	return input
+}
+
 func DeserializeTime(date string, format string) (*time.Time, error) {
 	d, err := time.Parse(format, date)
 	if err != nil {

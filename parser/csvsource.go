@@ -23,23 +23,28 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	reader := csv.NewReader(in)
 	reader.Comma = ','
 	reader.FieldsPerRecord = -1
+
+	//override to standarize date string
+	date := helper.UnifiedDateStr(*config.ParseDay)
+
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
 			break
-		} else if len(record) == 0 {
-			continue
 		}
-		idColumn := record[0]
-		if helper.IsInteger(idColumn[0:2]) && config.Capacity == len(record) {
-			switch config.Type {
-			case TwseDailyClose:
-				*p.result = append(*p.result, twseToEntity(*config.ParseDay, record))
-				updatedLen++
-			case TwseThreePrimary:
-			case TpexDailyClose:
-				*p.result = append(*p.result, tpexToEntity(*config.ParseDay, record))
-				updatedLen++
+
+		if len(record) > 0 && len(record[0]) < 6 {
+			idColumn := record[0]
+			if helper.IsInteger(idColumn[0:2]) && config.Capacity == len(record) {
+				switch config.Type {
+				case TwseDailyClose:
+					*p.result = append(*p.result, twseToEntity(date, record))
+					updatedLen++
+				case TwseThreePrimary:
+				case TpexDailyClose:
+					*p.result = append(*p.result, tpexToEntity(date, record))
+					updatedLen++
+				}
 			}
 		}
 	}

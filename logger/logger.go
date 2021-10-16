@@ -44,5 +44,7 @@ func UpdateConfig(output io.Writer, level logrus.Level, caller bool) {
 	l := Logger().logrus
 	l.SetOutput(output)
 	l.SetLevel(level)
+
+	//TODO: caller refer to customized logger now, need to refer to original caller
 	l.SetReportCaller(caller)
 }
