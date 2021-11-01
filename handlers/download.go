@@ -2,15 +2,17 @@ package handlers
 
 import (
 	"context"
-	log "samwang0723/jarvis/logger"
-
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/crawler/icrawler"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/helper"
+	log "samwang0723/jarvis/logger"
 	"samwang0723/jarvis/parser"
+
 	"sync"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
@@ -44,6 +46,7 @@ func twse(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 		c.SetURL(icrawler.TwseDailyClose, dayString, icrawler.StockOnly)
 		stream, err := c.Fetch()
 		if err != nil {
+			sentry.CaptureException(err)
 			log.Errorf("twse DailyClose fetch error: %s\n", err)
 			continue
 		}
@@ -53,6 +56,7 @@ func twse(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 			Type:     parser.TwseDailyClose,
 		}, stream)
 		if err != nil {
+			sentry.CaptureException(err)
 			continue
 		}
 		respChan <- p.Flush()
@@ -73,6 +77,8 @@ func tpex(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 		c.SetURL(icrawler.TpexDailyClose, dayString)
 		stream, err := c.Fetch()
 		if err != nil {
+			sentry.CaptureException(err)
+			log.Errorf("tpex DailyClose fetch error: %s\n", err)
 			continue
 		}
 		err = p.Parse(parser.Config{
@@ -81,6 +87,7 @@ func tpex(ctx context.Context, wg *sync.WaitGroup, respChan chan *[]interface{},
 			Type:     parser.TpexDailyClose,
 		}, stream)
 		if err != nil {
+			sentry.CaptureException(err)
 			continue
 		}
 		respChan <- p.Flush()

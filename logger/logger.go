@@ -1,50 +1,15 @@
 package logger
 
 import (
-	"io"
-	"time"
-
-	"github.com/sirupsen/logrus"
-	gormlogger "gorm.io/gorm/logger"
+	structuredlog "samwang0723/jarvis/logger/structured"
 )
 
 var (
-	logImpl *logger
+	instance structuredlog.ILogger
 )
 
-type logger struct {
-	logrus                    *logrus.Logger
-	SlowThreshold             time.Duration
-	SourceField               string
-	IgnoreRecordNotFoundError bool
-	Colorful                  bool
-	LogLevel                  gormlogger.LogLevel
-}
-
-func initialize(l *logger) {
-	logImpl = l
-	Info("initialized logger")
-}
-
-func Logger() *logger {
-	if logImpl == nil {
-		resp := &logger{
-			SlowThreshold:             time.Second,      // Slow SQL threshold
-			LogLevel:                  gormlogger.Error, // Log level
-			IgnoreRecordNotFoundError: true,             // Ignore ErrRecordNotFound error for logger
-			Colorful:                  false,            // Disable color
-			logrus:                    logrus.New(),
-		}
-		initialize(resp)
+func Initialize(l structuredlog.ILogger) {
+	if instance == nil {
+		instance = l
 	}
-	return logImpl
-}
-
-func UpdateConfig(output io.Writer, level logrus.Level, caller bool) {
-	l := Logger().logrus
-	l.SetOutput(output)
-	l.SetLevel(level)
-
-	//TODO: caller refer to customized logger now, need to refer to original caller
-	l.SetReportCaller(caller)
 }

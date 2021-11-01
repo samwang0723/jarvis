@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	log "samwang0723/jarvis/logger"
+	log "samwang0723/jarvis/logger/gorm"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
