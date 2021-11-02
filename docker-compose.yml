@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.9"
 
 services:
   mysql:
@@ -9,9 +9,15 @@ services:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
+      - type: volume
+        source: mysql_data
+        target: /var/lib/mysql/
       - type: bind
         source: ./db/mysql-master.cnf
         target: /etc/mysql/conf.d/mysql-master.cnf
+    restart: always
     ports:
       - "3306:3306"
 
+volumes:
+  mysql_data: {}
