@@ -5,20 +5,27 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
 	"samwang0723/jarvis/logger"
 	structuredlog "samwang0723/jarvis/logger/structured"
 	"samwang0723/jarvis/services"
 )
 
+const (
+	gracefulShutdownPeriod = 5 * time.Second
+)
+
 type IServer interface {
 	Name() string
 	Logger() structuredlog.ILogger
+	Handler() handlers.IHandler
 	Run(context.Context) error
-	Start() error
+	Start(context.Context) error
 	Stop() error
 }
 
@@ -29,10 +36,13 @@ type server struct {
 func Serve() {
 	//TODO: Load configuration
 	config := &db.Config{
-		User:     "jarvis",
-		Password: "password",
-		Host:     "tcp(localhost:3306)",
-		Database: "jarvis",
+		User:         "jarvis",
+		Password:     "password",
+		Host:         "tcp(localhost:3306)",
+		Database:     "jarvis",
+		MaxLifetime:  10,
+		MaxIdleConns: 20,
+		MaxOpenConns: 800,
 	}
 	db := db.GormFactory(config)
 	dalService := dal.New(dal.WithDB(db))
@@ -44,8 +54,8 @@ func Serve() {
 		Logger(structuredlog.Logger()),
 		Handler(handler),
 		BeforeStop(func() error {
-			sqld, _ := db.DB()
-			return sqld.Close()
+			sqlDB, _ := db.DB()
+			return sqlDB.Close()
 		}),
 	)
 	logger.Initialize(s.Logger())
@@ -65,12 +75,19 @@ func newServer(opts ...Option) IServer {
 	}
 }
 
-func (s *server) Start() error {
+func (s *server) Start(ctx context.Context) error {
 	for _, fn := range s.opts.BeforeStart {
 		if err := fn(); err != nil {
 			return err
 		}
 	}
+
+	go func() {
+		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
+			RewindLimit: 20,
+			RateLimit:   5000,
+		})
+	}()
 
 	return nil
 }
@@ -94,17 +111,21 @@ func (s *server) Run(ctx context.Context) error {
 		defer s.Logger().Flush()
 	}
 
-	if err := s.Start(); err != nil {
+	if err := s.Start(childCtx); err != nil {
 		return err
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
-
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	select {
-	case <-c:
+	case <-quit:
+		s.Logger().Warn("singal interrupt")
+		cancel()
 	case <-childCtx.Done():
+		s.Logger().Warn("main context being cancelled")
 	}
+	<-time.After(gracefulShutdownPeriod)
+	s.Logger().Warn("server being gracefully shuted down")
 
 	return s.Stop()
 }
@@ -115,4 +136,8 @@ func (s *server) Logger() structuredlog.ILogger {
 
 func (s *server) Name() string {
 	return s.opts.Name
+}
+
+func (s *server) Handler() handlers.IHandler {
+	return s.opts.Handler
 }

@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	log "samwang0723/jarvis/logger/gorm"
 
@@ -10,10 +11,13 @@ import (
 )
 
 type Config struct {
-	User     string
-	Password string
-	Host     string
-	Database string
+	User         string
+	Password     string
+	Host         string
+	Database     string
+	MaxLifetime  int
+	MaxOpenConns int
+	MaxIdleConns int
 }
 
 func GormFactory(config *Config) *gorm.DB {
@@ -24,6 +28,15 @@ func GormFactory(config *Config) *gorm.DB {
 	if err != nil {
 		panic("connect database error: " + err.Error())
 	}
+
+	sqlDB, err := session.DB()
+	if err != nil {
+		panic(err)
+	}
+	sqlDB.SetConnMaxLifetime(time.Duration(config.MaxLifetime) * time.Second)
+	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+
 	return session
 }
 
