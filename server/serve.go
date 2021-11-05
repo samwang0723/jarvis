@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"samwang0723/jarvis/config"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
 	"samwang0723/jarvis/dto"
@@ -34,23 +35,15 @@ type server struct {
 }
 
 func Serve() {
-	//TODO: Load configuration
-	config := &db.Config{
-		User:         "jarvis",
-		Password:     "password",
-		Host:         "tcp(localhost:3306)",
-		Database:     "jarvis",
-		MaxLifetime:  10,
-		MaxIdleConns: 20,
-		MaxOpenConns: 800,
-	}
-	db := db.GormFactory(config)
+	config.Load()
+	cfg := config.GetCurrentConfig()
+	db := db.GormFactory(cfg)
 	dalService := dal.New(dal.WithDB(db))
 	dataService := services.New(services.WithDAL(dalService))
 	handler := handlers.New(dataService)
 
 	s := newServer(
-		Name("jarvis"),
+		Name(cfg.Server.Name),
 		Logger(structuredlog.Logger()),
 		Handler(handler),
 		BeforeStop(func() error {
@@ -84,7 +77,7 @@ func (s *server) Start(ctx context.Context) error {
 
 	go func() {
 		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 20,
+			RewindLimit: 2,
 			RateLimit:   5000,
 		})
 	}()

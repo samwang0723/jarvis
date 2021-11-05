@@ -48,12 +48,12 @@ func download(ctx context.Context,
 
 	defer wg.Done()
 
-	index := req.RewindLimit
+	index := req.RewindLimit * -1
 	for {
 		fn(index, respChan, req)
 		// calculate count
-		index--
-		if index <= 0 {
+		index++
+		if index > 0 {
 			return
 		}
 

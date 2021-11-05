@@ -4,24 +4,15 @@ import (
 	"fmt"
 	"time"
 
+	"samwang0723/jarvis/config"
 	log "samwang0723/jarvis/logger/gorm"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-type Config struct {
-	User         string
-	Password     string
-	Host         string
-	Database     string
-	MaxLifetime  int
-	MaxOpenConns int
-	MaxIdleConns int
-}
-
-func GormFactory(config *Config) *gorm.DB {
-	dsn := generateDSN(config)
+func GormFactory(cfg *config.Config) *gorm.DB {
+	dsn := generateDSN(cfg)
 	session, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: log.Logger(),
 	})
@@ -33,14 +24,21 @@ func GormFactory(config *Config) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	sqlDB.SetConnMaxLifetime(time.Duration(config.MaxLifetime) * time.Second)
-	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
-	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	database := cfg.Database
+	sqlDB.SetConnMaxLifetime(time.Duration(database.MaxLifetime) * time.Second)
+	sqlDB.SetMaxOpenConns(database.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(database.MaxIdleConns)
 
 	return session
 }
 
-func generateDSN(config *Config) string {
-	dsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True", config.User, config.Password, config.Host, config.Database)
+func generateDSN(cfg *config.Config) string {
+	database := cfg.Database
+	dsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
+		database.User,
+		database.Password,
+		database.Host,
+		database.Database,
+	)
 	return dsn
 }

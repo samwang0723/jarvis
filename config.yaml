@@ -1,0 +1,19 @@
+# Server configurations
+server:
+  name: "jarvis"
+  host: "localhost"
+  port: 8000
+
+# Database credentials
+database:
+  user: "jarvis"
+  password: "password"
+  host: "tcp(localhost:3306)"
+  database: "jarvis"
+  maxLifetime:  10
+  maxIdleConns: 20
+  maxOpenConns: 800
+
+# Logging
+log:
+  level: "INFO"
