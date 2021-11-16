@@ -17,9 +17,10 @@ CREATE TABLE daily_closes (
     deleted_at datetime NULL,
     UNIQUE KEY index_stock_id_exchange_date(stock_id, exchange_date),
     KEY index_transactions(trade_shares),
-    KEY index_close(close)
+    KEY index_close(close),
+    KEY index_exchange_date(exchange_date),
+    KEY index_stock_id(stock_id)
 ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
-
 -- +goose StatementEnd
 
 -- +goose Down

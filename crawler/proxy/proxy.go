@@ -11,14 +11,4 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
-
-import "gorm.io/gorm"
-
-type Option func(o *dalImpl)
-
-func WithDB(db *gorm.DB) Option {
-	return func(s *dalImpl) {
-		s.db = db
-	}
-}
+package proxy
