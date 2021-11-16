@@ -1,3 +1,16 @@
+// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package crawler
 
 import (
@@ -37,7 +50,8 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 }
 
 func (c *crawlerImpl) Fetch() (io.Reader, error) {
-	req, err := http.NewRequest("GET", c.url, nil)
+	urlWithProxy := fmt.Sprintf("http://api.scraperapi.com?api_key=11ddb9ebafc327c52315274cb4e419c4&url=%s", c.url)
+	req, err := http.NewRequest("GET", urlWithProxy, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new fetch request initialize error: %v\n", err)
 	}
@@ -59,7 +73,7 @@ func (c *crawlerImpl) Fetch() (io.Reader, error) {
 	}
 
 	log.Infof("download completed (%s), URL: %s\n",
-		helper.ReadableSize(len(csvfile), 2), c.url)
+		helper.ReadableSize(len(csvfile), 2), urlWithProxy)
 	raw := bytes.NewBuffer(csvfile)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

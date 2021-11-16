@@ -1,3 +1,17 @@
+// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package server
 
 import (
@@ -7,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"samwang0723/jarvis/concurrent"
 	"samwang0723/jarvis/config"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
@@ -25,6 +40,8 @@ type IServer interface {
 	Name() string
 	Logger() structuredlog.ILogger
 	Handler() handlers.IHandler
+	Config() *config.Config
+	Dispatcher() *concurrent.Dispatcher
 	Run(context.Context) error
 	Start(context.Context) error
 	Stop() error
@@ -37,20 +54,30 @@ type server struct {
 func Serve() {
 	config.Load()
 	cfg := config.GetCurrentConfig()
+
+	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> database
+	// initialize DAL layer
 	db := db.GormFactory(cfg)
 	dalService := dal.New(dal.WithDB(db))
+	// bind DAL layer with service
 	dataService := services.New(services.WithDAL(dalService))
+	// associate service with handler
 	handler := handlers.New(dataService)
 
 	s := newServer(
 		Name(cfg.Server.Name),
+		Config(cfg),
 		Logger(structuredlog.Logger()),
 		Handler(handler),
+		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
 		BeforeStop(func() error {
 			sqlDB, _ := db.DB()
 			return sqlDB.Close()
 		}),
 	)
+	// initialize global job queue
+	concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
+
 	logger.Initialize(s.Logger())
 	err := s.Run(context.Background())
 	if err != nil && s.Logger() != nil {
@@ -77,8 +104,8 @@ func (s *server) Start(ctx context.Context) error {
 
 	go func() {
 		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 2,
-			RateLimit:   5000,
+			RewindLimit: 365,
+			RateLimit:   100,
 		})
 	}()
 
@@ -133,4 +160,12 @@ func (s *server) Name() string {
 
 func (s *server) Handler() handlers.IHandler {
 	return s.opts.Handler
+}
+
+func (s *server) Config() *config.Config {
+	return s.opts.Config
+}
+
+func (s *server) Dispatcher() *concurrent.Dispatcher {
+	return s.opts.Dispatcher
 }

@@ -1,3 +1,16 @@
+// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package handlers
 
 import (
@@ -44,13 +57,13 @@ func download(ctx context.Context,
 	wg *sync.WaitGroup,
 	respChan chan *[]interface{},
 	req *dto.DownloadRequest,
-	fn func(int, chan *[]interface{}, *dto.DownloadRequest)) {
+	fn func(int, chan *[]interface{})) {
 
 	defer wg.Done()
 
 	index := req.RewindLimit * -1
 	for {
-		fn(index, respChan, req)
+		fn(index, respChan)
 		// calculate count
 		index++
 		if index > 0 {
@@ -68,7 +81,7 @@ func download(ctx context.Context,
 	}
 }
 
-func twse(index int, respChan chan *[]interface{}, req *dto.DownloadRequest) {
+func twse(index int, respChan chan *[]interface{}) {
 	c := crawler.New()
 	p := parser.New()
 	dayString := helper.ConvertDateStr(0, 0, index, helper.TwseDateFormat)
@@ -94,7 +107,7 @@ func twse(index int, respChan chan *[]interface{}, req *dto.DownloadRequest) {
 	respChan <- p.Flush()
 }
 
-func tpex(index int, respChan chan *[]interface{}, req *dto.DownloadRequest) {
+func tpex(index int, respChan chan *[]interface{}) {
 	c := crawler.New()
 	p := parser.New()
 	dayString := helper.ConvertDateStr(0, 0, index, helper.TpexDateFormat)
