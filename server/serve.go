@@ -18,9 +18,6 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"syscall"
-	"time"
-
 	"samwang0723/jarvis/concurrent"
 	"samwang0723/jarvis/config"
 	"samwang0723/jarvis/db"
@@ -30,6 +27,8 @@ import (
 	"samwang0723/jarvis/logger"
 	structuredlog "samwang0723/jarvis/logger/structured"
 	"samwang0723/jarvis/services"
+	"syscall"
+	"time"
 )
 
 const (
@@ -67,16 +66,21 @@ func Serve() {
 	s := newServer(
 		Name(cfg.Server.Name),
 		Config(cfg),
-		Logger(structuredlog.Logger()),
+		Logger(structuredlog.Logger(cfg)),
 		Handler(handler),
 		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
+		BeforeStart(func() error {
+			// initialize global job queue
+			concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
+			return nil
+		}),
 		BeforeStop(func() error {
+			close(concurrent.JobQueue)
+
 			sqlDB, _ := db.DB()
 			return sqlDB.Close()
 		}),
 	)
-	// initialize global job queue
-	concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
 
 	logger.Initialize(s.Logger())
 	err := s.Run(context.Background())
@@ -102,9 +106,13 @@ func (s *server) Start(ctx context.Context) error {
 		}
 	}
 
+	// starting the workerpool
+	s.Dispatcher().Run(ctx)
+
+	//TODO: replace with actual server
 	go func() {
 		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 365,
+			RewindLimit: 3650,
 			RateLimit:   100,
 		})
 	}()
@@ -113,13 +121,20 @@ func (s *server) Start(ctx context.Context) error {
 }
 
 func (s *server) Stop() error {
+	var err error
 	for _, fn := range s.opts.BeforeStop {
-		if err := fn(); err != nil {
-			return err
+		if err = fn(); err != nil {
+			break
 		}
 	}
 
-	return nil
+	// graceful shutdown workerpool
+	s.Dispatcher().WaitGroup().Wait()
+
+	<-time.After(gracefulShutdownPeriod)
+	s.Logger().Warn("server being gracefully shuted down")
+
+	return err
 }
 
 // Run starts the server and shut down gracefully afterwards
@@ -144,9 +159,6 @@ func (s *server) Run(ctx context.Context) error {
 	case <-childCtx.Done():
 		s.Logger().Warn("main context being cancelled")
 	}
-	<-time.After(gracefulShutdownPeriod)
-	s.Logger().Warn("server being gracefully shuted down")
-
 	return s.Stop()
 }
 

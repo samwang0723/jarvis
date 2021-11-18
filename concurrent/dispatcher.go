@@ -13,10 +13,19 @@
 // limitations under the License.
 package concurrent
 
+import (
+	"context"
+	"sync"
+
+	log "samwang0723/jarvis/logger"
+)
+
 type Dispatcher struct {
 	// a pool of worker channels that registered with dispatcher
 	workerPool chan JobChan
+	workers    []*Worker
 	maxWorkers int
+	waitGroup  *sync.WaitGroup
 }
 
 func NewDispatcher(maxWorkers int) *Dispatcher {
@@ -24,31 +33,44 @@ func NewDispatcher(maxWorkers int) *Dispatcher {
 	return &Dispatcher{
 		workerPool: pool,
 		maxWorkers: maxWorkers,
+		waitGroup:  &sync.WaitGroup{},
 	}
 }
 
-func (d *Dispatcher) Run() {
+func (d *Dispatcher) Run(ctx context.Context) {
+	d.waitGroup.Add(d.maxWorkers)
 	for i := 0; i < d.maxWorkers; i++ {
-		worker := NewWorker(d.workerPool)
+		worker := NewWorker(i, d.workerPool, d.waitGroup)
 		worker.Start()
+		d.workers = append(d.workers, worker)
 	}
 
-	go d.dispatch()
+	go d.dispatch(ctx)
 }
 
-func (d *Dispatcher) dispatch() {
+func (d *Dispatcher) dispatch(ctx context.Context) {
 	for {
 		select {
 		// job request received
-		case job := <-JobQueue:
-			go func(job Job) {
+		case job, ok := <-JobQueue:
+			if ok {
 				// try to obtain a available worker job channel
 				// this will block until a worker is idle
 				jobChannel := <-d.workerPool
 
 				// dispatch the job to worker job channel
 				jobChannel <- job
-			}(job)
+			}
+		case <-ctx.Done():
+			log.Warn("dispatch: context cancelled!")
+			for _, w := range d.workers {
+				w.Stop()
+			}
+			return
 		}
 	}
+}
+
+func (d *Dispatcher) WaitGroup() *sync.WaitGroup {
+	return d.waitGroup
 }

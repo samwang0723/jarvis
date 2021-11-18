@@ -16,9 +16,9 @@ database:
 
 # Logging
 log:
-  level: "INFO"
+  level: "DEBUG"
 
 # WorkerPool
 workerpool:
-  maxPoolSize: 5
-  maxQueueSize: 20
+  maxPoolSize: 20
+  maxQueueSize: 40

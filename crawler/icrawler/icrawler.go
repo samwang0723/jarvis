@@ -14,6 +14,7 @@
 package icrawler
 
 import (
+	"context"
 	"io"
 )
 
@@ -27,6 +28,6 @@ const (
 )
 
 type ICrawler interface {
-	Fetch() (io.Reader, error)
+	Fetch(ctx context.Context) (io.Reader, error)
 	SetURL(template string, date string, options ...string)
 }
