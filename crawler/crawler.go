@@ -15,14 +15,17 @@ package crawler
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	log "samwang0723/jarvis/logger"
 
 	"samwang0723/jarvis/crawler/icrawler"
+	"samwang0723/jarvis/crawler/proxy"
 	"samwang0723/jarvis/helper"
 
 	"golang.org/x/text/encoding/traditionalchinese"
@@ -36,6 +39,7 @@ type crawlerImpl struct {
 
 func New() icrawler.ICrawler {
 	res := &crawlerImpl{
+		url:    "",
 		client: &http.Client{},
 	}
 	return res
@@ -49,8 +53,8 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 	}
 }
 
-func (c *crawlerImpl) Fetch() (io.Reader, error) {
-	urlWithProxy := fmt.Sprintf("http://api.scraperapi.com?api_key=11ddb9ebafc327c52315274cb4e419c4&url=%s", c.url)
+func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
+	urlWithProxy := fmt.Sprintf("%s&url=%s", proxy.ProxyURI(), url.QueryEscape(c.url))
 	req, err := http.NewRequest("GET", urlWithProxy, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new fetch request initialize error: %v\n", err)
@@ -58,6 +62,8 @@ func (c *crawlerImpl) Fetch() (io.Reader, error) {
 	req.Header = http.Header{
 		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
+	req = req.WithContext(ctx)
+	log.Infof("download started: %s\n", urlWithProxy)
 	resp, err := (*c.client).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch request error: %v\n", err)
@@ -73,7 +79,7 @@ func (c *crawlerImpl) Fetch() (io.Reader, error) {
 	}
 
 	log.Infof("download completed (%s), URL: %s\n",
-		helper.ReadableSize(len(csvfile), 2), urlWithProxy)
+		helper.ReadableSize(len(csvfile), 2), c.url)
 	raw := bytes.NewBuffer(csvfile)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

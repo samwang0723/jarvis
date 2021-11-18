@@ -16,6 +16,7 @@ package structuredlog
 
 import (
 	"log"
+	"samwang0723/jarvis/config"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -42,7 +43,6 @@ type ILogger interface {
 
 type structuredLogger struct {
 	logger *logrus.Logger
-	level  logrus.Level
 }
 
 func initialize(l ILogger) {
@@ -50,14 +50,27 @@ func initialize(l ILogger) {
 	instance.Info("initialized logger")
 }
 
-func Logger() ILogger {
+func Logger(cfg *config.Config) ILogger {
 	if instance == nil {
-		resp := &structuredLogger{
-			logger: logrus.New(),
-			level:  logrus.InfoLevel,
+		var level logrus.Level
+		switch cfg.Log.Level {
+		case "FATAL":
+			level = logrus.FatalLevel
+		case "DEBUG":
+			level = logrus.DebugLevel
+		case "WARN":
+			level = logrus.WarnLevel
+		case "ERROR":
+			level = logrus.ErrorLevel
+		default:
+			level = logrus.InfoLevel
 		}
-		resp.logger.SetLevel(resp.level)
-		initialize(resp)
+		slog := &structuredLogger{
+			logger: logrus.New(),
+		}
+		slog.logger.Level = level
+
+		initialize(slog)
 		initSentry()
 	}
 	return instance

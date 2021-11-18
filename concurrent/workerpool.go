@@ -15,6 +15,7 @@ package concurrent
 
 import (
 	log "samwang0723/jarvis/logger"
+	"sync"
 )
 
 type Job interface {
@@ -25,10 +26,12 @@ type Job interface {
 type JobChan chan Job
 
 type Worker struct {
-	WorkerPool chan JobChan
+	id         int
+	workerPool chan JobChan
 	// job channel is for worker to get job
-	JobChannel JobChan
+	jobChannel JobChan
 	quit       chan bool
+	waitGroup  *sync.WaitGroup
 }
 
 var (
@@ -36,11 +39,13 @@ var (
 	JobQueue JobChan
 )
 
-func NewWorker(workerPool chan JobChan) *Worker {
+func NewWorker(id int, workerPool chan JobChan, wg *sync.WaitGroup) *Worker {
 	return &Worker{
-		WorkerPool: workerPool,
-		JobChannel: make(JobChan),
+		id:         id,
+		workerPool: workerPool,
+		jobChannel: make(JobChan),
 		quit:       make(chan bool),
+		waitGroup:  wg,
 	}
 }
 
@@ -48,15 +53,18 @@ func (w *Worker) Start() {
 	go func() {
 		for {
 			// keep register available job channel back to worker pool
-			w.WorkerPool <- w.JobChannel
+			w.workerPool <- w.jobChannel
 			select {
-			case job := <-w.JobChannel:
-				if err := job.Do(); err != nil {
-					log.Errorf("job execution with failure: %+v\n", err)
-				}
 			// received quit event and terminate worker
 			case <-w.quit:
+				log.Warnf("worker(%d) terminated: context cancelled!", w.id)
+				w.waitGroup.Done()
 				return
+
+			case job := <-w.jobChannel:
+				if err := job.Do(); err != nil {
+					log.Errorf("worker(%d) job execution with failure: %+v", w.id, err)
+				}
 			}
 		}
 	}()

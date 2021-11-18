@@ -12,3 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package proxy
+
+import (
+	"net/http"
+	"net/url"
+)
+
+func ProxyClient() *http.Client {
+	proxyURL, _ := url.Parse("http://109.127.82.34:8080")
+	return &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(proxyURL),
+		},
+	}
+}
+
+func ProxyURI() string {
+	return "https://api.proxycrawl.com/?token=8p_nDk7-zo09I-P4_MjkKw"
+}
