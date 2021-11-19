@@ -112,8 +112,8 @@ func (s *server) Start(ctx context.Context) error {
 	//TODO: replace with actual server
 	go func() {
 		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 3650,
-			RateLimit:   100,
+			RewindLimit: 365 * 5,
+			RateLimit:   2000,
 		})
 	}()
 

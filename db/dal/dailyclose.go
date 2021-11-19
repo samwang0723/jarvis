@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error {
@@ -27,8 +28,10 @@ func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) 
 	return err
 }
 
-func (i *dalImpl) BatchCreateDailyClose(ctx context.Context, objs []*entity.DailyClose) error {
-	err := i.db.Create(&objs).Error
+func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.DailyClose) error {
+	err := i.db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).CreateInBatches(&objs, idal.MaxRow).Error
 	return err
 }
 

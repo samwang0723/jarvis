@@ -25,6 +25,7 @@ type ID uint64
 
 const ZeroID = ID(0)
 
+// use Sonyflake to support distributed unique IDs
 var sf *sonyflake.Sonyflake
 
 func init() {

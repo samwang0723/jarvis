@@ -60,7 +60,9 @@ func ConvertDateStr(year int, month int, day int, format string) string {
 	if wkDay == time.Saturday || wkDay == time.Sunday {
 		return ""
 	}
+	// Twse format: 20190213
 	s := t.Format(format)
+	// Tpex format: 108/02/06
 	if format == TpexDateFormat {
 		res := strings.Split(s, "/")
 		year, _ := strconv.Atoi(res[0])
