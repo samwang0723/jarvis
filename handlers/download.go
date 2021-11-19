@@ -40,7 +40,6 @@ type downloadJob struct {
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	respChan := make(chan *[]interface{})
-	//defer close(respChan)
 
 	go generateJob(ctx, req.RewindLimit*-1, parser.TwseDailyClose, req.RateLimit, respChan)
 	go generateJob(ctx, req.RewindLimit*-1, parser.TpexDailyClose, req.RateLimit, respChan)
@@ -48,8 +47,13 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 	go func() {
 		for {
 			select {
+			// since its hard to predict how many records already been processed,
+			// sync.WaitGroup hard to apply in this scenario, use timeout instead
+			case <-time.After(4 * time.Hour):
+				log.Warn("(BatchingDownload): timeout")
+				return
 			case <-ctx.Done():
-				log.Warn("=== terminate the downloading process ===")
+				log.Warn("(BatchingDownload): context cancel")
 				return
 			case obj, ok := <-respChan:
 				if ok {
@@ -81,12 +85,12 @@ func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit
 			select {
 			case concurrent.JobQueue <- job:
 			case <-ctx.Done():
-				log.Debug("download: generateJob goroutine exit!")
+				log.Debug("(BatchingDownload): generateJob goroutine exit!")
 				return
 			}
 		}
 	}
-	log.Debug("download: all jobs sent!")
+	log.Debug("(BatchingDownload): all download jobs sent!")
 }
 
 func (job *downloadJob) Do() error {
@@ -124,7 +128,7 @@ func (job *downloadJob) Do() error {
 	select {
 	case <-time.After(time.Duration(job.rateLimit) * time.Millisecond):
 	case <-job.ctx.Done():
-		log.Warn("download: context cancelled!")
+		log.Warn("(BatchingDownload): downloadJob - context cancelled!")
 	}
 
 	return nil
