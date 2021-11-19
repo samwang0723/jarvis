@@ -16,8 +16,11 @@ package parser
 
 import "io"
 
+type Source int
+
+//go:generate stringer -type=Source
 const (
-	TwseDailyClose = iota
+	TwseDailyClose Source = iota
 	TwseThreePrimary
 	TpexDailyClose
 )
@@ -34,7 +37,7 @@ type parserImpl struct {
 type Config struct {
 	ParseDay *string
 	Capacity int
-	Type     int
+	Type     Source
 }
 
 func New() IParser {

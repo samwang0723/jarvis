@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	log "samwang0723/jarvis/logger"
 
@@ -39,8 +40,10 @@ type crawlerImpl struct {
 
 func New() icrawler.ICrawler {
 	res := &crawlerImpl{
-		url:    "",
-		client: &http.Client{},
+		url: "",
+		client: &http.Client{
+			Timeout: time.Second * 60,
+		},
 	}
 	return res
 }
@@ -63,7 +66,7 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
 	req = req.WithContext(ctx)
-	log.Infof("download started: %s\n", urlWithProxy)
+	log.Debugf("download started: %s\n", urlWithProxy)
 	resp, err := (*c.client).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetch request error: %v\n", err)
@@ -78,8 +81,7 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 		return nil, fmt.Errorf("fetch unable to read body: %v\n", err)
 	}
 
-	log.Infof("download completed (%s), URL: %s\n",
-		helper.ReadableSize(len(csvfile), 2), c.url)
+	log.Infof("download completed (%s), URL: %s", helper.ReadableSize(len(csvfile), 2), c.url)
 	raw := bytes.NewBuffer(csvfile)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

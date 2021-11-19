@@ -41,19 +41,8 @@ type ILogger interface {
 	Flush()
 }
 
-type LogLevel int
-
-const (
-	Fatal LogLevel = iota
-	Error
-	Warn
-	Debug
-	Info
-)
-
 type structuredLogger struct {
 	logger *logrus.Logger
-	level  LogLevel
 }
 
 func initialize(l ILogger) {
@@ -63,23 +52,23 @@ func initialize(l ILogger) {
 
 func Logger(cfg *config.Config) ILogger {
 	if instance == nil {
-		var level LogLevel
+		var level logrus.Level
 		switch cfg.Log.Level {
 		case "FATAL":
-			level = Fatal
-		case "DEBUG":
-			level = Debug
+			level = logrus.FatalLevel
+		case "INFO":
+			level = logrus.InfoLevel
 		case "WARN":
-			level = Warn
+			level = logrus.WarnLevel
 		case "ERROR":
-			level = Error
+			level = logrus.ErrorLevel
 		default:
-			level = Info
+			level = logrus.DebugLevel
 		}
 		slog := &structuredLogger{
 			logger: logrus.New(),
-			level:  level,
 		}
+		slog.logger.SetLevel(level)
 		initialize(slog)
 		initSentry()
 	}
@@ -99,81 +88,42 @@ func initSentry() {
 }
 
 func (l *structuredLogger) Debug(args ...interface{}) {
-	if l.level < Debug {
-		return
-	}
 	l.logger.Debug(args...)
 }
 
 func (l *structuredLogger) Debugf(s string, args ...interface{}) {
-	if l.level < Debug {
-		return
-	}
-
 	l.logger.Debugf(s, args...)
 }
 
 func (l *structuredLogger) Info(args ...interface{}) {
-	if l.level < Info {
-		return
-	}
-
 	l.logger.Info(args...)
 }
 
 func (l *structuredLogger) Infof(s string, args ...interface{}) {
-	if l.level < Info {
-		return
-	}
-
 	l.logger.Infof(s, args...)
 }
 
 func (l *structuredLogger) Warn(args ...interface{}) {
-	if l.level < Warn {
-		return
-	}
-
 	l.logger.Warn(args...)
 }
 
 func (l *structuredLogger) Warnf(s string, args ...interface{}) {
-	if l.level < Warn {
-		return
-	}
-
 	l.logger.Warnf(s, args...)
 }
 
 func (l *structuredLogger) Fatal(args ...interface{}) {
-	if l.level < Fatal {
-		return
-	}
-
 	l.logger.Fatal(args...)
 }
 
 func (l *structuredLogger) Fatalf(s string, args ...interface{}) {
-	if l.level < Fatal {
-		return
-	}
-
 	l.logger.Fatalf(s, args...)
 }
 
 func (l *structuredLogger) Error(args ...interface{}) {
-	if l.level < Error {
-		return
-	}
-
 	l.logger.Error(args...)
 }
 
 func (l *structuredLogger) Errorf(s string, args ...interface{}) {
-	if l.level < Error {
-		return
-	}
-
 	l.logger.Errorf(s, args...)
 }
 

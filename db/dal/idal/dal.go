@@ -14,7 +14,7 @@
 package idal
 
 const (
-	MaxRow = 1000
+	MaxRow = 500
 )
 
 type IDAL interface {

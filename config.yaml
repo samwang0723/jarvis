@@ -16,7 +16,7 @@ database:
 
 # Logging
 log:
-  level: "DEBUG"
+  level: "INFO"
 
 # WorkerPool
 workerpool:

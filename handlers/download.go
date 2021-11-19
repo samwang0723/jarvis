@@ -28,52 +28,49 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-type source int
-
-//go:generate stringer -type=source
-const (
-	TwseDailyClose source = iota
-	TwseThreePrimary
-	TpexDailyClose
-)
-
 // download job to run in workerpool
 type downloadJob struct {
 	ctx       context.Context
 	date      string
 	respChan  chan *[]interface{}
 	rateLimit int
-	origin    source
+	origin    parser.Source
 }
 
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	respChan := make(chan *[]interface{})
-	defer close(respChan)
 
-	go generateJob(ctx, req.RewindLimit*-1, TwseDailyClose, req.RateLimit, respChan)
-	go generateJob(ctx, req.RewindLimit*-1, TpexDailyClose, req.RateLimit, respChan)
+	go generateJob(ctx, req.RewindLimit*-1, parser.TwseDailyClose, req.RateLimit, respChan)
+	go generateJob(ctx, req.RewindLimit*-1, parser.TpexDailyClose, req.RateLimit, respChan)
 
-	for {
-		select {
-		case <-ctx.Done():
-			log.Warn("=== terminate the downloading process ===")
-			return
-		case obj, ok := <-respChan:
-			if ok {
-				h.dataService.BatchCreateDailyClose(ctx, obj)
+	go func() {
+		for {
+			select {
+			// since its hard to predict how many records already been processed,
+			// sync.WaitGroup hard to apply in this scenario, use timeout instead
+			case <-time.After(4 * time.Hour):
+				log.Warn("(BatchingDownload): timeout")
+				return
+			case <-ctx.Done():
+				log.Warn("(BatchingDownload): context cancel")
+				return
+			case obj, ok := <-respChan:
+				if ok {
+					h.dataService.BatchUpsertDailyClose(ctx, obj)
+				}
 			}
 		}
-	}
+	}()
 }
 
-func generateJob(ctx context.Context, start int, origin source, rateLimit int, respChan chan *[]interface{}) {
+func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit int, respChan chan *[]interface{}) {
 	for i := start; i < 0; i++ {
 		var date string
 		switch origin {
-		case TwseDailyClose:
+		case parser.TwseDailyClose:
 			date = helper.ConvertDateStr(0, 0, i, helper.TwseDateFormat)
-		case TpexDailyClose:
+		case parser.TpexDailyClose:
 			date = helper.ConvertDateStr(0, 0, i, helper.TpexDateFormat)
 		}
 
@@ -88,35 +85,30 @@ func generateJob(ctx context.Context, start int, origin source, rateLimit int, r
 			select {
 			case concurrent.JobQueue <- job:
 			case <-ctx.Done():
-				log.Debug("download: generateJob goroutine exit!")
+				log.Debug("(BatchingDownload): generateJob goroutine exit!")
 				return
 			}
 		}
 	}
+	log.Debug("(BatchingDownload): all download jobs sent!")
 }
 
 func (job *downloadJob) Do() error {
 	c := crawler.New()
 	p := parser.New()
-	var config parser.Config
 
 	switch job.origin {
-	case TwseDailyClose:
+	case parser.TwseDailyClose:
 		c.SetURL(icrawler.TwseDailyClose, job.date, icrawler.StockOnly)
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 17,
-			Type:     parser.TwseDailyClose,
-		}
-	case TpexDailyClose:
+	case parser.TpexDailyClose:
 		c.SetURL(icrawler.TpexDailyClose, job.date)
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 19,
-			Type:     parser.TpexDailyClose,
-		}
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
+	}
+	config := parser.Config{
+		ParseDay: &job.date,
+		Capacity: 17,
+		Type:     job.origin,
 	}
 
 	stream, err := c.Fetch(job.ctx)
@@ -136,7 +128,7 @@ func (job *downloadJob) Do() error {
 	select {
 	case <-time.After(time.Duration(job.rateLimit) * time.Millisecond):
 	case <-job.ctx.Done():
-		log.Warn("download: context cancelled!")
+		log.Warn("(BatchingDownload): downloadJob - context cancelled!")
 	}
 
 	return nil

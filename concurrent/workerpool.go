@@ -15,7 +15,9 @@ package concurrent
 
 import (
 	log "samwang0723/jarvis/logger"
+	"samwang0723/jarvis/utils"
 	"sync"
+	"time"
 )
 
 type Job interface {
@@ -55,16 +57,15 @@ func (w *Worker) Start() {
 			// keep register available job channel back to worker pool
 			w.workerPool <- w.jobChannel
 			select {
+			case job := <-w.jobChannel:
+				if err := utils.Retry(3, 2000*time.Millisecond, job.Do); err != nil {
+					log.Errorf("worker(%d) job execution with failure: %+v", w.id, err)
+				}
 			// received quit event and terminate worker
 			case <-w.quit:
 				log.Warnf("worker(%d) terminated: context cancelled!", w.id)
 				w.waitGroup.Done()
 				return
-
-			case job := <-w.jobChannel:
-				if err := job.Do(); err != nil {
-					log.Errorf("worker(%d) job execution with failure: %+v", w.id, err)
-				}
 			}
 		}
 	}()

@@ -12,28 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package services
+package utils
 
 import (
-	"context"
-	"samwang0723/jarvis/db/dal/idal"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
+	log "samwang0723/jarvis/logger"
+	"time"
 )
 
-type IService interface {
-	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
-	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
-}
+// Retry mechanism
+func Retry(attempts int, sleep time.Duration, fn func() error) error {
+	if err := fn(); err != nil {
+		if s, ok := err.(stop); ok {
+			return s.error
+		}
 
-type serviceImpl struct {
-	dal idal.IDAL
-}
-
-func New(opts ...Option) IService {
-	impl := &serviceImpl{}
-	for _, opt := range opts {
-		opt(impl)
+		if attempts--; attempts > 0 {
+			log.Warnf("retry func error: %s. attemps #%d after %s.", err.Error(), attempts, sleep)
+			time.Sleep(sleep)
+			// if continue to fail on retry, double the interval
+			return Retry(attempts, 2*sleep, fn)
+		}
+		return err
 	}
-	return impl
+	return nil
+}
+
+type stop struct {
+	error
+}
+
+// If don't want to retry, pass this instead of error
+func NoRetryError(err error) stop {
+	return stop{err}
 }
