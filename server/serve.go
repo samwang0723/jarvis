@@ -20,12 +20,13 @@ import (
 	"os/signal"
 	"samwang0723/jarvis/concurrent"
 	"samwang0723/jarvis/config"
+	"samwang0723/jarvis/cronjob"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
-	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
-	"samwang0723/jarvis/logger"
+	log "samwang0723/jarvis/logger"
 	structuredlog "samwang0723/jarvis/logger/structured"
+
 	"samwang0723/jarvis/services"
 	"syscall"
 	"time"
@@ -53,28 +54,33 @@ type server struct {
 func Serve() {
 	config.Load()
 	cfg := config.GetCurrentConfig()
-
+	logger := structuredlog.Logger(cfg)
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> database
 	// initialize DAL layer
 	db := db.GormFactory(cfg)
 	dalService := dal.New(dal.WithDB(db))
 	// bind DAL layer with service
-	dataService := services.New(services.WithDAL(dalService))
+	dataService := services.New(
+		services.WithDAL(dalService),
+		services.WithCronJob(cronjob.New(logger)),
+	)
 	// associate service with handler
 	handler := handlers.New(dataService)
 
 	s := newServer(
 		Name(cfg.Server.Name),
 		Config(cfg),
-		Logger(structuredlog.Logger(cfg)),
+		Logger(logger),
 		Handler(handler),
 		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
 		BeforeStart(func() error {
 			// initialize global job queue
 			concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
+			dataService.StartCron()
 			return nil
 		}),
 		BeforeStop(func() error {
+			dataService.StopCron()
 			close(concurrent.JobQueue)
 
 			sqlDB, _ := db.DB()
@@ -82,10 +88,10 @@ func Serve() {
 		}),
 	)
 
-	logger.Initialize(s.Logger())
+	log.Initialize(s.Logger())
 	err := s.Run(context.Background())
 	if err != nil && s.Logger() != nil {
-		s.Logger().Errorf("error returned by service.Run(): %s\n", err.Error())
+		log.Errorf("error returned by service.Run(): %s\n", err.Error())
 	}
 }
 
@@ -110,14 +116,9 @@ func (s *server) Start(ctx context.Context) error {
 	s.Dispatcher().Run(ctx)
 
 	//TODO: replace with actual server
-	go func() {
-		s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 365 * 5,
-			RateLimit:   2000,
-		})
-	}()
+	err := s.Handler().CronDownload(ctx)
 
-	return nil
+	return err
 }
 
 func (s *server) Stop() error {
@@ -132,7 +133,7 @@ func (s *server) Stop() error {
 	s.Dispatcher().WaitGroup().Wait()
 
 	<-time.After(gracefulShutdownPeriod)
-	s.Logger().Warn("server being gracefully shuted down")
+	log.Warn("server being gracefully shuted down")
 
 	return err
 }
@@ -154,10 +155,10 @@ func (s *server) Run(ctx context.Context) error {
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-quit:
-		s.Logger().Warn("singal interrupt")
+		log.Warn("singal interrupt")
 		cancel()
 	case <-childCtx.Done():
-		s.Logger().Warn("main context being cancelled")
+		log.Warn("main context being cancelled")
 	}
 	return s.Stop()
 }

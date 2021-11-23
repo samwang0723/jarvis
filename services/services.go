@@ -16,18 +16,23 @@ package services
 
 import (
 	"context"
+	"samwang0723/jarvis/cronjob/icronjob"
 	"samwang0723/jarvis/db/dal/idal"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
 )
 
 type IService interface {
+	StartCron()
+	StopCron()
+	AddJob(ctx context.Context, spec string, job func()) error
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 }
 
 type serviceImpl struct {
-	dal idal.IDAL
+	dal     idal.IDAL
+	cronjob icronjob.ICronJob
 }
 
 func New(opts ...Option) IService {

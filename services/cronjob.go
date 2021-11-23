@@ -11,27 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package handlers
+
+package services
 
 import (
 	"context"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/services"
 )
 
-type IHandler interface {
-	CronDownload(ctx context.Context) error
-	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
-	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
+func (s *serviceImpl) StartCron() {
+	s.cronjob.Start()
 }
 
-type handlerImpl struct {
-	dataService services.IService
+func (s *serviceImpl) StopCron() {
+	s.cronjob.Stop()
 }
 
-func New(dataService services.IService) IHandler {
-	res := &handlerImpl{
-		dataService: dataService,
-	}
-	return res
+func (s *serviceImpl) AddJob(ctx context.Context, spec string, job func()) error {
+	return s.cronjob.AddJob(ctx, spec, job)
 }

@@ -14,12 +14,21 @@
 
 package services
 
-import "samwang0723/jarvis/db/dal/idal"
+import (
+	"samwang0723/jarvis/cronjob/icronjob"
+	"samwang0723/jarvis/db/dal/idal"
+)
 
 type Option func(o *serviceImpl)
 
 func WithDAL(dal idal.IDAL) Option {
 	return func(i *serviceImpl) {
 		i.dal = dal
+	}
+}
+
+func WithCronJob(cronjob icronjob.ICronJob) Option {
+	return func(i *serviceImpl) {
+		i.cronjob = cronjob
 	}
 }
