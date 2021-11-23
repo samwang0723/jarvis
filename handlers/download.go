@@ -37,6 +37,15 @@ type downloadJob struct {
 	origin    parser.Source
 }
 
+func (h *handlerImpl) CronDownload(ctx context.Context) error {
+	return h.dataService.AddJob(ctx, "00 18 * * 1-5", func() {
+		h.BatchingDownload(ctx, &dto.DownloadRequest{
+			RewindLimit: 1,
+			RateLimit:   2000,
+		})
+	})
+}
+
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	respChan := make(chan *[]interface{})
@@ -65,7 +74,7 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 }
 
 func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit int, respChan chan *[]interface{}) {
-	for i := start; i < 0; i++ {
+	for i := start; i <= 0; i++ {
 		var date string
 		switch origin {
 		case parser.TwseDailyClose:

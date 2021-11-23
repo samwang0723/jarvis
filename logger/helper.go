@@ -15,43 +15,43 @@
 package logger
 
 func Debug(args ...interface{}) {
-	instance.Debug(args...)
+	instance.RawLogger().Debug(args...)
 }
 
 func Debugf(s string, args ...interface{}) {
-	instance.Debugf(s, args...)
+	instance.RawLogger().Debugf(s, args...)
 }
 
 func Info(args ...interface{}) {
-	instance.Info(args...)
+	instance.RawLogger().Info(args...)
 }
 
 func Infof(s string, args ...interface{}) {
-	instance.Infof(s, args...)
+	instance.RawLogger().Infof(s, args...)
 }
 
 func Warn(args ...interface{}) {
-	instance.Warn(args...)
+	instance.RawLogger().Warn(args...)
 }
 
 func Warnf(s string, args ...interface{}) {
-	instance.Warnf(s, args...)
+	instance.RawLogger().Warnf(s, args...)
 }
 
 func Fatal(args ...interface{}) {
-	instance.Fatal(args...)
+	instance.RawLogger().Fatal(args...)
 }
 
 func Fatalf(s string, args ...interface{}) {
-	instance.Fatalf(s, args...)
+	instance.RawLogger().Fatalf(s, args...)
 }
 
 func Error(args ...interface{}) {
-	instance.Error(args...)
+	instance.RawLogger().Error(args...)
 }
 
 func Errorf(s string, args ...interface{}) {
-	instance.Errorf(s, args...)
+	instance.RawLogger().Errorf(s, args...)
 }
 
 func Flush() {

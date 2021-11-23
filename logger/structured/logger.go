@@ -28,16 +28,7 @@ var (
 )
 
 type ILogger interface {
-	Debug(args ...interface{})
-	Info(args ...interface{})
-	Warn(args ...interface{})
-	Error(args ...interface{})
-	Fatal(args ...interface{})
-	Debugf(s string, args ...interface{})
-	Infof(s string, args ...interface{})
-	Warnf(s string, args ...interface{})
-	Errorf(s string, args ...interface{})
-	Fatalf(s string, args ...interface{})
+	RawLogger() *logrus.Logger
 	Flush()
 }
 
@@ -47,7 +38,7 @@ type structuredLogger struct {
 
 func initialize(l ILogger) {
 	instance = l
-	instance.Info("initialized logger")
+	instance.RawLogger().Info("initialized logger")
 }
 
 func Logger(cfg *config.Config) ILogger {
@@ -69,6 +60,11 @@ func Logger(cfg *config.Config) ILogger {
 			logger: logrus.New(),
 		}
 		slog.logger.SetLevel(level)
+		slog.logger.SetFormatter(&logrus.TextFormatter{
+			FullTimestamp:   true,
+			TimestampFormat: "2006-01-02 15:04:05",
+		})
+
 		initialize(slog)
 		initSentry()
 	}
@@ -87,52 +83,8 @@ func initSentry() {
 	}
 }
 
-func (l *structuredLogger) Debug(args ...interface{}) {
-	l.logger.Debug(args...)
-}
-
-func (l *structuredLogger) Debugf(s string, args ...interface{}) {
-	l.logger.Debugf(s, args...)
-}
-
-func (l *structuredLogger) Info(args ...interface{}) {
-	l.logger.Info(args...)
-}
-
-func (l *structuredLogger) Infof(s string, args ...interface{}) {
-	l.logger.Infof(s, args...)
-}
-
-func (l *structuredLogger) Warn(args ...interface{}) {
-	l.logger.Warn(args...)
-}
-
-func (l *structuredLogger) Warnf(s string, args ...interface{}) {
-	l.logger.Warnf(s, args...)
-}
-
-func (l *structuredLogger) Fatal(args ...interface{}) {
-	l.logger.Fatal(args...)
-}
-
-func (l *structuredLogger) Fatalf(s string, args ...interface{}) {
-	l.logger.Fatalf(s, args...)
-}
-
-func (l *structuredLogger) Error(args ...interface{}) {
-	l.logger.Error(args...)
-}
-
-func (l *structuredLogger) Errorf(s string, args ...interface{}) {
-	l.logger.Errorf(s, args...)
-}
-
-func (l *structuredLogger) Panic(args ...interface{}) {
-	l.logger.Panic(args...)
-}
-
-func (l *structuredLogger) Panicf(s string, args ...interface{}) {
-	l.logger.Panicf(s, args...)
+func (l *structuredLogger) RawLogger() *logrus.Logger {
+	return l.logger
 }
 
 func (log *structuredLogger) Flush() {
