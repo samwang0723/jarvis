@@ -11,24 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package idal
+
+package services
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"samwang0723/jarvis/entity"
 )
 
-type ListStockSearchParams struct {
-	StockIDs *[]string
-	Country  string
+func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error {
+	// Replicate the value from interface to *entity.DailyClose
+	stocks := []*entity.Stock{}
+	for _, v := range *objs {
+		if val, ok := v.(*entity.Stock); ok {
+			stocks = append(stocks, val)
+		} else {
+			return fmt.Errorf("cannot cast interface to *dto.Stock: %v\n", reflect.TypeOf(v).Elem())
+		}
+	}
+
+	return s.dal.BatchUpsertStocks(ctx, stocks)
 }
 
-type IStockDAL interface {
-	BatchUpsertStocks(ctx context.Context, objs []*entity.Stock) error
-	CreateStock(ctx context.Context, obj *entity.Stock) error
-	UpdateStock(ctx context.Context, obj *entity.Stock) error
-	DeleteStockByID(ctx context.Context, id entity.ID) error
-	ListStock(ctx context.Context, offset int, limit int,
-		searchParams *ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error)
-	GetStockByStockID(ctx context.Context, stockID string) (*entity.Stock, error)
+func (s *serviceImpl) CreateStock(ctx context.Context, obj *entity.Stock) error {
+	return s.dal.CreateStock(ctx, obj)
 }

@@ -28,6 +28,8 @@ type IService interface {
 	AddJob(ctx context.Context, spec string, job func()) error
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
+	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
+	CreateStock(ctx context.Context, obj *entity.Stock) error
 }
 
 type serviceImpl struct {

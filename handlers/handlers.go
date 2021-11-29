@@ -20,6 +20,7 @@ import (
 )
 
 type IHandler interface {
+	StockListDownload(ctx context.Context)
 	CronDownload(ctx context.Context) error
 	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)

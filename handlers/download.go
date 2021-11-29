@@ -46,6 +46,49 @@ func (h *handlerImpl) CronDownload(ctx context.Context) error {
 	})
 }
 
+func (h *handlerImpl) StockListDownload(ctx context.Context) {
+	respChan := make(chan *[]interface{})
+	types := []parser.Source{
+		parser.TwseStockList,
+		parser.TpexStockList,
+	}
+	go func() {
+		for _, t := range types {
+			job := &downloadJob{
+				ctx:       ctx,
+				respChan:  respChan,
+				rateLimit: 1000,
+				origin:    t,
+			}
+			select {
+			case concurrent.JobQueue <- job:
+			case <-ctx.Done():
+				log.Debug("(StockListDownload): generateJob goroutine exit!")
+				return
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			// since its hard to predict how many records already been processed,
+			// sync.WaitGroup hard to apply in this scenario, use timeout instead
+			case <-time.After(10 * time.Minute):
+				log.Warn("(StockListDownload): timeout")
+				return
+			case <-ctx.Done():
+				log.Warn("(StockListDownload): context cancel")
+				return
+			case objs, ok := <-respChan:
+				if ok {
+					h.dataService.BatchUpsertStocks(ctx, objs)
+				}
+			}
+		}
+	}()
+}
+
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	respChan := make(chan *[]interface{})
@@ -105,19 +148,37 @@ func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit
 func (job *downloadJob) Do() error {
 	c := crawler.New()
 	p := parser.New()
+	var config parser.Config
 
 	switch job.origin {
 	case parser.TwseDailyClose:
+		config = parser.Config{
+			ParseDay: &job.date,
+			Capacity: 17,
+			Type:     job.origin,
+		}
 		c.SetURL(icrawler.TwseDailyClose, job.date, icrawler.StockOnly)
 	case parser.TpexDailyClose:
+		config = parser.Config{
+			ParseDay: &job.date,
+			Capacity: 17,
+			Type:     job.origin,
+		}
 		c.SetURL(icrawler.TpexDailyClose, job.date)
+	case parser.TwseStockList:
+		config = parser.Config{
+			Capacity: 6,
+			Type:     job.origin,
+		}
+		c.SetURL(icrawler.TWSEStocks, "")
+	case parser.TpexStockList:
+		config = parser.Config{
+			Capacity: 6,
+			Type:     job.origin,
+		}
+		c.SetURL(icrawler.TPEXStocks, "")
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
-	}
-	config := parser.Config{
-		ParseDay: &job.date,
-		Capacity: 17,
-		Type:     job.origin,
 	}
 
 	stream, err := c.Fetch(job.ctx)
@@ -137,7 +198,7 @@ func (job *downloadJob) Do() error {
 	select {
 	case <-time.After(time.Duration(job.rateLimit) * time.Millisecond):
 	case <-job.ctx.Done():
-		log.Warn("(BatchingDownload): downloadJob - context cancelled!")
+		log.Warn("(downloadJob) - context cancelled!")
 	}
 
 	return nil
