@@ -117,6 +117,7 @@ func (s *server) Start(ctx context.Context) error {
 
 	//TODO: replace with actual server
 	err := s.Handler().CronDownload(ctx)
+	s.Handler().StockListDownload(ctx)
 
 	return err
 }

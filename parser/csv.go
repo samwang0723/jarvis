@@ -23,10 +23,7 @@ import (
 	"strings"
 )
 
-func (p *parserImpl) Parse(config Config, in io.Reader) error {
-	if p.result == nil {
-		return fmt.Errorf("didn't initialized the result map\n")
-	}
+func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 	if config.ParseDay == nil {
 		return fmt.Errorf("parse day missing\n")
 	}
@@ -38,7 +35,7 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	reader.Comma = ','
 	reader.FieldsPerRecord = -1
 
-	//override to standarize date string
+	//override to standarize date string (20211123)
 	date := helper.UnifiedDateStr(*config.ParseDay)
 
 	for {
@@ -47,6 +44,7 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 			break
 		}
 
+		// make sure only parse recognized stock_id
 		if len(record) > 0 && len(record[0]) < 6 {
 			idColumn := record[0]
 			if helper.IsInteger(idColumn[0:2]) && config.Capacity <= len(record) {
@@ -67,12 +65,6 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	}
 
 	return nil
-}
-
-func (p *parserImpl) Flush() *[]interface{} {
-	res := *p.result
-	p.result = &[]interface{}{}
-	return &res
 }
 
 func twseToEntity(day string, data []string) *entity.DailyClose {

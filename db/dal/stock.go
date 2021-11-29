@@ -20,7 +20,15 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
+
+func (i *dalImpl) BatchUpsertStocks(ctx context.Context, objs []*entity.Stock) error {
+	err := i.db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).CreateInBatches(&objs, idal.MaxRow).Error
+	return err
+}
 
 func (i *dalImpl) CreateStock(ctx context.Context, obj *entity.Stock) error {
 	err := i.db.Create(obj).Error

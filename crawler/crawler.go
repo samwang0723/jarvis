@@ -52,7 +52,11 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 	if len(options) > 0 {
 		c.url = fmt.Sprintf(template, date, options[0])
 	} else {
-		c.url = fmt.Sprintf(template, date)
+		if len(date) == 0 {
+			c.url = template
+		} else {
+			c.url = fmt.Sprintf(template, date)
+		}
 	}
 }
 
@@ -76,13 +80,15 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 		return nil, fmt.Errorf("fetch status error: %v\n", resp.StatusCode)
 	}
 
-	csvfile, err := ioutil.ReadAll(resp.Body)
+	// copy stream from response body, although it consumes memory but
+	// better helps on concurrent handling in goroutine.
+	f, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("fetch unable to read body: %v\n", err)
 	}
 
-	log.Infof("download completed (%s), URL: %s", helper.ReadableSize(len(csvfile), 2), c.url)
-	raw := bytes.NewBuffer(csvfile)
+	log.Infof("download completed (%s), URL: %s", helper.ReadableSize(len(f), 2), c.url)
+	raw := bytes.NewBuffer(f)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 
 	return reader, nil

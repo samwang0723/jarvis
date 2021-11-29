@@ -14,7 +14,10 @@
 
 package parser
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 type Source int
 
@@ -23,6 +26,8 @@ const (
 	TwseDailyClose Source = iota
 	TwseThreePrimary
 	TpexDailyClose
+	TwseStockList
+	TpexStockList
 )
 
 type IParser interface {
@@ -45,4 +50,23 @@ func New() IParser {
 		result: &[]interface{}{},
 	}
 	return res
+}
+
+func (p *parserImpl) Parse(config Config, in io.Reader) error {
+	if p.result == nil {
+		return fmt.Errorf("didn't initialized the result map\n")
+	}
+
+	switch config.Type {
+	case TwseStockList, TpexStockList:
+		return p.parseHtml(config, in)
+	default:
+		return p.parseCsv(config, in)
+	}
+}
+
+func (p *parserImpl) Flush() *[]interface{} {
+	res := *p.result
+	p.result = &[]interface{}{}
+	return &res
 }
