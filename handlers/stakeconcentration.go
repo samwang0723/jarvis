@@ -11,14 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package idal
 
-const (
-	MaxRow = 500
+package handlers
+
+import (
+	"context"
+	"samwang0723/jarvis/dto"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
+func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error) {
+	err := h.dataService.CreateStakeConcentration(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	res, err := h.dataService.GetStakeConcentration(ctx, &dto.GetStakeConcentrationRequest{StockID: req.StockID})
+	if err != nil {
+		return nil, err
+	}
+	return &dto.CreateStakeConcentrationResponse{Entry: res}, nil
 }

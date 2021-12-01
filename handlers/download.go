@@ -20,6 +20,7 @@ import (
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/crawler/icrawler"
 	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/helper"
 	log "samwang0723/jarvis/logger"
 	"samwang0723/jarvis/parser"
@@ -32,6 +33,7 @@ import (
 type downloadJob struct {
 	ctx       context.Context
 	date      string
+	stockId   string
 	respChan  chan *[]interface{}
 	rateLimit int
 	origin    parser.Source
@@ -40,7 +42,7 @@ type downloadJob struct {
 func (h *handlerImpl) CronDownload(ctx context.Context) error {
 	return h.dataService.AddJob(ctx, "00 18 * * 1-5", func() {
 		h.BatchingDownload(ctx, &dto.DownloadRequest{
-			RewindLimit: 1,
+			RewindLimit: 0,
 			RateLimit:   2000,
 		})
 	})
@@ -74,7 +76,7 @@ func (h *handlerImpl) StockListDownload(ctx context.Context) {
 			select {
 			// since its hard to predict how many records already been processed,
 			// sync.WaitGroup hard to apply in this scenario, use timeout instead
-			case <-time.After(10 * time.Minute):
+			case <-time.After(20 * time.Minute):
 				log.Warn("(StockListDownload): timeout")
 				return
 			case <-ctx.Done():
@@ -91,32 +93,47 @@ func (h *handlerImpl) StockListDownload(ctx context.Context) {
 
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
-	respChan := make(chan *[]interface{})
+	dailyCloseChan := make(chan *[]interface{})
+	stakeConcentrationChan := make(chan *[]interface{})
 
-	go generateJob(ctx, req.RewindLimit*-1, parser.TwseDailyClose, req.RateLimit, respChan)
-	go generateJob(ctx, req.RewindLimit*-1, parser.TpexDailyClose, req.RateLimit, respChan)
+	go h.generateJob(ctx, req.RewindLimit*-1, parser.TwseDailyClose, req.RateLimit, dailyCloseChan)
+	go h.generateJob(ctx, req.RewindLimit*-1, parser.TpexDailyClose, req.RateLimit, dailyCloseChan)
+	go h.generateJob(ctx, req.RewindLimit*-1, parser.StakeConcentration, req.RateLimit, stakeConcentrationChan)
 
 	go func() {
 		for {
 			select {
 			// since its hard to predict how many records already been processed,
 			// sync.WaitGroup hard to apply in this scenario, use timeout instead
-			case <-time.After(4 * time.Hour):
+			case <-time.After(8 * time.Hour):
 				log.Warn("(BatchingDownload): timeout")
 				return
 			case <-ctx.Done():
 				log.Warn("(BatchingDownload): context cancel")
 				return
-			case obj, ok := <-respChan:
+			case objs, ok := <-dailyCloseChan:
 				if ok {
-					h.dataService.BatchUpsertDailyClose(ctx, obj)
+					h.dataService.BatchUpsertDailyClose(ctx, objs)
+				}
+			case objs, ok := <-stakeConcentrationChan:
+				if ok && len(*objs) > 0 {
+					if val, ok := (*objs)[0].(*entity.StakeConcentration); ok {
+						h.dataService.CreateStakeConcentration(ctx, &dto.CreateStakeConcentrationRequest{
+							StockID:       val.StockID,
+							Date:          val.Date,
+							SumBuyShares:  val.SumBuyShares,
+							SumSellShares: val.SumSellShares,
+							AvgBuyPrice:   val.AvgBuyPrice,
+							AvgSellPrice:  val.AvgSellPrice,
+						})
+					}
 				}
 			}
 		}
 	}()
 }
 
-func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit int, respChan chan *[]interface{}) {
+func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.Source, rateLimit int, respChan chan *[]interface{}) {
 	for i := start; i <= 0; i++ {
 		var date string
 		switch origin {
@@ -124,21 +141,56 @@ func generateJob(ctx context.Context, start int, origin parser.Source, rateLimit
 			date = helper.ConvertDateStr(0, 0, i, helper.TwseDateFormat)
 		case parser.TpexDailyClose:
 			date = helper.ConvertDateStr(0, 0, i, helper.TpexDateFormat)
+		case parser.StakeConcentration:
+			date = helper.ConvertDateStr(0, 0, i, helper.StakeConcentrationFormat)
 		}
 
 		if len(date) > 0 {
-			job := &downloadJob{
-				ctx:       ctx,
-				date:      date,
-				respChan:  respChan,
-				rateLimit: rateLimit,
-				origin:    origin,
-			}
-			select {
-			case concurrent.JobQueue <- job:
-			case <-ctx.Done():
-				log.Debug("(BatchingDownload): generateJob goroutine exit!")
-				return
+			if origin == parser.StakeConcentration {
+				limit := 100
+				for offset := 0; offset < 1750; offset += limit {
+					resp, err := h.ListStock(ctx, &dto.ListStockRequest{
+						Offset: offset,
+						Limit:  limit,
+						SearchParams: &dto.ListStockSearchParams{
+							Country: "TW",
+						},
+					})
+					if err != nil {
+						log.Errorf("ListStock error: %+v", err)
+					}
+					for _, r := range resp.Entries {
+						job := &downloadJob{
+							ctx:       ctx,
+							date:      date,
+							stockId:   r.StockID,
+							respChan:  respChan,
+							rateLimit: rateLimit,
+							origin:    origin,
+						}
+
+						select {
+						case concurrent.JobQueue <- job:
+						case <-ctx.Done():
+							log.Debug("(BatchingDownload): generateJob goroutine exit!")
+							return
+						}
+					}
+				}
+			} else {
+				job := &downloadJob{
+					ctx:       ctx,
+					date:      date,
+					respChan:  respChan,
+					rateLimit: rateLimit,
+					origin:    origin,
+				}
+				select {
+				case concurrent.JobQueue <- job:
+				case <-ctx.Done():
+					log.Debug("(BatchingDownload): generateJob goroutine exit!")
+					return
+				}
 			}
 		}
 	}
@@ -177,6 +229,12 @@ func (job *downloadJob) Do() error {
 			Type:     job.origin,
 		}
 		c.SetURL(icrawler.TPEXStocks, "")
+	case parser.StakeConcentration:
+		config = parser.Config{
+			ParseDay: &job.date,
+			Type:     job.origin,
+		}
+		c.SetURL(icrawler.StakeConcentration, job.date, job.stockId)
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
 	}

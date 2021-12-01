@@ -29,7 +29,9 @@ type IService interface {
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
-	CreateStock(ctx context.Context, obj *entity.Stock) error
+	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
+	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
+	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 }
 
 type serviceImpl struct {

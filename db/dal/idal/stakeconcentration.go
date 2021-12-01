@@ -11,14 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package idal
 
-const (
-	MaxRow = 500
+import (
+	"context"
+	"samwang0723/jarvis/entity"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
+type IStakeConcentrationDAL interface {
+	CreateStakeConcentration(ctx context.Context, obj *entity.StakeConcentration) error
+	GetStakeConcentrationByStockID(ctx context.Context, stockID string) (*entity.StakeConcentration, error)
 }

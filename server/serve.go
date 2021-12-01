@@ -23,6 +23,7 @@ import (
 	"samwang0723/jarvis/cronjob"
 	"samwang0723/jarvis/db"
 	"samwang0723/jarvis/db/dal"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/handlers"
 	log "samwang0723/jarvis/logger"
 	structuredlog "samwang0723/jarvis/logger/structured"
@@ -117,7 +118,11 @@ func (s *server) Start(ctx context.Context) error {
 
 	//TODO: replace with actual server
 	err := s.Handler().CronDownload(ctx)
-	s.Handler().StockListDownload(ctx)
+	s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
+		RewindLimit: 0,
+		RateLimit:   1000,
+	})
+	//s.Handler().StockListDownload(ctx)
 
 	return err
 }

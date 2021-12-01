@@ -50,7 +50,11 @@ func New() icrawler.ICrawler {
 
 func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 	if len(options) > 0 {
-		c.url = fmt.Sprintf(template, date, options[0])
+		if template == icrawler.StakeConcentration {
+			c.url = fmt.Sprintf(template, options[0], date, date)
+		} else {
+			c.url = fmt.Sprintf(template, date, options[0])
+		}
 	} else {
 		if len(date) == 0 {
 			c.url = template

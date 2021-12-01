@@ -15,8 +15,10 @@
 package convert
 
 import (
+	"fmt"
 	"samwang0723/jarvis/db/dal/idal"
 	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/entity"
 )
 
 func ListDailyCloseSearchParamsDTOToDAL(obj *dto.ListDailyCloseSearchParams) *idal.ListDailyCloseSearchParams {
@@ -30,4 +32,28 @@ func ListDailyCloseSearchParamsDTOToDAL(obj *dto.ListDailyCloseSearchParams) *id
 		res.End = obj.End
 	}
 	return res
+}
+
+func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListStockSearchParams {
+	res := &idal.ListStockSearchParams{
+		Country: obj.Country,
+	}
+	if obj.StockIDs != nil {
+		res.StockIDs = obj.StockIDs
+	}
+	return res
+}
+
+func StakeConcentrationCreateRequestToEntity(obj *dto.CreateStakeConcentrationRequest) (*entity.StakeConcentration, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("dto.CreateConcentrationRequest: %+v", obj)
+	}
+	return &entity.StakeConcentration{
+		StockID:       obj.StockID,
+		Date:          obj.Date,
+		SumBuyShares:  obj.SumBuyShares,
+		SumSellShares: obj.SumSellShares,
+		AvgBuyPrice:   obj.AvgBuyPrice,
+		AvgSellPrice:  obj.AvgSellPrice,
+	}, nil
 }

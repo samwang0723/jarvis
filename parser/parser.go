@@ -28,6 +28,7 @@ const (
 	TpexDailyClose
 	TwseStockList
 	TpexStockList
+	StakeConcentration
 )
 
 type IParser interface {
@@ -60,9 +61,12 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	switch config.Type {
 	case TwseStockList, TpexStockList:
 		return p.parseHtml(config, in)
-	default:
+	case TwseDailyClose, TpexDailyClose:
 		return p.parseCsv(config, in)
+	case StakeConcentration:
+		return p.parseConcentration(config, in)
 	}
+	return nil
 }
 
 func (p *parserImpl) Flush() *[]interface{} {

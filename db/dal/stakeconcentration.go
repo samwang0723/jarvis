@@ -12,7 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package idal
+package dal
 
-type IStakeConcentration interface {
+import (
+	"context"
+	"samwang0723/jarvis/entity"
+)
+
+func (i *dalImpl) CreateStakeConcentration(ctx context.Context, obj *entity.StakeConcentration) error {
+	err := i.db.Create(obj).Error
+	return err
+}
+
+func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID string) (*entity.StakeConcentration, error) {
+	res := &entity.StakeConcentration{}
+	if err := i.db.First(res, "stock_id = ?", stockID).Error; err != nil {
+		return nil, err
+	}
+	return res, nil
 }

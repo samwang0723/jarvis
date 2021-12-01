@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
+	"samwang0723/jarvis/services/convert"
 )
 
 func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error {
@@ -35,6 +37,15 @@ func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}
 	return s.dal.BatchUpsertStocks(ctx, stocks)
 }
 
-func (s *serviceImpl) CreateStock(ctx context.Context, obj *entity.Stock) error {
-	return s.dal.CreateStock(ctx, obj)
+func (s *serviceImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error) {
+	objs, totalCount, err := s.dal.ListStock(
+		ctx,
+		req.Offset,
+		req.Limit,
+		convert.ListStockSearchParamsDTOToDAL(req.SearchParams),
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+	return objs, totalCount, nil
 }
