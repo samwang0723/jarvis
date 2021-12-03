@@ -33,15 +33,3 @@ type StakeConcentration struct {
 func (StakeConcentration) TableName() string {
 	return "stake_concentration"
 }
-
-func (s *StakeConcentration) Validate() bool {
-	if len(s.StockID) > 0 &&
-		len(s.Date) > 0 &&
-		s.SumBuyShares > 0 &&
-		s.SumSellShares > 0 &&
-		s.AvgBuyPrice > 0.0 &&
-		s.AvgSellPrice > 0.0 {
-		return true
-	}
-	return false
-}

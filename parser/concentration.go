@@ -17,7 +17,6 @@ package parser
 import (
 	"fmt"
 	"io"
-	"regexp"
 	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/helper"
 	"strings"
@@ -41,26 +40,21 @@ func (p *parserImpl) parseConcentration(config Config, in io.Reader) error {
 	var concentration *entity.StakeConcentration
 
 	// parse the header of stockID
-	row := getElementById(doc, "oScrollHead", 1)
-	if row != nil && row.Data == "tr" {
-		for c := row.FirstChild; c != nil; c = c.NextSibling {
-			for d := c.FirstChild; d != nil && d.Type == html.TextNode; d = d.NextSibling {
-				re := regexp.MustCompile("\\((.*?)\\)")
-				match := re.FindStringSubmatch(d.Data)
-				if len(match) > 0 {
-					concentration = &entity.StakeConcentration{
-						Date:    *config.ParseDay,
-						StockID: match[1],
-					}
-				}
-			}
+	if title, ok := getHtmlTitle(doc); ok {
+		t := strings.Split(title, "-")
+		concentration = &entity.StakeConcentration{
+			Date:    *config.ParseDay,
+			StockID: strings.TrimSpace(t[1]),
 		}
+	}
+	if concentration == nil {
+		return fmt.Errorf("failed to parser concentration StockID: %+v", nil)
 	}
 
 	// parser the content of stake concentration
 	var tag string
-	for i := 1; i <= 2 && concentration != nil; i++ {
-		row = getElementById(doc, "oScrollFoot", i)
+	for i := 1; i <= 2; i++ {
+		row := getElementById(doc, "oScrollFoot", i)
 		if row != nil && row.Data == "tr" {
 			for c := row.FirstChild; c != nil; c = c.NextSibling {
 				for d := c.FirstChild; d != nil && d.Type == html.TextNode; d = d.NextSibling {
@@ -87,10 +81,7 @@ func (p *parserImpl) parseConcentration(config Config, in io.Reader) error {
 		}
 	}
 
-	// make sure all required information being stored
-	if concentration != nil && concentration.Validate() {
-		*p.result = append(*p.result, concentration)
-	}
+	*p.result = append(*p.result, concentration)
 
 	return nil
 }
@@ -135,4 +126,27 @@ func traverse(n *html.Node, id string, target int, cursor *int) *html.Node {
 func getElementById(n *html.Node, id string, target int) *html.Node {
 	cursor := 0
 	return traverse(n, id, target, &cursor)
+}
+
+func isTitleElement(n *html.Node) bool {
+	return n.Type == html.ElementNode && n.Data == "title"
+}
+
+func traverseTitle(n *html.Node) (string, bool) {
+	if isTitleElement(n) {
+		return n.FirstChild.Data, true
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		result, ok := traverseTitle(c)
+		if ok {
+			return result, ok
+		}
+	}
+
+	return "", false
+}
+
+func getHtmlTitle(n *html.Node) (string, bool) {
+	return traverseTitle(n)
 }

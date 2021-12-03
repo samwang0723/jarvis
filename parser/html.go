@@ -68,10 +68,10 @@ func (p *parserImpl) parseHtml(config Config, in io.Reader) error {
 				if config.Capacity == len(buffer) {
 					s := strings.Split(buffer[0], "　")
 					stock := &entity.Stock{
-						StockID:  s[0],
-						Name:     s[1],
+						StockID:  strings.TrimSpace(s[0]),
+						Name:     strings.TrimSpace(s[1]),
 						Country:  "TW",
-						Category: buffer[4],
+						Category: strings.TrimSpace(buffer[4]),
 					}
 					*p.result = append(*p.result, stock)
 					updatedLen++

@@ -31,3 +31,15 @@ func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID st
 	}
 	return res, nil
 }
+
+func (i *dalImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
+	res := []string{}
+	if err := i.db.Raw(`select stock_id from (
+		select stock_id from stocks 
+		union all 
+		select stock_id from stake_concentration where exchange_date=?
+	) tbl group by stock_id having count(*) = 1;`, date).Scan(&res).Error; err != nil {
+		return res, err
+	}
+	return res, nil
+}

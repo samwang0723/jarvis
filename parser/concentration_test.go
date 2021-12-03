@@ -22,10 +22,32 @@ import (
 func Test_parseConcentration(t *testing.T) {
 	wrongDoc := "<html><body><table><tr><td>WRONG</td></tr></table></body></html>"
 	correctDoc := `<html>
+	<head>
+		<title>主力賣買超-6727</title>
+	</head>
 	<body>
-	  <table>
-		<tr id="oScrollHead"><td class="t10" colspan="10">聯電(2303) 主力進出明細
-		<div class="t11">單位：張　最後更新日：2021/11/23</div></td></tr>
+	<table id="oMainTable" class="t01" width="612" border="0" cellspacing="1" cellpadding="1">
+	<tr id="oScrollHead"><td class="t10" colspan="10"><select name="stk" onchange="changeStkID(this.options[this.selectedIndex].value);">
+	<option value="" selected>亞泰金屬(6727)</option><option value="67271">亞泰金屬一(67271)</option>
+	</select>主力進出比較圖</td></tr>
+	<tr id="oScrollHead"><td colspan="10" class="t3n0" width="100%"></tr>
+	</table>
+	<table>
+		<tr id="oScrollHead"><td class="t10" colspan="10">亞泰金屬(6727)
+		主力進出明細
+		<div class="t11">單位：張　最後更新日：2021/12/01</div></td></tr>
+		<tr id="oScrollHead"><td class="t2" colspan="10">
+		<select name="D" onChange="goA();">
+		<option value="0" selected>請選擇</option>
+		<option value="1">近一日</option>
+		<option value="2">近五日</option>
+		<option value="3">近十日</option>
+		<option value="4">近20日</option>
+		<option value="5">近40日</option>
+		<option value="6">近60日</option>
+		<option value="7">近120日</option>
+		<option value="8">近240日</option>
+		</select>
 		<TR>
 		<TD class="t4t1" nowrap><a href="/z/zc/zco/zco0/zco0.djhtm?a=2303&b=0038003800380041&BHID=8880">國泰-館前</a></TD>
 		<TD class="t3n1">690</TD>

@@ -16,6 +16,7 @@ package crawler
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,16 +35,21 @@ import (
 )
 
 type crawlerImpl struct {
-	url    string
-	client *http.Client
+	url      string
+	client   *http.Client
+	useProxy bool
 }
 
-func New() icrawler.ICrawler {
+func New(useProxy bool) icrawler.ICrawler {
 	res := &crawlerImpl{
 		url: "",
 		client: &http.Client{
 			Timeout: time.Second * 60,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
 		},
+		useProxy: useProxy,
 	}
 	return res
 }
@@ -65,33 +71,36 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 }
 
 func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
-	urlWithProxy := fmt.Sprintf("%s&url=%s", proxy.ProxyURI(), url.QueryEscape(c.url))
-	req, err := http.NewRequest("GET", urlWithProxy, nil)
+	uri := c.url
+	if c.useProxy {
+		uri = fmt.Sprintf("%s&url=%s", proxy.ProxyURI(), url.QueryEscape(c.url))
+	}
+	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("new fetch request initialize error: %v\n", err)
+		return nil, fmt.Errorf("new fetch request initialize error: %v", err)
 	}
 	req.Header = http.Header{
 		"Content-Type": []string{"text/csv;charset=ms950"},
 	}
 	req = req.WithContext(ctx)
-	log.Debugf("download started: %s\n", urlWithProxy)
+	log.Debugf("download started: %s", uri)
 	resp, err := (*c.client).Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("fetch request error: %v\n", err)
+		return nil, fmt.Errorf("fetch request error: %v, url: %s", err, c.url)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetch status error: %v\n", resp.StatusCode)
+		return nil, fmt.Errorf("fetch status error: %v, url: %s", resp.StatusCode, c.url)
 	}
 
 	// copy stream from response body, although it consumes memory but
 	// better helps on concurrent handling in goroutine.
 	f, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("fetch unable to read body: %v\n", err)
+		return nil, fmt.Errorf("fetch unable to read body: %v, url: %s", err, c.url)
 	}
 
-	log.Infof("download completed (%s), URL: %s", helper.ReadableSize(len(f), 2), c.url)
+	log.Debugf("download completed (%s), URL: %s", helper.ReadableSize(len(f), 2), c.url)
 	raw := bytes.NewBuffer(f)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

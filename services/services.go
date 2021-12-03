@@ -32,6 +32,7 @@ type IService interface {
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
+	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
 }
 
 type serviceImpl struct {

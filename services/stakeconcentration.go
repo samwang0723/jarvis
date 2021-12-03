@@ -32,3 +32,7 @@ func (s *serviceImpl) CreateStakeConcentration(ctx context.Context, req *dto.Cre
 func (s *serviceImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
 	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID)
 }
+
+func (s *serviceImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
+	return s.dal.ListBackfillStakeConcentrationStockIDs(ctx, date)
+}

@@ -42,21 +42,21 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 		record, err := reader.Read()
 		if err == io.EOF {
 			break
+		} else if len(record) == 0 || config.Capacity > len(record) {
+			continue
 		}
 
 		// make sure only parse recognized stock_id
-		if len(record) > 0 && len(record[0]) < 6 {
-			idColumn := record[0]
-			if helper.IsInteger(idColumn[0:2]) && config.Capacity <= len(record) {
-				switch config.Type {
-				case TwseDailyClose:
-					*p.result = append(*p.result, twseToEntity(date, record))
-					updatedLen++
-				case TwseThreePrimary:
-				case TpexDailyClose:
-					*p.result = append(*p.result, tpexToEntity(date, record))
-					updatedLen++
-				}
+		record[0] = strings.TrimSpace(record[0])
+		if len(record[0]) > 0 && len(record[0]) < 6 && helper.IsInteger(record[0][0:2]) {
+			switch config.Type {
+			case TwseDailyClose:
+				*p.result = append(*p.result, twseToEntity(date, record))
+				updatedLen++
+			case TwseThreePrimary:
+			case TpexDailyClose:
+				*p.result = append(*p.result, tpexToEntity(date, record))
+				updatedLen++
 			}
 		}
 	}
@@ -68,9 +68,8 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 }
 
 func twseToEntity(day string, data []string) *entity.DailyClose {
-	id := data[0]
 	dailyClose := &entity.DailyClose{
-		StockID:      id,
+		StockID:      data[0],
 		Date:         day,
 		TradedShares: helper.ToUint64(strings.Replace(data[2], ",", "", -1)),
 		Transactions: helper.ToUint64(strings.Replace(data[3], ",", "", -1)),
@@ -85,9 +84,8 @@ func twseToEntity(day string, data []string) *entity.DailyClose {
 }
 
 func tpexToEntity(day string, data []string) *entity.DailyClose {
-	id := data[0]
 	dailyClose := &entity.DailyClose{
-		StockID:      id,
+		StockID:      data[0],
 		Date:         day,
 		TradedShares: helper.ToUint64(strings.Replace(data[7], ",", "", -1)),
 		Transactions: helper.ToUint64(strings.Replace(data[9], ",", "", -1)),

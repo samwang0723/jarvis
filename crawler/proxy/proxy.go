@@ -28,5 +28,5 @@ func ProxyClient() *http.Client {
 }
 
 func ProxyURI() string {
-	return "https://api.proxycrawl.com/?token=8p_nDk7-zo09I-P4_MjkKw"
+	return "https://api.proxycrawl.com/?token=Lq9LsbxJibce1s2A9sICnA"
 }

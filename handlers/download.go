@@ -43,7 +43,7 @@ func (h *handlerImpl) CronDownload(ctx context.Context) error {
 	return h.dataService.AddJob(ctx, "00 18 * * 1-5", func() {
 		h.BatchingDownload(ctx, &dto.DownloadRequest{
 			RewindLimit: 0,
-			RateLimit:   2000,
+			RateLimit:   3000,
 		})
 	})
 }
@@ -147,34 +147,26 @@ func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.
 
 		if len(date) > 0 {
 			if origin == parser.StakeConcentration {
-				limit := 100
-				for offset := 0; offset < 1750; offset += limit {
-					resp, err := h.ListStock(ctx, &dto.ListStockRequest{
-						Offset: offset,
-						Limit:  limit,
-						SearchParams: &dto.ListStockSearchParams{
-							Country: "TW",
-						},
-					})
-					if err != nil {
-						log.Errorf("ListStock error: %+v", err)
+				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, date)
+				if err != nil {
+					log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
+					continue
+				}
+				for _, id := range res {
+					job := &downloadJob{
+						ctx:       ctx,
+						date:      date,
+						stockId:   id,
+						respChan:  respChan,
+						rateLimit: rateLimit,
+						origin:    origin,
 					}
-					for _, r := range resp.Entries {
-						job := &downloadJob{
-							ctx:       ctx,
-							date:      date,
-							stockId:   r.StockID,
-							respChan:  respChan,
-							rateLimit: rateLimit,
-							origin:    origin,
-						}
 
-						select {
-						case concurrent.JobQueue <- job:
-						case <-ctx.Done():
-							log.Debug("(BatchingDownload): generateJob goroutine exit!")
-							return
-						}
+					select {
+					case concurrent.JobQueue <- job:
+					case <-ctx.Done():
+						log.Debug("(BatchingDownload): generateJob goroutine exit!")
+						return
 					}
 				}
 			} else {
@@ -198,7 +190,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.
 }
 
 func (job *downloadJob) Do() error {
-	c := crawler.New()
+	var c icrawler.ICrawler
 	p := parser.New()
 	var config parser.Config
 
@@ -209,6 +201,7 @@ func (job *downloadJob) Do() error {
 			Capacity: 17,
 			Type:     job.origin,
 		}
+		c = crawler.New(true)
 		c.SetURL(icrawler.TwseDailyClose, job.date, icrawler.StockOnly)
 	case parser.TpexDailyClose:
 		config = parser.Config{
@@ -216,24 +209,28 @@ func (job *downloadJob) Do() error {
 			Capacity: 17,
 			Type:     job.origin,
 		}
+		c = crawler.New(true)
 		c.SetURL(icrawler.TpexDailyClose, job.date)
 	case parser.TwseStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
+		c = crawler.New(false)
 		c.SetURL(icrawler.TWSEStocks, "")
 	case parser.TpexStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
+		c = crawler.New(false)
 		c.SetURL(icrawler.TPEXStocks, "")
 	case parser.StakeConcentration:
 		config = parser.Config{
 			ParseDay: &job.date,
 			Type:     job.origin,
 		}
+		c = crawler.New(true)
 		c.SetURL(icrawler.StakeConcentration, job.date, job.stockId)
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
@@ -242,12 +239,12 @@ func (job *downloadJob) Do() error {
 	stream, err := c.Fetch(job.ctx)
 	if err != nil {
 		sentry.CaptureException(err)
-		return fmt.Errorf("(%s/%s) fetch error: %+v", job.origin, job.date, err)
+		return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
 	}
 	err = p.Parse(config, stream)
 	if err != nil {
 		sentry.CaptureException(err)
-		return fmt.Errorf("(%s/%s) parse failed, err: %+v", job.origin, job.date, err)
+		return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
 	}
 
 	job.respChan <- p.Flush()
