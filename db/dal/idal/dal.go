@@ -20,4 +20,5 @@ const (
 type IDAL interface {
 	IStockDAL
 	IDailyCloseDAL
+	IStakeConcentrationDAL
 }

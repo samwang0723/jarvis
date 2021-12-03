@@ -11,22 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package proxy
+
+package handlers
 
 import (
-	"net/http"
-	"net/url"
+	"context"
+	"samwang0723/jarvis/dto"
 )
 
-func ProxyClient() *http.Client {
-	proxyURL, _ := url.Parse("http://109.127.82.34:8080")
-	return &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
-		},
+func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error) {
+	err := h.dataService.CreateStakeConcentration(ctx, req)
+	if err != nil {
+		return nil, err
 	}
-}
-
-func ProxyURI() string {
-	return "https://api.proxycrawl.com/?token=Lq9LsbxJibce1s2A9sICnA"
+	res, err := h.dataService.GetStakeConcentration(ctx, &dto.GetStakeConcentrationRequest{StockID: req.StockID})
+	if err != nil {
+		return nil, err
+	}
+	return &dto.CreateStakeConcentrationResponse{Entry: res}, nil
 }

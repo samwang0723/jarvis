@@ -24,6 +24,8 @@ type IHandler interface {
 	CronDownload(ctx context.Context) error
 	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
+	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
+	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
 }
 
 type handlerImpl struct {

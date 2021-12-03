@@ -13,3 +13,21 @@
 // limitations under the License.
 
 package handlers
+
+import (
+	"context"
+	"samwang0723/jarvis/dto"
+)
+
+func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error) {
+	entries, totalCount, err := h.dataService.ListStock(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.ListStockResponse{
+		Offset:     req.Offset,
+		Limit:      req.Limit,
+		Entries:    entries,
+		TotalCount: int(totalCount),
+	}, nil
+}

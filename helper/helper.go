@@ -21,13 +21,14 @@ import (
 )
 
 const (
-	TB             = 1000000000000
-	GB             = 1000000000
-	MB             = 1000000
-	KB             = 1000
-	TimeZone       = "Asia/Taipei"
-	TwseDateFormat = "20060102"
-	TpexDateFormat = "2006/01/02"
+	TB                       = 1000000000000
+	GB                       = 1000000000
+	MB                       = 1000000
+	KB                       = 1000
+	TimeZone                 = "Asia/Taipei"
+	TwseDateFormat           = "20060102"
+	TpexDateFormat           = "2006/01/02"
+	StakeConcentrationFormat = "2006-01-02"
 )
 
 func IsInteger(v string) bool {
