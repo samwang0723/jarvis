@@ -19,6 +19,7 @@ import (
 	"samwang0723/jarvis/concurrent"
 	"samwang0723/jarvis/crawler"
 	"samwang0723/jarvis/crawler/icrawler"
+	"samwang0723/jarvis/crawler/proxy"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/helper"
@@ -201,7 +202,7 @@ func (job *downloadJob) Do() error {
 			Capacity: 17,
 			Type:     job.origin,
 		}
-		c = crawler.New(true)
+		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
 		c.SetURL(icrawler.TwseDailyClose, job.date, icrawler.StockOnly)
 	case parser.TpexDailyClose:
 		config = parser.Config{
@@ -209,28 +210,28 @@ func (job *downloadJob) Do() error {
 			Capacity: 17,
 			Type:     job.origin,
 		}
-		c = crawler.New(true)
+		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
 		c.SetURL(icrawler.TpexDailyClose, job.date)
 	case parser.TwseStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
-		c = crawler.New(false)
+		c = crawler.New(nil)
 		c.SetURL(icrawler.TWSEStocks, "")
 	case parser.TpexStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
-		c = crawler.New(false)
+		c = crawler.New(nil)
 		c.SetURL(icrawler.TPEXStocks, "")
 	case parser.StakeConcentration:
 		config = parser.Config{
 			ParseDay: &job.date,
 			Type:     job.origin,
 		}
-		c = crawler.New(true)
+		c = crawler.New(&proxy.Proxy{Type: proxy.Concentration})
 		c.SetURL(icrawler.StakeConcentration, job.date, job.stockId)
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)

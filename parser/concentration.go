@@ -42,6 +42,9 @@ func (p *parserImpl) parseConcentration(config Config, in io.Reader) error {
 	// parse the header of stockID
 	if title, ok := getHtmlTitle(doc); ok {
 		t := strings.Split(title, "-")
+		if len(t) <= 1 {
+			return fmt.Errorf("failed to parse title: %+v", t)
+		}
 		concentration = &entity.StakeConcentration{
 			Date:    *config.ParseDay,
 			StockID: strings.TrimSpace(t[1]),
