@@ -14,11 +14,25 @@
 package proxy
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
-func ProxyClient() *http.Client {
+const (
+	DailyClose    = "DAILYCLOSE_PROXY"
+	Concentration = "CONCENTRATION_PROXY"
+)
+
+type Proxy struct {
+	Type          string
+	RequireClient bool
+}
+
+func (p *Proxy) Client() *http.Client {
 	proxyURL, _ := url.Parse("http://109.127.82.34:8080")
 	return &http.Client{
 		Transport: &http.Transport{
@@ -27,6 +41,7 @@ func ProxyClient() *http.Client {
 	}
 }
 
-func ProxyURI() string {
-	return "https://api.proxycrawl.com/?token=Lq9LsbxJibce1s2A9sICnA"
+func (p *Proxy) URI() string {
+	token := os.Getenv(p.Type)
+	return fmt.Sprintf("https://api.proxycrawl.com/?token=%s", token)
 }

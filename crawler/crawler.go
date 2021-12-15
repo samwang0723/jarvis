@@ -35,12 +35,12 @@ import (
 )
 
 type crawlerImpl struct {
-	url      string
-	client   *http.Client
-	useProxy bool
+	url    string
+	client *http.Client
+	proxy  *proxy.Proxy
 }
 
-func New(useProxy bool) icrawler.ICrawler {
+func New(p *proxy.Proxy) icrawler.ICrawler {
 	res := &crawlerImpl{
 		url: "",
 		client: &http.Client{
@@ -49,7 +49,7 @@ func New(useProxy bool) icrawler.ICrawler {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
-		useProxy: useProxy,
+		proxy: p,
 	}
 	return res
 }
@@ -72,8 +72,8 @@ func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
 
 func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 	uri := c.url
-	if c.useProxy {
-		uri = fmt.Sprintf("%s&url=%s", proxy.ProxyURI(), url.QueryEscape(c.url))
+	if c.proxy != nil {
+		uri = fmt.Sprintf("%s&url=%s", c.proxy.URI(), url.QueryEscape(c.url))
 	}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -81,6 +81,8 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 	}
 	req.Header = http.Header{
 		"Content-Type": []string{"text/csv;charset=ms950"},
+		// It is important to close the connection otherwise fd count will overhead
+		"Connection": []string{"close"},
 	}
 	req = req.WithContext(ctx)
 	log.Debugf("download started: %s", uri)
