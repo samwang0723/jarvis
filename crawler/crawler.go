@@ -102,7 +102,7 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 		return nil, fmt.Errorf("fetch unable to read body: %v, url: %s", err, c.url)
 	}
 
-	log.Debugf("download completed (%s), URL: %s", helper.ReadableSize(len(f), 2), c.url)
+	log.Debugf("download completed (%s), URL: %s", helper.GetReadableSize(len(f), 2), c.url)
 	raw := bytes.NewBuffer(f)
 	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
 

@@ -38,6 +38,14 @@ func IsInteger(v string) bool {
 	return false
 }
 
+func ToInt64(v string) int64 {
+	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+		return i
+	}
+
+	return 0
+}
+
 func ToUint64(v string) uint64 {
 	if i, err := strconv.ParseUint(v, 10, 64); err == nil {
 		return i
@@ -53,26 +61,69 @@ func ToFloat32(v string) float32 {
 	return 0
 }
 
-func ConvertDateStr(year int, month int, day int, format string) string {
+func FormalizeValidTimeWithLocation(input time.Time, offset ...int) *time.Time {
 	l, _ := time.LoadLocation(TimeZone)
-	t := time.Now().In(l)
-	t = t.AddDate(year, month, day)
+	t := input.In(l)
+	if len(offset) > 0 {
+		t = t.AddDate(0, 0, offset[0])
+	}
+
+	// only within workday will be valid
 	wkDay := t.Weekday()
 	if wkDay == time.Saturday || wkDay == time.Sunday {
+		return nil
+	}
+	return &t
+}
+
+func GetDateFromUTC(timestamp string, format string) string {
+	i, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
 		return ""
 	}
+	t := FormalizeValidTimeWithLocation(time.Unix(i, 0))
+	if t == nil {
+		return ""
+	}
+
 	// Twse format: 20190213
 	s := t.Format(format)
-	// Tpex format: 108/02/06
-	if format == TpexDateFormat {
-		res := strings.Split(s, "/")
-		year, _ := strconv.Atoi(res[0])
-		s = fmt.Sprintf("%d/%s/%s", year-1911, res[1], res[2])
+
+	switch format {
+	case TpexDateFormat:
+		// Tpex format: 108/02/06
+		s = UnifiedDateFormatToTpex(s)
 	}
 	return s
 }
 
-func UnifiedDateStr(input string) string {
+func GetDateFromOffset(offset int, format string) string {
+	t := FormalizeValidTimeWithLocation(time.Now(), offset)
+	if t == nil {
+		return ""
+	}
+
+	// Twse format: 20190213
+	s := t.Format(format)
+
+	switch format {
+	case TpexDateFormat:
+		// Tpex format: 108/02/06
+		s = UnifiedDateFormatToTpex(s)
+	}
+	return s
+}
+
+func UnifiedDateFormatToTpex(input string) string {
+	if strings.Contains(input, "/") {
+		res := strings.Split(input, "/")
+		year, _ := strconv.Atoi(res[0])
+		return fmt.Sprintf("%d/%s/%s", year-1911, res[1], res[2])
+	}
+	return input
+}
+
+func UnifiedDateFormatToTwse(input string) string {
 	if strings.Contains(input, "/") {
 		i := strings.Split(input, "/")
 		year, _ := strconv.Atoi(i[0])
@@ -82,21 +133,7 @@ func UnifiedDateStr(input string) string {
 	return input
 }
 
-func DeserializeTime(date string, format string) (*time.Time, error) {
-	d, err := time.Parse(format, date)
-	if err != nil {
-		return nil, err
-	}
-	l, _ := time.LoadLocation(TimeZone)
-	d = d.In(l)
-	return &d, nil
-}
-
-func ToDateStr(date time.Time, format string) string {
-	return date.Format(format)
-}
-
-func ReadableSize(length int, decimals int) (out string) {
+func GetReadableSize(length int, decimals int) (out string) {
 	var unit string
 	var i int
 	var remainder int

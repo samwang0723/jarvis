@@ -34,6 +34,25 @@ type ListDailyCloseResponse struct {
 	Entries    []*entity.DailyClose `json:"Entries"`
 }
 
+type ListThreePrimarySearchParams struct {
+	StockID string  `json:"StockID,omitempty"`
+	Start   string  `json:"Start"`
+	End     *string `json:"End,omitempty"`
+}
+
+type ListThreePrimaryRequest struct {
+	Offset       int                           `json:"Offset"`
+	Limit        int                           `json:"Limit"`
+	SearchParams *ListThreePrimarySearchParams `json:"SearchParams"`
+}
+
+type ListThreePrimaryResponse struct {
+	Offset     int                    `json:"Offset"`
+	Limit      int                    `json:"Limit"`
+	TotalCount int                    `json:"TotalCount"`
+	Entries    []*entity.ThreePrimary `json:"Entries"`
+}
+
 type ListStockSearchParams struct {
 	StockIDs *[]string `json:"StockIDs,omitempty"`
 	Country  string    `json:"Country"`
@@ -53,8 +72,9 @@ type ListStockResponse struct {
 }
 
 type DownloadRequest struct {
-	RewindLimit int `json:"RewindLimit"`
-	RateLimit   int `json:"RateLimit"`
+	UTCTimestamp string `json:"UTCTimestamp"`
+	RewindLimit  int    `json:"RewindLimit"`
+	RateLimit    int    `json:"RateLimit"`
 }
 
 type CreateStakeConcentrationRequest struct {
