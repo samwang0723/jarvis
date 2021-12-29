@@ -33,6 +33,8 @@ type IService interface {
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
+	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
+	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
 }
 
 type serviceImpl struct {

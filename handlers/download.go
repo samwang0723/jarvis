@@ -96,10 +96,12 @@ func (h *handlerImpl) StockListDownload(ctx context.Context) {
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	dailyCloseChan := make(chan *[]interface{})
 	stakeConcentrationChan := make(chan *[]interface{})
+	threePrimaryChan := make(chan *[]interface{})
 
-	go h.generateJob(ctx, req.RewindLimit*-1, parser.TwseDailyClose, req.RateLimit, dailyCloseChan)
-	go h.generateJob(ctx, req.RewindLimit*-1, parser.TpexDailyClose, req.RateLimit, dailyCloseChan)
-	go h.generateJob(ctx, req.RewindLimit*-1, parser.StakeConcentration, req.RateLimit, stakeConcentrationChan)
+	//go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
+	//go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
+	go h.generateJob(ctx, parser.TwseThreePrimary, req, threePrimaryChan)
+	//go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
 
 	go func() {
 		for {
@@ -115,6 +117,10 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 			case objs, ok := <-dailyCloseChan:
 				if ok {
 					h.dataService.BatchUpsertDailyClose(ctx, objs)
+				}
+			case objs, ok := <-threePrimaryChan:
+				if ok {
+					h.dataService.BatchUpsertThreePrimary(ctx, objs)
 				}
 			case objs, ok := <-stakeConcentrationChan:
 				if ok && len(*objs) > 0 {
@@ -134,16 +140,17 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 	}()
 }
 
-func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.Source, rateLimit int, respChan chan *[]interface{}) {
-	for i := start; i <= 0; i++ {
+func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req *dto.DownloadRequest, respChan chan *[]interface{}) {
+	for i := req.RewindLimit * -1; i <= 0; i++ {
 		var date string
 		switch origin {
 		case parser.TwseDailyClose:
-			date = helper.ConvertDateStr(0, 0, i, helper.TwseDateFormat)
+		case parser.TwseThreePrimary:
+			date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
 		case parser.TpexDailyClose:
-			date = helper.ConvertDateStr(0, 0, i, helper.TpexDateFormat)
+			date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
 		case parser.StakeConcentration:
-			date = helper.ConvertDateStr(0, 0, i, helper.StakeConcentrationFormat)
+			date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)
 		}
 
 		if len(date) > 0 {
@@ -159,7 +166,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.
 						date:      date,
 						stockId:   id,
 						respChan:  respChan,
-						rateLimit: rateLimit,
+						rateLimit: req.RateLimit,
 						origin:    origin,
 					}
 
@@ -175,7 +182,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, start int, origin parser.
 					ctx:       ctx,
 					date:      date,
 					respChan:  respChan,
-					rateLimit: rateLimit,
+					rateLimit: req.RateLimit,
 					origin:    origin,
 				}
 				select {
@@ -212,6 +219,14 @@ func (job *downloadJob) Do() error {
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
 		c.SetURL(icrawler.TpexDailyClose, job.date)
+	case parser.TwseThreePrimary:
+		config = parser.Config{
+			ParseDay: &job.date,
+			Capacity: 19,
+			Type:     job.origin,
+		}
+		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
+		c.SetURL(icrawler.TwseThreePrimary, job.date, icrawler.StockOnly)
 	case parser.TwseStockList:
 		config = parser.Config{
 			Capacity: 6,

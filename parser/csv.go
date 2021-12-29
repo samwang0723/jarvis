@@ -36,7 +36,7 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 	reader.FieldsPerRecord = -1
 
 	//override to standarize date string (20211123)
-	date := helper.UnifiedDateStr(*config.ParseDay)
+	date := helper.UnifiedDateFormatToTwse(*config.ParseDay)
 
 	for {
 		record, err := reader.Read()
@@ -54,6 +54,8 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 				*p.result = append(*p.result, twseToEntity(date, record))
 				updatedLen++
 			case TwseThreePrimary:
+				*p.result = append(*p.result, twseThreePrimaryToEntity(date, record))
+				updatedLen++
 			case TpexDailyClose:
 				*p.result = append(*p.result, tpexToEntity(date, record))
 				updatedLen++
@@ -65,6 +67,18 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 	}
 
 	return nil
+}
+
+func twseThreePrimaryToEntity(day string, data []string) *entity.ThreePrimary {
+	threePrimary := &entity.ThreePrimary{
+		StockID:            data[0],
+		Date:               day,
+		ForeignTradeShares: helper.ToInt64(strings.Replace(data[4], ",", "", -1)),
+		TrustTradeShares:   helper.ToInt64(strings.Replace(data[10], ",", "", -1)),
+		DealerTradeShares:  helper.ToInt64(strings.Replace(data[14], ",", "", -1)),
+		HedgingTradeShares: helper.ToInt64(strings.Replace(data[17], ",", "", -1)),
+	}
+	return threePrimary
 }
 
 func twseToEntity(day string, data []string) *entity.DailyClose {

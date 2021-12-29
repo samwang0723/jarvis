@@ -21,7 +21,7 @@ import (
 type ListDailyCloseSearchParams struct {
 	StockIDs *[]string
 	Start    string
-	End      *string
+	End      *string // End = nil means it's querying to up-to-date data
 }
 
 type IDailyCloseDAL interface {

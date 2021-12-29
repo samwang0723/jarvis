@@ -34,6 +34,17 @@ func ListDailyCloseSearchParamsDTOToDAL(obj *dto.ListDailyCloseSearchParams) *id
 	return res
 }
 
+func ListThreePrimarySearchParamsDTOToDAL(obj *dto.ListThreePrimarySearchParams) *idal.ListThreePrimarySearchParams {
+	res := &idal.ListThreePrimarySearchParams{
+		StockID: obj.StockID,
+		Start:   obj.Start,
+	}
+	if obj.End != nil {
+		res.End = obj.End
+	}
+	return res
+}
+
 func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListStockSearchParams {
 	res := &idal.ListStockSearchParams{
 		Country: obj.Country,
