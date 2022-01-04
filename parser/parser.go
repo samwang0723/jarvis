@@ -26,6 +26,7 @@ const (
 	TwseDailyClose Source = iota
 	TwseThreePrimary
 	TpexDailyClose
+	TpexThreePrimary
 	TwseStockList
 	TpexStockList
 	StakeConcentration
@@ -61,7 +62,7 @@ func (p *parserImpl) Parse(config Config, in io.Reader) error {
 	switch config.Type {
 	case TwseStockList, TpexStockList:
 		return p.parseHtml(config, in)
-	case TwseDailyClose, TpexDailyClose, TwseThreePrimary:
+	case TwseDailyClose, TpexDailyClose, TwseThreePrimary, TpexThreePrimary:
 		return p.parseCsv(config, in)
 	case StakeConcentration:
 		return p.parseConcentration(config, in)

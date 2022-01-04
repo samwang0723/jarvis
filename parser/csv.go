@@ -59,6 +59,9 @@ func (p *parserImpl) parseCsv(config Config, in io.Reader) error {
 			case TpexDailyClose:
 				*p.result = append(*p.result, tpexToEntity(date, record))
 				updatedLen++
+			case TpexThreePrimary:
+				*p.result = append(*p.result, tpexThreePrimaryToEntity(date, record))
+				updatedLen++
 			}
 		}
 	}
@@ -95,6 +98,18 @@ func twseToEntity(day string, data []string) *entity.DailyClose {
 		PriceDiff:    helper.ToFloat32(fmt.Sprintf("%s%s", data[9], data[10])),
 	}
 	return dailyClose
+}
+
+func tpexThreePrimaryToEntity(day string, data []string) *entity.ThreePrimary {
+	threePrimary := &entity.ThreePrimary{
+		StockID:            data[0],
+		Date:               day,
+		ForeignTradeShares: helper.ToInt64(strings.Replace(data[10], ",", "", -1)),
+		TrustTradeShares:   helper.ToInt64(strings.Replace(data[13], ",", "", -1)),
+		DealerTradeShares:  helper.ToInt64(strings.Replace(data[16], ",", "", -1)),
+		HedgingTradeShares: helper.ToInt64(strings.Replace(data[19], ",", "", -1)),
+	}
+	return threePrimary
 }
 
 func tpexToEntity(day string, data []string) *entity.DailyClose {
