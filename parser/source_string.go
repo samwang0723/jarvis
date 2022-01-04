@@ -11,14 +11,15 @@ func _() {
 	_ = x[TwseDailyClose-0]
 	_ = x[TwseThreePrimary-1]
 	_ = x[TpexDailyClose-2]
-	_ = x[TwseStockList-3]
-	_ = x[TpexStockList-4]
-	_ = x[StakeConcentration-5]
+	_ = x[TpexThreePrimary-3]
+	_ = x[TwseStockList-4]
+	_ = x[TpexStockList-5]
+	_ = x[StakeConcentration-6]
 }
 
-const _Source_name = "TwseDailyCloseTwseThreePrimaryTpexDailyCloseTwseStockListTpexStockListStakeConcentration"
+const _Source_name = "TwseDailyCloseTwseThreePrimaryTpexDailyCloseTpexThreePrimaryTwseStockListTpexStockListStakeConcentration"
 
-var _Source_index = [...]uint8{0, 14, 30, 44, 57, 70, 88}
+var _Source_index = [...]uint8{0, 14, 30, 44, 60, 73, 86, 104}
 
 func (i Source) String() string {
 	if i < 0 || i >= Source(len(_Source_index)-1) {

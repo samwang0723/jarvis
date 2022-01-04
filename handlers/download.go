@@ -98,10 +98,11 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 	stakeConcentrationChan := make(chan *[]interface{})
 	threePrimaryChan := make(chan *[]interface{})
 
-	//go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
-	//go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
+	go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
+	go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
 	go h.generateJob(ctx, parser.TwseThreePrimary, req, threePrimaryChan)
-	//go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
+	go h.generateJob(ctx, parser.TpexThreePrimary, req, threePrimaryChan)
+	go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
 
 	go func() {
 		for {
@@ -148,6 +149,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 		case parser.TwseThreePrimary:
 			date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
 		case parser.TpexDailyClose:
+		case parser.TpexThreePrimary:
 			date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
 		case parser.StakeConcentration:
 			date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)
@@ -227,6 +229,14 @@ func (job *downloadJob) Do() error {
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
 		c.SetURL(icrawler.TwseThreePrimary, job.date, icrawler.StockOnly)
+	case parser.TpexThreePrimary:
+		config = parser.Config{
+			ParseDay: &job.date,
+			Capacity: 24,
+			Type:     job.origin,
+		}
+		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
+		c.SetURL(icrawler.TpexThreePrimary, job.date)
 	case parser.TwseStockList:
 		config = parser.Config{
 			Capacity: 6,

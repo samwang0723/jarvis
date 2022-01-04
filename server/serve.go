@@ -117,10 +117,10 @@ func (s *server) Start(ctx context.Context) error {
 
 	//TODO: replace with actual server
 	err := s.Handler().CronDownload(ctx)
-	//	s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-	//		RewindLimit: 0,
-	//		RateLimit:   3000,
-	//	})
+	//s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
+	//	RewindLimit: 0,
+	//	RateLimit:   3000,
+	//})
 	//s.Handler().StockListDownload(ctx)
 
 	return err

@@ -25,6 +25,7 @@ const (
 	TwseThreePrimary   = "http://www.tse.com.tw/fund/T86?response=csv&date=%s&selectType=%s"
 	OperatingDays      = "https://www.twse.com.tw/holidaySchedule/holidaySchedule?response=csv&queryYear=%d"
 	TpexDailyClose     = "http://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_download.php?l=zh-tw&d=%s&s=0,asc,0"
+	TpexThreePrimary   = "https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=csv&se=EW&t=D&d=%s"
 	TWSEStocks         = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=2"
 	TPEXStocks         = "https://isin.twse.com.tw/isin/C_public.jsp?strMode=4"
 	StakeConcentration = "https://stockchannelnew.sinotrade.com.tw/z/zc/zco/zco.djhtm?a=%s&e=%s&f=%s"
