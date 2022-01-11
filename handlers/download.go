@@ -145,11 +145,9 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 	for i := req.RewindLimit * -1; i <= 0; i++ {
 		var date string
 		switch origin {
-		case parser.TwseDailyClose:
-		case parser.TwseThreePrimary:
+		case parser.TwseDailyClose, parser.TwseThreePrimary:
 			date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
-		case parser.TpexDailyClose:
-		case parser.TpexThreePrimary:
+		case parser.TpexDailyClose, parser.TpexThreePrimary:
 			date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
 		case parser.StakeConcentration:
 			date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)

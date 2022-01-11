@@ -102,16 +102,8 @@ func GetDateFromOffset(offset int, format string) string {
 	if t == nil {
 		return ""
 	}
-
-	// Twse format: 20190213
-	s := t.Format(format)
-
-	switch format {
-	case TpexDateFormat:
-		// Tpex format: 108/02/06
-		s = UnifiedDateFormatToTpex(s)
-	}
-	return s
+	timestamp := strconv.FormatInt(t.Unix(), 10)
+	return GetDateFromUTC(timestamp, format)
 }
 
 func UnifiedDateFormatToTpex(input string) string {
