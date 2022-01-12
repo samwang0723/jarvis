@@ -33,7 +33,7 @@ func Test_IsInteger(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "non-integer string",
+		name: "non-integer string",
 			val:  "ABCD",
 			want: false,
 		},

@@ -21,6 +21,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
+
+	logtest "github.com/sirupsen/logrus/hooks/test"
 )
 
 var (
@@ -68,6 +70,14 @@ func Logger(cfg *config.Config) ILogger {
 		initialize(slog)
 		initSentry()
 	}
+	return instance
+}
+
+func NullLogger() ILogger {
+	l, _ := logtest.NewNullLogger()
+	initialize(&structuredLogger{
+		logger: l,
+	})
 	return instance
 }
 
