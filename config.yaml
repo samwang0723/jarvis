@@ -6,9 +6,9 @@ server:
 
 # Database credentials
 database:
-  user: "jarvis"
-  password: "password"
-  host: "tcp(localhost:3306)"
+  user: "admin"
+  password: "iori2008"
+  host: "tcp(jarvis-database-instance-1.cjemwmweprl0.ap-southeast-1.rds.amazonaws.com:3306)"
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20

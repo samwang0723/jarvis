@@ -25,9 +25,16 @@ import (
 	"samwang0723/jarvis/helper"
 	log "samwang0723/jarvis/logger"
 	"samwang0723/jarvis/parser"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
+)
+
+const (
+	DailyClose = iota
+	ThreePrimary
+	Concentration
 )
 
 // download job to run in workerpool
@@ -40,11 +47,12 @@ type downloadJob struct {
 	origin    parser.Source
 }
 
-func (h *handlerImpl) CronDownload(ctx context.Context) error {
-	return h.dataService.AddJob(ctx, "00 18 * * 1-5", func() {
+func (h *handlerImpl) CronDownload(ctx context.Context, schedule string, downloadTypes []int) error {
+	return h.dataService.AddJob(ctx, schedule, func() {
 		h.BatchingDownload(ctx, &dto.DownloadRequest{
 			RewindLimit: 0,
 			RateLimit:   3000,
+			Types:       downloadTypes,
 		})
 	})
 }
@@ -98,11 +106,18 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 	stakeConcentrationChan := make(chan *[]interface{})
 	threePrimaryChan := make(chan *[]interface{})
 
-	go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
-	go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
-	go h.generateJob(ctx, parser.TwseThreePrimary, req, threePrimaryChan)
-	go h.generateJob(ctx, parser.TpexThreePrimary, req, threePrimaryChan)
-	go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
+	for _, t := range req.Types {
+		switch t {
+		case DailyClose:
+			go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
+			go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
+		case ThreePrimary:
+			go h.generateJob(ctx, parser.TwseThreePrimary, req, threePrimaryChan)
+			go h.generateJob(ctx, parser.TpexThreePrimary, req, threePrimaryChan)
+		case Concentration:
+			go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
+		}
+	}
 
 	go func() {
 		for {
@@ -155,7 +170,8 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 
 		if len(date) > 0 {
 			if origin == parser.StakeConcentration {
-				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, date)
+				// align the date format to be 20220107, but remains the query date as 2022-01-07
+				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
 				if err != nil {
 					log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
 					continue
