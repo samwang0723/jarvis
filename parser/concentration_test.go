@@ -15,6 +15,7 @@
 package parser
 
 import (
+	"samwang0723/jarvis/entity"
 	"strings"
 	"testing"
 )
@@ -98,17 +99,21 @@ func Test_parseConcentration(t *testing.T) {
 	tests := []struct {
 		name    string
 		content string
-		want    int
+		want    bool
+		shares  []uint64
+		price   []float32
 	}{
 		{
 			name:    "normal html",
 			content: correctDoc,
-			want:    1,
+			want:    true,
+			shares:  []uint64{12449, 40221},
+			price:   []float32{63.45, 63.53},
 		},
 		{
 			name:    "wrong html",
 			content: wrongDoc,
-			want:    0,
+			want:    false,
 		},
 	}
 
@@ -129,8 +134,17 @@ func Test_parseConcentration(t *testing.T) {
 			}
 			res.parseConcentration(conf, in)
 
-			if got := len(*res.result); got != tt.want {
-				t.Errorf("len(parser.result) = %v, want %v", got, tt.want)
+			respLen := len(*res.result)
+			if respLen > 0 != tt.want {
+				t.Errorf("len(parser.result) = %v, want %v", respLen, tt.want)
+			} else if respLen > 0 {
+				c := (*res.result)[0].(*entity.StakeConcentration)
+				if c.SumBuyShares != tt.shares[0] ||
+					c.SumSellShares != tt.shares[1] ||
+					c.AvgBuyPrice != tt.price[0] ||
+					c.AvgSellPrice != tt.price[1] {
+					t.Errorf("response details = %+v is not fit the expectation", c)
+				}
 			}
 		})
 	}

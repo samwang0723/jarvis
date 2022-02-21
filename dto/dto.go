@@ -75,6 +75,7 @@ type DownloadRequest struct {
 	UTCTimestamp string `json:"UTCTimestamp"`
 	RewindLimit  int    `json:"RewindLimit"`
 	RateLimit    int    `json:"RateLimit"`
+	Types        []int  `json:"Types"`
 }
 
 type CreateStakeConcentrationRequest struct {

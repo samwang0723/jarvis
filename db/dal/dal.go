@@ -23,6 +23,7 @@ type dalImpl struct {
 	db *gorm.DB
 }
 
+// functional options design pattern
 func New(opts ...Option) idal.IDAL {
 	impl := &dalImpl{}
 	for _, opt := range opts {

@@ -17,10 +17,12 @@ package dal
 import (
 	"context"
 	"samwang0723/jarvis/entity"
+
+	"gorm.io/gorm/clause"
 )
 
 func (i *dalImpl) CreateStakeConcentration(ctx context.Context, obj *entity.StakeConcentration) error {
-	err := i.db.Create(obj).Error
+	err := i.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(obj).Error
 	return err
 }
 
@@ -34,11 +36,10 @@ func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID st
 
 func (i *dalImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
 	res := []string{}
-	if err := i.db.Raw(`select stock_id from (
-		select stock_id from stocks 
-		union all 
-		select stock_id from stake_concentration where exchange_date=?
-	) tbl group by stock_id having count(*) = 1;`, date).Scan(&res).Error; err != nil {
+	// using reference from daily_closes to keep data alignment
+	if err := i.db.Raw(`select a.stock_id from daily_closes as a 
+		left join stake_concentration as b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date) 
+		where b.stock_id is null and a.exchange_date = ?`, date).Scan(&res).Error; err != nil {
 		return res, err
 	}
 	return res, nil
