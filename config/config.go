@@ -34,6 +34,15 @@ type Config struct {
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"database"`
+	Replica struct {
+		User         string `yaml:"user"`
+		Password     string `yaml:"password"`
+		Host         string `yaml:"host"`
+		Database     string `yaml:"database"`
+		MaxLifetime  int    `yaml:"maxLifetime"`
+		MaxIdleConns int    `yaml:"maxIdleConns"`
+		MaxOpenConns int    `yaml:"maxOpenConns"`
+	} `yaml:"replica"`
 	Log struct {
 		Level string `yaml:"level"`
 	} `yaml:"log"`

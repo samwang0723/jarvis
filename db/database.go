@@ -22,16 +22,23 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/dbresolver"
 )
 
 func GormFactory(cfg *config.Config) *gorm.DB {
-	dsn := generateDSN(cfg)
-	session, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	dsns := generateDSN(cfg)
+	session, err := gorm.Open(mysql.Open(dsns["master"]), &gorm.Config{
 		Logger: log.Logger(),
 	})
 	if err != nil {
 		panic("connect database error: " + err.Error())
 	}
+	dbResolverCfg := dbresolver.Config{
+		Sources:  []gorm.Dialector{mysql.Open(dsns["master"])},
+		Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
+	}
+	readWritePlugin := dbresolver.Register(dbResolverCfg)
+	session.Use(readWritePlugin)
 
 	sqlDB, err := session.DB()
 	if err != nil {
@@ -45,13 +52,24 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 	return session
 }
 
-func generateDSN(cfg *config.Config) string {
+func generateDSN(cfg *config.Config) map[string]string {
+	resp := make(map[string]string, 2)
 	database := cfg.Database
-	dsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
+	masterDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
 		database.User,
 		database.Password,
 		database.Host,
 		database.Database,
 	)
-	return dsn
+	resp["master"] = masterDsn
+	replica := cfg.Replica
+	replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
+		replica.User,
+		replica.Password,
+		replica.Host,
+		replica.Database,
+	)
+	resp["replica"] = replicaDsn
+
+	return resp
 }
