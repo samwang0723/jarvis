@@ -62,7 +62,7 @@ func (d *Dispatcher) dispatch(ctx context.Context) {
 				jobChannel <- job
 			}
 		case <-ctx.Done():
-			log.Warn("dispatch: context cancelled!")
+			log.Warn("!!! dispatch: context cancelled !!!")
 			for _, w := range d.workers {
 				w.Stop()
 			}

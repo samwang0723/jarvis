@@ -28,13 +28,17 @@ type IService interface {
 	AddJob(ctx context.Context, spec string, job func()) error
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
+	HasDailyClose(ctx context.Context, date string) bool
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
+	HasStakeConcentration(ctx context.Context, date string) bool
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
+	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (map[int]float32, error)
+	BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error
 }
 
 type serviceImpl struct {

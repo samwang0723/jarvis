@@ -149,6 +149,8 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 							AvgBuyPrice:   val.AvgBuyPrice,
 							AvgSellPrice:  val.AvgSellPrice,
 						})
+						// refresh the concentration
+						h.RefreshStakeConcentration(ctx, val.StockID, val.Date)
 					}
 				}
 			}
@@ -293,7 +295,7 @@ func (job *downloadJob) Do() error {
 	select {
 	case <-time.After(time.Duration(job.rateLimit) * time.Millisecond):
 	case <-job.ctx.Done():
-		log.Warn("(downloadJob) - context cancelled!")
+		//log.Warn("(downloadJob) - context cancelled!")
 	}
 
 	return nil

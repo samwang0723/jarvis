@@ -58,7 +58,7 @@ func Logger() ILogger {
 			SourceField:               "",
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  false,
-			LogLevel:                  gormlogger.Error,
+			LogLevel:                  gormlogger.Info,
 		}
 		initialize(resp)
 	}

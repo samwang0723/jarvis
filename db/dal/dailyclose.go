@@ -35,6 +35,14 @@ func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.Dail
 	return err
 }
 
+func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
+	res := []string{}
+	if err := i.db.Raw(`select stock_id from daily_closes where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
+		return false
+	}
+	return len(res) > 0
+}
+
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int, limit int,
 	searchParams *idal.ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error) {
 	query := i.db.Model(&entity.DailyClose{})

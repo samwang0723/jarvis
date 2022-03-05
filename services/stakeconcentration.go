@@ -16,6 +16,8 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"samwang0723/jarvis/dto"
 	"samwang0723/jarvis/entity"
 	"samwang0723/jarvis/services/convert"
@@ -35,4 +37,26 @@ func (s *serviceImpl) GetStakeConcentration(ctx context.Context, req *dto.GetSta
 
 func (s *serviceImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
 	return s.dal.ListBackfillStakeConcentrationStockIDs(ctx, date)
+}
+
+func (s *serviceImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (map[int]float32, error) {
+	return s.dal.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
+}
+
+func (s *serviceImpl) BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error {
+	// Replicate the value from interface to *entity.StakeConcentration
+	stakeConcentrations := []*entity.StakeConcentration{}
+	for _, v := range *objs {
+		if val, ok := v.(*entity.StakeConcentration); ok {
+			stakeConcentrations = append(stakeConcentrations, val)
+		} else {
+			return fmt.Errorf("cannot cast interface to *dto.StakeConcentration: %v\n", reflect.TypeOf(v).Elem())
+		}
+	}
+
+	return s.dal.BatchUpdateStakeConcentration(ctx, stakeConcentrations)
+}
+
+func (s *serviceImpl) HasStakeConcentration(ctx context.Context, date string) bool {
+	return s.dal.HasStakeConcentration(ctx, date)
 }

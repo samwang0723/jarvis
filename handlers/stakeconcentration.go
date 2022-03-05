@@ -16,7 +16,9 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"samwang0723/jarvis/dto"
+	"samwang0723/jarvis/entity"
 )
 
 func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error) {
@@ -29,4 +31,33 @@ func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.Cre
 		return nil, err
 	}
 	return &dto.CreateStakeConcentrationResponse{Entry: res}, nil
+}
+
+func (h *handlerImpl) RefreshStakeConcentration(ctx context.Context, stockId string, date string) error {
+	if !h.dataService.HasStakeConcentration(ctx, date) {
+		return fmt.Errorf("not valid date for concentration")
+	}
+	concentrations := &[]interface{}{}
+	c := h.calculateConcentration(ctx, stockId, date)
+	if c == nil {
+		return fmt.Errorf("failed to calculate concentration of %s, %s", stockId, date)
+	}
+	*concentrations = append(*concentrations, c)
+	return h.dataService.BatchUpdateStakeConcentration(ctx, concentrations)
+}
+
+func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string, date string) *entity.StakeConcentration {
+	m, err := h.dataService.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
+	if err != nil || len(m) < 5 {
+		return nil
+	}
+	return &entity.StakeConcentration{
+		StockID:          stockId,
+		Date:             date,
+		Concentration_1:  m[1],
+		Concentration_5:  m[5],
+		Concentration_10: m[10],
+		Concentration_20: m[20],
+		Concentration_60: m[60],
+	}
 }

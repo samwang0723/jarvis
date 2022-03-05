@@ -26,6 +26,7 @@ type IHandler interface {
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
+	RefreshConcentration(ctx context.Context, rewindLimit int) error
 }
 
 type handlerImpl struct {

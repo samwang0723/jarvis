@@ -72,7 +72,5 @@ func (w *Worker) Start() {
 }
 
 func (w *Worker) Stop() {
-	go func() {
-		w.quit <- true
-	}()
+	w.quit <- true
 }

@@ -119,13 +119,6 @@ func (s *server) Start(ctx context.Context) error {
 	err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int{handlers.DailyClose, handlers.ThreePrimary})
 	err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int{handlers.Concentration})
 
-	//	s.Handler().BatchingDownload(ctx, &dto.DownloadRequest{
-	//		RewindLimit: 0,
-	//		RateLimit:   5000,
-	//		Types:       []int{handlers.Concentration},
-	//	})
-	//s.Handler().StockListDownload(ctx)
-
 	return err
 }
 

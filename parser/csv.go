@@ -116,9 +116,9 @@ func tpexToEntity(day string, data []string) *entity.DailyClose {
 	dailyClose := &entity.DailyClose{
 		StockID:      data[0],
 		Date:         day,
-		TradedShares: helper.ToUint64(strings.Replace(data[7], ",", "", -1)),
-		Transactions: helper.ToUint64(strings.Replace(data[9], ",", "", -1)),
-		Turnover:     helper.ToUint64(strings.Replace(data[8], ",", "", -1)),
+		TradedShares: helper.ToUint64(strings.Replace(data[8], ",", "", -1)),
+		Transactions: helper.ToUint64(strings.Replace(data[10], ",", "", -1)),
+		Turnover:     helper.ToUint64(strings.Replace(data[9], ",", "", -1)),
 		Open:         helper.ToFloat32(data[4]),
 		High:         helper.ToFloat32(data[5]),
 		Low:          helper.ToFloat32(data[6]),

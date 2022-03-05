@@ -55,7 +55,7 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 func generateDSN(cfg *config.Config) map[string]string {
 	resp := make(map[string]string, 2)
 	database := cfg.Database
-	masterDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
+	masterDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 		database.User,
 		database.Password,
 		database.Host,
@@ -63,7 +63,7 @@ func generateDSN(cfg *config.Config) map[string]string {
 	)
 	resp["master"] = masterDsn
 	replica := cfg.Replica
-	replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True",
+	replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 		replica.User,
 		replica.Password,
 		replica.Host,

@@ -49,3 +49,7 @@ func (s *serviceImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 	}
 	return objs, totalCount, nil
 }
+
+func (s *serviceImpl) HasDailyClose(ctx context.Context, date string) bool {
+	return s.dal.HasDailyClose(ctx, date)
+}

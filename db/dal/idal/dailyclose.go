@@ -29,4 +29,5 @@ type IDailyCloseDAL interface {
 	BatchUpsertDailyClose(ctx context.Context, objs []*entity.DailyClose) error
 	ListDailyClose(ctx context.Context, offset int, limit int,
 		searchParams *ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error)
+	HasDailyClose(ctx context.Context, date string) bool
 }
