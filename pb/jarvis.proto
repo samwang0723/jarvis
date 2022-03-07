@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package jarvis;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./";
+
+service Jarvis {
+    rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {}
+}
+
+message ListDailyCloseRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListDailyCloseSearchParams searchParams = 3;
+}
+
+message ListDailyCloseResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int32 totalCount = 3;
+    repeated DailyClose entries = 4;
+}
+
+message ListDailyCloseSearchParams {
+    repeated string stockIDs = 1;
+    string start = 2;
+    string end = 3;
+}
+
+message DailyClose {
+    uint64 dailyCloseID = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    uint64 tradeShares = 7;
+    uint64 transactions = 8;
+    uint64 turnover = 9;
+    float open = 10;
+    float close = 11;
+    float high = 12;
+    float low = 13;
+    float diff = 14;
+}
+

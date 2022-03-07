@@ -16,81 +16,81 @@ package dto
 import "samwang0723/jarvis/entity"
 
 type ListDailyCloseSearchParams struct {
-	StockIDs *[]string `json:"StockIDs,omitempty"`
-	Start    string    `json:"Start"`
-	End      *string   `json:"End,omitempty"`
+	StockIDs *[]string `json:"stockIDs,omitempty"`
+	Start    string    `json:"start"`
+	End      *string   `json:"end,omitempty"`
 }
 
 type ListDailyCloseRequest struct {
-	Offset       int                         `json:"Offset"`
-	Limit        int                         `json:"Limit"`
-	SearchParams *ListDailyCloseSearchParams `json:"SearchParams"`
+	Offset       int                         `json:"offset"`
+	Limit        int                         `json:"limit"`
+	SearchParams *ListDailyCloseSearchParams `json:"searchParams"`
 }
 
 type ListDailyCloseResponse struct {
-	Offset     int                  `json:"Offset"`
-	Limit      int                  `json:"Limit"`
-	TotalCount int                  `json:"TotalCount"`
-	Entries    []*entity.DailyClose `json:"Entries"`
+	Offset     int                  `json:"offset"`
+	Limit      int                  `json:"limit"`
+	TotalCount int                  `json:"totalCount"`
+	Entries    []*entity.DailyClose `json:"entries"`
 }
 
 type ListThreePrimarySearchParams struct {
-	StockID string  `json:"StockID,omitempty"`
-	Start   string  `json:"Start"`
-	End     *string `json:"End,omitempty"`
+	StockID string  `json:"stockID,omitempty"`
+	Start   string  `json:"start"`
+	End     *string `json:"end,omitempty"`
 }
 
 type ListThreePrimaryRequest struct {
-	Offset       int                           `json:"Offset"`
-	Limit        int                           `json:"Limit"`
-	SearchParams *ListThreePrimarySearchParams `json:"SearchParams"`
+	Offset       int                           `json:"offset"`
+	Limit        int                           `json:"limit"`
+	SearchParams *ListThreePrimarySearchParams `json:"searchParams"`
 }
 
 type ListThreePrimaryResponse struct {
-	Offset     int                    `json:"Offset"`
-	Limit      int                    `json:"Limit"`
-	TotalCount int                    `json:"TotalCount"`
-	Entries    []*entity.ThreePrimary `json:"Entries"`
+	Offset     int                    `json:"offset"`
+	Limit      int                    `json:"limit"`
+	TotalCount int                    `json:"yotalCount"`
+	Entries    []*entity.ThreePrimary `json:"entries"`
 }
 
 type ListStockSearchParams struct {
-	StockIDs *[]string `json:"StockIDs,omitempty"`
-	Country  string    `json:"Country"`
+	StockIDs *[]string `json:"stockIDs,omitempty"`
+	Country  string    `json:"country"`
 }
 
 type ListStockRequest struct {
-	Offset       int                    `json:"Offset"`
-	Limit        int                    `json:"Limit"`
-	SearchParams *ListStockSearchParams `json:"SearchParams"`
+	Offset       int                    `json:"offset"`
+	Limit        int                    `json:"limit"`
+	SearchParams *ListStockSearchParams `json:"searchParams"`
 }
 
 type ListStockResponse struct {
-	Offset     int             `json:"Offset"`
-	Limit      int             `json:"Limit"`
-	TotalCount int             `json:"TotalCount"`
-	Entries    []*entity.Stock `json:"Entries"`
+	Offset     int             `json:"offset"`
+	Limit      int             `json:"limit"`
+	TotalCount int             `json:"totalCount"`
+	Entries    []*entity.Stock `json:"entries"`
 }
 
 type DownloadRequest struct {
-	UTCTimestamp string `json:"UTCTimestamp"`
-	RewindLimit  int    `json:"RewindLimit"`
-	RateLimit    int    `json:"RateLimit"`
-	Types        []int  `json:"Types"`
+	UTCTimestamp string `json:"utcTimestamp"`
+	RewindLimit  int    `json:"rewindLimit"`
+	RateLimit    int    `json:"rateLimit"`
+	Types        []int  `json:"types"`
 }
 
 type CreateStakeConcentrationRequest struct {
-	StockID       string  `json:"StockID"`
-	Date          string  `json:"Date"`
-	SumBuyShares  uint64  `json:"SumBuyShares"`
-	SumSellShares uint64  `json:"SumSellShares"`
-	AvgBuyPrice   float32 `json:"AvgBuyPrice"`
-	AvgSellPrice  float32 `json:"AvgSellPrice"`
+	StockID       string  `json:"stockID"`
+	Date          string  `json:"date"`
+	SumBuyShares  uint64  `json:"sumBuyShares"`
+	SumSellShares uint64  `json:"sumSellShares"`
+	AvgBuyPrice   float32 `json:"avgBuyPrice"`
+	AvgSellPrice  float32 `json:"avgSellPrice"`
 }
 
 type CreateStakeConcentrationResponse struct {
-	Entry *entity.StakeConcentration `json:"Entry"`
+	Entry *entity.StakeConcentration `json:"entry"`
 }
 
 type GetStakeConcentrationRequest struct {
-	StockID string `json:"StockID"`
+	StockID string `json:"stockID"`
 }
