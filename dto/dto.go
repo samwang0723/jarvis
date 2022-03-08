@@ -22,15 +22,15 @@ type ListDailyCloseSearchParams struct {
 }
 
 type ListDailyCloseRequest struct {
-	Offset       int                         `json:"offset"`
-	Limit        int                         `json:"limit"`
+	Offset       int32                       `json:"offset"`
+	Limit        int32                       `json:"limit"`
 	SearchParams *ListDailyCloseSearchParams `json:"searchParams"`
 }
 
 type ListDailyCloseResponse struct {
-	Offset     int                  `json:"offset"`
-	Limit      int                  `json:"limit"`
-	TotalCount int                  `json:"totalCount"`
+	Offset     int32                `json:"offset"`
+	Limit      int32                `json:"limit"`
+	TotalCount int64                `json:"totalCount"`
 	Entries    []*entity.DailyClose `json:"entries"`
 }
 
@@ -41,15 +41,15 @@ type ListThreePrimarySearchParams struct {
 }
 
 type ListThreePrimaryRequest struct {
-	Offset       int                           `json:"offset"`
-	Limit        int                           `json:"limit"`
+	Offset       int32                         `json:"offset"`
+	Limit        int32                         `json:"limit"`
 	SearchParams *ListThreePrimarySearchParams `json:"searchParams"`
 }
 
 type ListThreePrimaryResponse struct {
-	Offset     int                    `json:"offset"`
-	Limit      int                    `json:"limit"`
-	TotalCount int                    `json:"yotalCount"`
+	Offset     int32                  `json:"offset"`
+	Limit      int32                  `json:"limit"`
+	TotalCount int64                  `json:"totalCount"`
 	Entries    []*entity.ThreePrimary `json:"entries"`
 }
 
@@ -59,23 +59,23 @@ type ListStockSearchParams struct {
 }
 
 type ListStockRequest struct {
-	Offset       int                    `json:"offset"`
-	Limit        int                    `json:"limit"`
+	Offset       int32                  `json:"offset"`
+	Limit        int32                  `json:"limit"`
 	SearchParams *ListStockSearchParams `json:"searchParams"`
 }
 
 type ListStockResponse struct {
-	Offset     int             `json:"offset"`
-	Limit      int             `json:"limit"`
-	TotalCount int             `json:"totalCount"`
+	Offset     int32           `json:"offset"`
+	Limit      int32           `json:"limit"`
+	TotalCount int64           `json:"totalCount"`
 	Entries    []*entity.Stock `json:"entries"`
 }
 
 type DownloadRequest struct {
-	UTCTimestamp string `json:"utcTimestamp"`
-	RewindLimit  int    `json:"rewindLimit"`
-	RateLimit    int    `json:"rateLimit"`
-	Types        []int  `json:"types"`
+	UTCTimestamp string  `json:"utcTimestamp"`
+	RewindLimit  int32   `json:"rewindLimit"`
+	RateLimit    int32   `json:"rateLimit"`
+	Types        []int32 `json:"types"`
 }
 
 type CreateStakeConcentrationRequest struct {

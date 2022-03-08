@@ -28,7 +28,7 @@ type IStockDAL interface {
 	CreateStock(ctx context.Context, obj *entity.Stock) error
 	UpdateStock(ctx context.Context, obj *entity.Stock) error
 	DeleteStockByID(ctx context.Context, id entity.ID) error
-	ListStock(ctx context.Context, offset int, limit int,
+	ListStock(ctx context.Context, offset int32, limit int32,
 		searchParams *ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error)
 	GetStockByStockID(ctx context.Context, stockID string) (*entity.Stock, error)
 }

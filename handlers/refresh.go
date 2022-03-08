@@ -34,7 +34,7 @@ type refreshJob struct {
 	rateLimit int
 }
 
-func (h *handlerImpl) RefreshConcentration(ctx context.Context, rewindLimit int) error {
+func (h *handlerImpl) RefreshConcentration(ctx context.Context, rewindLimit int32) error {
 	respChan := make(chan *entity.StakeConcentration)
 	stocks, err := h.ListStock(ctx, &dto.ListStockRequest{
 		Offset: 0,
@@ -89,7 +89,7 @@ func (h *handlerImpl) RefreshConcentration(ctx context.Context, rewindLimit int)
 	return nil
 }
 
-func (h *handlerImpl) generateRefreshJob(ctx context.Context, stocks []*entity.Stock, rewindLimit int, respChan chan *entity.StakeConcentration) {
+func (h *handlerImpl) generateRefreshJob(ctx context.Context, stocks []*entity.Stock, rewindLimit int32, respChan chan *entity.StakeConcentration) {
 	for i := rewindLimit * -1; i <= 0; i++ {
 		date := helper.GetDateFromOffset(i, helper.TwseDateFormat)
 		if len(date) <= 0 || !h.dataService.HasStakeConcentration(ctx, date) {

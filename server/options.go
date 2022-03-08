@@ -19,6 +19,8 @@ import (
 	"samwang0723/jarvis/config"
 	"samwang0723/jarvis/handlers"
 	structuredlog "samwang0723/jarvis/logger/structured"
+
+	"google.golang.org/grpc"
 )
 
 type Options struct {
@@ -28,6 +30,7 @@ type Options struct {
 	ProfilingEnabled bool
 	Config           *config.Config
 	Dispatcher       *concurrent.Dispatcher
+	GRPCServer       *grpc.Server
 
 	// Before funcs
 	BeforeStart []func() error
@@ -75,5 +78,11 @@ func Name(name string) Option {
 func Dispatcher(dispatcher *concurrent.Dispatcher) Option {
 	return func(o *Options) {
 		o.Dispatcher = dispatcher
+	}
+}
+
+func GRPCServer(gRPCServer *grpc.Server) Option {
+	return func(o *Options) {
+		o.GRPCServer = gRPCServer
 	}
 }

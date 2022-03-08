@@ -43,11 +43,11 @@ type downloadJob struct {
 	date      string
 	stockId   string
 	respChan  chan *[]interface{}
-	rateLimit int
+	rateLimit int32
 	origin    parser.Source
 }
 
-func (h *handlerImpl) CronDownload(ctx context.Context, schedule string, downloadTypes []int) error {
+func (h *handlerImpl) CronDownload(ctx context.Context, schedule string, downloadTypes []int32) error {
 	return h.dataService.AddJob(ctx, schedule, func() {
 		h.BatchingDownload(ctx, &dto.DownloadRequest{
 			RewindLimit: 0,

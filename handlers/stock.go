@@ -28,6 +28,6 @@ func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 		Offset:     req.Offset,
 		Limit:      req.Limit,
 		Entries:    entries,
-		TotalCount: int(totalCount),
+		TotalCount: totalCount,
 	}, nil
 }

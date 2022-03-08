@@ -53,7 +53,7 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 	return res, nil
 }
 
-func (i *dalImpl) ListStock(ctx context.Context, offset int, limit int,
+func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error) {
 	query := i.db.Model(&entity.Stock{})
 	query = buildQueryFromListStockSearchParams(query, searchParams)
@@ -62,7 +62,7 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int, limit int,
 		return nil, 0, err
 	}
 
-	err = query.Offset(offset).Limit(limit).Find(&objs).Error
+	err = query.Offset(int(offset)).Limit(int(limit)).Find(&objs).Error
 	if err != nil {
 		return nil, 0, err
 	}

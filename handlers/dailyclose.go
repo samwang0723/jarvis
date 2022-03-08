@@ -27,6 +27,6 @@ func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 		Offset:     req.Offset,
 		Limit:      req.Limit,
 		Entries:    entries,
-		TotalCount: int(totalCount),
+		TotalCount: totalCount,
 	}, nil
 }

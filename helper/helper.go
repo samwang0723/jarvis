@@ -61,11 +61,11 @@ func ToFloat32(v string) float32 {
 	return 0
 }
 
-func FormalizeValidTimeWithLocation(input time.Time, offset ...int) *time.Time {
+func FormalizeValidTimeWithLocation(input time.Time, offset ...int32) *time.Time {
 	l, _ := time.LoadLocation(TimeZone)
 	t := input.In(l)
 	if len(offset) > 0 {
-		t = t.AddDate(0, 0, offset[0])
+		t = t.AddDate(0, 0, int(offset[0]))
 	}
 
 	// only within workday will be valid
@@ -97,7 +97,7 @@ func GetDateFromUTC(timestamp string, format string) string {
 	return s
 }
 
-func GetDateFromOffset(offset int, format string) string {
+func GetDateFromOffset(offset int32, format string) string {
 	t := FormalizeValidTimeWithLocation(time.Now(), offset)
 	if t == nil {
 		return ""

@@ -43,7 +43,7 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
-func (i *dalImpl) ListDailyClose(ctx context.Context, offset int, limit int,
+func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error) {
 	query := i.db.Model(&entity.DailyClose{})
 	query = buildQueryFromListDailyCloseSearchParams(query, searchParams)
@@ -52,7 +52,7 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset int, limit int,
 		return nil, 0, err
 	}
 
-	err = query.Offset(offset).Limit(limit).Find(&objs).Error
+	err = query.Offset(int(offset)).Limit(int(limit)).Find(&objs).Error
 	if err != nil {
 		return nil, 0, err
 	}

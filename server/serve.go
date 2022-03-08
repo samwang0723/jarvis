@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"net"
 	"os"
 	"os/signal"
 	"samwang0723/jarvis/concurrent"
@@ -26,6 +27,9 @@ import (
 	"samwang0723/jarvis/handlers"
 	log "samwang0723/jarvis/logger"
 	structuredlog "samwang0723/jarvis/logger/structured"
+	pb "samwang0723/jarvis/pb"
+
+	"google.golang.org/grpc"
 
 	"samwang0723/jarvis/services"
 	"syscall"
@@ -42,6 +46,7 @@ type IServer interface {
 	Handler() handlers.IHandler
 	Config() *config.Config
 	Dispatcher() *concurrent.Dispatcher
+	GRPCServer() *grpc.Server
 	Run(context.Context) error
 	Start(context.Context) error
 	Stop() error
@@ -66,6 +71,7 @@ func Serve() {
 	)
 	// associate service with handler
 	handler := handlers.New(dataService)
+	gRPCServer := grpc.NewServer()
 
 	s := newServer(
 		Name(cfg.Server.Name),
@@ -73,6 +79,7 @@ func Serve() {
 		Logger(logger),
 		Handler(handler),
 		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
+		GRPCServer(gRPCServer),
 		BeforeStart(func() error {
 			// initialize global job queue
 			concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
@@ -115,9 +122,23 @@ func (s *server) Start(ctx context.Context) error {
 	// starting the workerpool
 	s.Dispatcher().Run(ctx)
 
-	//TODO: replace with actual server
-	err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int{handlers.DailyClose, handlers.ThreePrimary})
-	err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int{handlers.Concentration})
+	//TODO: separate cron action to other place
+	err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int32{handlers.DailyClose, handlers.ThreePrimary})
+	err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int32{handlers.Concentration})
+
+	// start gRPC server
+	lis, err := net.Listen("tcp", "localhost:8087")
+	if err != nil {
+		return err
+	}
+	log.Info("gRPC server running.")
+
+	pb.RegisterJarvisServer(s.GRPCServer(), s)
+	go func() {
+		if err = s.GRPCServer().Serve(lis); err != nil {
+			log.Fatalf("gRPC server serve failed: %s", err)
+		}
+	}()
 
 	return err
 }
@@ -132,6 +153,7 @@ func (s *server) Stop() error {
 
 	// graceful shutdown workerpool
 	s.Dispatcher().WaitGroup().Wait()
+	s.GRPCServer().GracefulStop()
 
 	<-time.After(gracefulShutdownPeriod)
 	log.Warn("server being gracefully shuted down")
@@ -182,4 +204,8 @@ func (s *server) Config() *config.Config {
 
 func (s *server) Dispatcher() *concurrent.Dispatcher {
 	return s.opts.Dispatcher
+}
+
+func (s *server) GRPCServer() *grpc.Server {
+	return s.opts.GRPCServer
 }
