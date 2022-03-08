@@ -15,11 +15,10 @@ package dal
 
 import (
 	"context"
+	"fmt"
 	"samwang0723/jarvis/db/dal/idal"
 	"samwang0723/jarvis/entity"
-	"strings"
 
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -45,31 +44,40 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error) {
-	query := i.db.Model(&entity.DailyClose{})
-	query = buildQueryFromListDailyCloseSearchParams(query, searchParams)
-	err = query.Count(&totalCount).Error
-	if err != nil {
+
+	sql := fmt.Sprintf("select count(*) from daily_closes where %s", buildQueryFromListDailyCloseSearchParams(searchParams))
+	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+	sql = fmt.Sprintf(`select t.* from 
+		(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q 
+		join daily_closes t on t.id = q.id`, buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit)
+	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}
 
-	err = query.Offset(int(offset)).Limit(int(limit)).Find(&objs).Error
-	if err != nil {
-		return nil, 0, err
-	}
 	return objs, totalCount, nil
 }
 
-func buildQueryFromListDailyCloseSearchParams(query *gorm.DB, params *idal.ListDailyCloseSearchParams) *gorm.DB {
+func buildQueryFromListDailyCloseSearchParams(params *idal.ListDailyCloseSearchParams) string {
 	if params == nil {
-		return query
+		return ""
 	}
-	query = query.Where("exchange_date >= ?", params.Start)
+	query := fmt.Sprintf("exchange_date >= %s", params.Start)
 	if params.End != nil {
 		dateStr := *params.End
-		query = query.Where("exchange_date < ?", dateStr)
+		query = fmt.Sprintf("%s and exchange_date < %s", query, dateStr)
 	}
 	if params.StockIDs != nil {
-		query = query.Where("stock_id IN (" + strings.Join(*params.StockIDs, ",") + ")")
+		idList := ""
+		stockIDs := *params.StockIDs
+		for i := 0; i < len(stockIDs); i++ {
+			if i > 0 {
+				idList += ","
+			}
+			idList += "'" + stockIDs[i] + "'"
+		}
+		query = fmt.Sprintf("%s and stock_id IN (%s)", query, idList)
 	}
 	return query
 }

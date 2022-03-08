@@ -3,7 +3,7 @@ module samwang0723/jarvis
 go 1.17
 
 require (
-	github.com/getsentry/sentry-go v0.11.0
+	github.com/getsentry/sentry-go v0.12.0
 	github.com/go-errors/errors v1.0.1
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/sirupsen/logrus v1.8.1

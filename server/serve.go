@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -127,7 +128,9 @@ func (s *server) Start(ctx context.Context) error {
 	err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int32{handlers.Concentration})
 
 	// start gRPC server
-	lis, err := net.Listen("tcp", "localhost:8087")
+	cfg := config.GetCurrentConfig()
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}

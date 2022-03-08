@@ -22,7 +22,7 @@ import (
 type Config struct {
 	Server struct {
 		Name string `yaml:"name"`
-		Port string `yaml:"port"`
+		Port int    `yaml:"port"`
 		Host string `yaml:"host"`
 	} `yaml:"server"`
 	Database struct {

@@ -86,7 +86,7 @@ func initSentry() {
 		Dsn:         "https://f3fb4890176c442aafef411fcf812312@o1049557.ingest.sentry.io/6030819",
 		Environment: "development",
 		// Specify a fixed sample rate:
-		TracesSampleRate: 1.0,
+		TracesSampleRate: 0.2,
 	})
 	if err != nil {
 		log.Fatalf("sentry.Init: %s", err)
