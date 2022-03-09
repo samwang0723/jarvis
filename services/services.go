@@ -31,6 +31,7 @@ type IService interface {
 	HasDailyClose(ctx context.Context, date string) bool
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
+	ListCategories(ctx context.Context) (objs []string, err error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)

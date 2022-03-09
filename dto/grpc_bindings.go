@@ -41,6 +41,45 @@ func ListDailyCloseSearchParamsFromPB(in *pb.ListDailyCloseSearchParams) *ListDa
 	return out
 }
 
+func ListStockRequestFromPB(in *pb.ListStockRequest) *ListStockRequest {
+	if in == nil {
+		return nil
+	}
+	out := &ListStockRequest{
+		Offset:       in.Offset,
+		Limit:        in.Limit,
+		SearchParams: ListStockSearchParamsFromPB(in.SearchParams),
+	}
+
+	return out
+}
+
+func ListStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchParams {
+	if in == nil {
+		return nil
+	}
+
+	out := &ListStockSearchParams{}
+
+	stockIDs := in.StockIDs
+	if stockIDs != nil {
+		out.StockIDs = &stockIDs
+	}
+	country := in.Country
+	if len(country) > 0 {
+		out.Country = country
+	}
+	name := in.Name
+	if len(name) > 0 {
+		out.Name = &name
+	}
+	category := in.Category
+	if len(category) > 0 {
+		out.Category = &category
+	}
+	return out
+}
+
 func ListDailyCloseResponseToPB(in *ListDailyCloseResponse) *pb.ListDailyCloseResponse {
 	if in == nil {
 		return nil
@@ -64,7 +103,7 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 		return nil
 	}
 
-	pbDailyCloseID := in.ID
+	pbID := in.ID
 	pbStockID := in.StockID
 	pbDate := in.Date
 	pbTradeShares := in.TradedShares
@@ -92,7 +131,7 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	}
 
 	return &pb.DailyClose{
-		DailyCloseID: pbDailyCloseID.Uint64(),
+		Id:           pbID.Uint64(),
 		StockID:      pbStockID,
 		Date:         pbDate,
 		TradeShares:  pbTradeShares,
@@ -106,5 +145,76 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 		CreatedAt:    pbCreatedAt,
 		UpdatedAt:    pbUpdatedAt,
 		DeletedAt:    pbDeletedAt,
+	}
+}
+
+func ListStockResponseToPB(in *ListStockResponse) *pb.ListStockResponse {
+	if in == nil {
+		return nil
+	}
+
+	var entries []*pb.Stock
+	for _, obj := range in.Entries {
+		entries = append(entries, StockToPB(obj))
+	}
+
+	return &pb.ListStockResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func StockToPB(in *entity.Stock) *pb.Stock {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbStockID := in.StockID
+	pbName := in.Name
+	pbCategory := in.Category
+	pbCountry := in.Country
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt, _ = ptypes.TimestampProto(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt, _ = ptypes.TimestampProto(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt != nil {
+		pbDeletedAt, _ = ptypes.TimestampProto(*in.DeletedAt)
+	}
+
+	return &pb.Stock{
+		Id:        pbID.Uint64(),
+		StockID:   pbStockID,
+		Name:      pbName,
+		Category:  pbCategory,
+		Country:   pbCountry,
+		CreatedAt: pbCreatedAt,
+		UpdatedAt: pbUpdatedAt,
+		DeletedAt: pbDeletedAt,
+	}
+}
+
+func ListCategoriesResponseToPB(in *ListCategoriesResponse) *pb.ListCategoriesResponse {
+	if in == nil {
+		return nil
+	}
+
+	var entries []string
+	for _, obj := range in.Entries {
+		entries = append(entries, obj)
+	}
+
+	return &pb.ListCategoriesResponse{
+		Entries: entries,
 	}
 }

@@ -21,6 +21,8 @@ import (
 type ListStockSearchParams struct {
 	StockIDs *[]string
 	Country  string
+	Name     *string
+	Category *string
 }
 
 type IStockDAL interface {
@@ -31,4 +33,5 @@ type IStockDAL interface {
 	ListStock(ctx context.Context, offset int32, limit int32,
 		searchParams *ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error)
 	GetStockByStockID(ctx context.Context, stockID string) (*entity.Stock, error)
+	ListCategories(ctx context.Context) (objs []string, err error)
 }

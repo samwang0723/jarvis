@@ -49,3 +49,7 @@ func (s *serviceImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 	}
 	return objs, totalCount, nil
 }
+
+func (s *serviceImpl) ListCategories(ctx context.Context) (objs []string, err error) {
+	return s.dal.ListCategories(ctx)
+}

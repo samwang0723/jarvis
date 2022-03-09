@@ -8,6 +8,8 @@ option go_package = "./";
 
 service Jarvis {
     rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {}
+    rpc ListStocks(ListStockRequest) returns (ListStockResponse) {}
+    rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {}
 }
 
 message ListDailyCloseRequest {
@@ -30,7 +32,7 @@ message ListDailyCloseSearchParams {
 }
 
 message DailyClose {
-    uint64 dailyCloseID = 1;
+    uint64 id = 1;
     google.protobuf.Timestamp createdAt = 2;
     google.protobuf.Timestamp updatedAt = 3;
     google.protobuf.Timestamp deletedAt = 4;
@@ -44,5 +46,41 @@ message DailyClose {
     float high = 12;
     float low = 13;
     float diff = 14;
+}
+
+message ListStockRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListStockSearchParams searchParams = 3;
+}
+
+message ListStockSearchParams {
+    repeated string stockIDs = 1;
+    string country = 2;
+    string name = 3;
+    string category = 4;
+}
+
+message ListStockResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated Stock entries = 4;
+}
+
+message Stock {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string name = 6;
+    string country = 7;
+    string category = 8;
+}
+
+message ListCategoriesRequest {}
+message ListCategoriesResponse {
+    repeated string entries = 1;
 }
 

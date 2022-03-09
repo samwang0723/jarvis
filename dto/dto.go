@@ -56,6 +56,8 @@ type ListThreePrimaryResponse struct {
 type ListStockSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
 	Country  string    `json:"country"`
+	Name     *string   `json:"name,omitempty"`
+	Category *string   `json:"category,omitempty"`
 }
 
 type ListStockRequest struct {
@@ -69,6 +71,10 @@ type ListStockResponse struct {
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`
 	Entries    []*entity.Stock `json:"entries"`
+}
+
+type ListCategoriesResponse struct {
+	Entries []string `json:"entries"`
 }
 
 type DownloadRequest struct {

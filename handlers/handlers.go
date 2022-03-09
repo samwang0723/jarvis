@@ -25,6 +25,7 @@ type IHandler interface {
 	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
+	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
 	RefreshConcentration(ctx context.Context, rewindLimit int32) error
 }

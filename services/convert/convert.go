@@ -52,6 +52,12 @@ func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListSto
 	if obj.StockIDs != nil {
 		res.StockIDs = obj.StockIDs
 	}
+	if obj.Name != nil {
+		res.Name = obj.Name
+	}
+	if obj.Category != nil {
+		res.Category = obj.Category
+	}
 	return res
 }
 

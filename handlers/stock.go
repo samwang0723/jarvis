@@ -31,3 +31,13 @@ func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 		TotalCount: totalCount,
 	}, nil
 }
+
+func (h *handlerImpl) ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error) {
+	entries, err := h.dataService.ListCategories(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.ListCategoriesResponse{
+		Entries: entries,
+	}, nil
+}
