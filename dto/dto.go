@@ -13,7 +13,7 @@
 // limitations under the License.
 package dto
 
-import "samwang0723/jarvis/entity"
+import "github.com/samwang0723/jarvis/entity"
 
 type ListDailyCloseSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
@@ -99,4 +99,5 @@ type CreateStakeConcentrationResponse struct {
 
 type GetStakeConcentrationRequest struct {
 	StockID string `json:"stockID"`
+	Date    string `json:"date"`
 }

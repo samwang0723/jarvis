@@ -16,10 +16,11 @@ package cronjob
 
 import (
 	"context"
-	"samwang0723/jarvis/cronjob/icronjob"
-	"samwang0723/jarvis/helper"
-	structuredlog "samwang0723/jarvis/logger/structured"
 	"time"
+
+	"github.com/samwang0723/jarvis/cronjob/icronjob"
+	"github.com/samwang0723/jarvis/helper"
+	structuredlog "github.com/samwang0723/jarvis/logger/structured"
 
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"

@@ -14,7 +14,7 @@
 package dal
 
 import (
-	"samwang0723/jarvis/db/dal/idal"
+	"github.com/samwang0723/jarvis/db/dal/idal"
 
 	"gorm.io/gorm"
 )

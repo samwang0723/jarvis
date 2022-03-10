@@ -16,7 +16,8 @@ package idal
 
 import (
 	"context"
-	"samwang0723/jarvis/entity"
+
+	"github.com/samwang0723/jarvis/entity"
 )
 
 type ListThreePrimarySearchParams struct {

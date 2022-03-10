@@ -16,7 +16,8 @@ package handlers
 
 import (
 	"context"
-	"samwang0723/jarvis/dto"
+
+	"github.com/samwang0723/jarvis/dto"
 )
 
 func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error) {

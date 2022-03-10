@@ -16,10 +16,10 @@ package structuredlog
 
 import (
 	"log"
-	"samwang0723/jarvis/config"
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/samwang0723/jarvis/config"
 	"github.com/sirupsen/logrus"
 
 	logtest "github.com/sirupsen/logrus/hooks/test"

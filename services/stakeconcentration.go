@@ -18,9 +18,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/services/convert"
+
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/services/convert"
 )
 
 func (s *serviceImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error {
@@ -32,7 +33,7 @@ func (s *serviceImpl) CreateStakeConcentration(ctx context.Context, req *dto.Cre
 }
 
 func (s *serviceImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
-	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID)
+	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID, req.Date)
 }
 
 func (s *serviceImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {

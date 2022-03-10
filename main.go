@@ -15,7 +15,7 @@
 package main
 
 import (
-	"samwang0723/jarvis/server"
+	"github.com/samwang0723/jarvis/server"
 )
 
 func main() {

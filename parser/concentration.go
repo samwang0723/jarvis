@@ -17,9 +17,10 @@ package parser
 import (
 	"fmt"
 	"io"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/helper"
 	"strings"
+
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/helper"
 
 	"golang.org/x/net/html"
 )

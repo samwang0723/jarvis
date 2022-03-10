@@ -15,8 +15,10 @@ package handlers
 
 import (
 	"context"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/services"
+
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/services"
 )
 
 type IHandler interface {
@@ -28,6 +30,7 @@ type IHandler interface {
 	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
 	RefreshConcentration(ctx context.Context, rewindLimit int32) error
+	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 }
 
 type handlerImpl struct {

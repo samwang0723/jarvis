@@ -1,8 +1,8 @@
 package dto
 
 import (
-	"samwang0723/jarvis/entity"
-	pb "samwang0723/jarvis/pb"
+	"github.com/samwang0723/jarvis/entity"
+	pb "github.com/samwang0723/jarvis/pb"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -216,5 +216,69 @@ func ListCategoriesResponseToPB(in *ListCategoriesResponse) *pb.ListCategoriesRe
 
 	return &pb.ListCategoriesResponse{
 		Entries: entries,
+	}
+}
+
+func GetStakeConcentrationRequestFromPB(in *pb.GetStakeConcentrationRequest) *GetStakeConcentrationRequest {
+	if in == nil {
+		return nil
+	}
+	return &GetStakeConcentrationRequest{
+		StockID: in.StockID,
+		Date:    in.Date,
+	}
+}
+
+func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetStakeConcentrationResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbStockID := in.StockID
+	pbDate := in.Date
+	pbSumBuyShares := in.SumBuyShares
+	pbSumSellShares := in.SumSellShares
+	pbAvgBuyPrice := in.AvgBuyPrice
+	pbAvgSellPrice := in.AvgSellPrice
+	pbConcentration1 := in.Concentration_1
+	pbConcentration5 := in.Concentration_5
+	pbConcentration10 := in.Concentration_10
+	pbConcentration20 := in.Concentration_20
+	pbConcentration60 := in.Concentration_60
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt, _ = ptypes.TimestampProto(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt, _ = ptypes.TimestampProto(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt != nil {
+		pbDeletedAt, _ = ptypes.TimestampProto(*in.DeletedAt)
+	}
+
+	return &pb.GetStakeConcentrationResponse{
+		StakeConcentration: &pb.StakeConcentration{
+			Id:               pbID.Uint64(),
+			StockID:          pbStockID,
+			Date:             pbDate,
+			SumBuyShares:     pbSumBuyShares,
+			SumSellShares:    pbSumSellShares,
+			AvgBuyPrice:      pbAvgBuyPrice,
+			AvgSellPrice:     pbAvgSellPrice,
+			Concentration_1:  pbConcentration1,
+			Concentration_5:  pbConcentration5,
+			Concentration_10: pbConcentration10,
+			Concentration_20: pbConcentration20,
+			Concentration_60: pbConcentration60,
+			CreatedAt:        pbCreatedAt,
+			UpdatedAt:        pbUpdatedAt,
+			DeletedAt:        pbDeletedAt,
+		},
 	}
 }

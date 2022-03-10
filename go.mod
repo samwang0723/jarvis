@@ -1,6 +1,6 @@
-module samwang0723/jarvis
+module github.com/samwang0723/jarvis
 
-go 1.17
+go 1.16
 
 require (
 	github.com/getsentry/sentry-go v0.12.0
@@ -17,17 +17,15 @@ require (
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.2 // indirect
-	github.com/joho/godotenv v1.4.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/golang/protobuf v1.5.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.8.0
+	github.com/johnbellone/grpc-middleware-sentry v0.2.0
+	github.com/joho/godotenv v1.4.0
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
-	google.golang.org/grpc v1.44.0 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
-	gorm.io/plugin/dbresolver v1.1.0 // indirect
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
+	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
+	google.golang.org/protobuf v1.27.1
+	gorm.io/plugin/dbresolver v1.1.0
 )

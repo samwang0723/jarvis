@@ -18,9 +18,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/helper"
 	"strings"
+
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/helper"
 )
 
 func (p *parserImpl) parseCsv(config Config, in io.Reader) error {

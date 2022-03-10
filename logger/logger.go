@@ -15,7 +15,7 @@
 package logger
 
 import (
-	structuredlog "samwang0723/jarvis/logger/structured"
+	structuredlog "github.com/samwang0723/jarvis/logger/structured"
 )
 
 var (

@@ -2,14 +2,42 @@ syntax = "proto3";
 
 package jarvis;
 
+import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "./";
+
+option go_package = "github.com/samwang0723/jarvis/pb";
 
 service Jarvis {
-    rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {}
-    rpc ListStocks(ListStockRequest) returns (ListStockResponse) {}
-    rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {}
+    rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/dailycloses"
+            body: "*"
+        };
+    }
+
+    rpc ListStocks(ListStockRequest) returns (ListStockResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/stocks"
+            body: "*"
+        };
+    }
+
+    rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            get: "/v1/categories"
+        };
+    }
+
+    rpc GetStakeConcentration(GetStakeConcentrationRequest) returns (GetStakeConcentrationResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            get: "/v1/stakeconcentration/{stockID}"
+        };
+    }
 }
 
 message ListDailyCloseRequest {
@@ -82,5 +110,32 @@ message Stock {
 message ListCategoriesRequest {}
 message ListCategoriesResponse {
     repeated string entries = 1;
+}
+
+message GetStakeConcentrationRequest {
+    string stockID = 1;
+    string date = 2;
+}
+
+message GetStakeConcentrationResponse {
+    StakeConcentration stakeConcentration = 1;
+}
+
+message StakeConcentration {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    uint64 sumBuyShares = 7;
+    uint64 sumSellShares = 8;
+	float avgBuyPrice = 9;     
+	float avgSellPrice = 10;
+	float concentration_1 = 11;
+	float concentration_5 = 12;
+	float concentration_10 = 13;
+	float concentration_20 = 14;
+	float concentration_60 = 15;
 }
 

@@ -16,17 +16,18 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"samwang0723/jarvis/concurrent"
-	"samwang0723/jarvis/crawler"
-	"samwang0723/jarvis/crawler/icrawler"
-	"samwang0723/jarvis/crawler/proxy"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/helper"
-	log "samwang0723/jarvis/logger"
-	"samwang0723/jarvis/parser"
 	"strings"
 	"time"
+
+	"github.com/samwang0723/jarvis/concurrent"
+	"github.com/samwang0723/jarvis/crawler"
+	"github.com/samwang0723/jarvis/crawler/icrawler"
+	"github.com/samwang0723/jarvis/crawler/proxy"
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/helper"
+	log "github.com/samwang0723/jarvis/logger"
+	"github.com/samwang0723/jarvis/parser"
 
 	"github.com/getsentry/sentry-go"
 )

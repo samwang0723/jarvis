@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"time"
 
-	"samwang0723/jarvis/config"
-	log "samwang0723/jarvis/logger/gorm"
+	"github.com/samwang0723/jarvis/config"
+	log "github.com/samwang0723/jarvis/logger/gorm"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

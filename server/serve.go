@@ -20,21 +20,25 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"samwang0723/jarvis/concurrent"
-	"samwang0723/jarvis/config"
-	"samwang0723/jarvis/cronjob"
-	"samwang0723/jarvis/db"
-	"samwang0723/jarvis/db/dal"
-	"samwang0723/jarvis/handlers"
-	log "samwang0723/jarvis/logger"
-	structuredlog "samwang0723/jarvis/logger/structured"
-	pb "samwang0723/jarvis/pb"
 
+	"github.com/samwang0723/jarvis/concurrent"
+	"github.com/samwang0723/jarvis/config"
+	"github.com/samwang0723/jarvis/cronjob"
+	"github.com/samwang0723/jarvis/db"
+	"github.com/samwang0723/jarvis/db/dal"
+	"github.com/samwang0723/jarvis/handlers"
+	log "github.com/samwang0723/jarvis/logger"
+	structuredlog "github.com/samwang0723/jarvis/logger/structured"
+	pb "github.com/samwang0723/jarvis/pb"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	"google.golang.org/grpc"
 
-	"samwang0723/jarvis/services"
 	"syscall"
 	"time"
+
+	"github.com/samwang0723/jarvis/services"
 )
 
 const (
@@ -72,7 +76,14 @@ func Serve() {
 	)
 	// associate service with handler
 	handler := handlers.New(dataService)
-	gRPCServer := grpc.NewServer()
+	gRPCServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_sentry.StreamServerInterceptor(),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_sentry.UnaryServerInterceptor(),
+		)),
+	)
 
 	s := newServer(
 		Name(cfg.Server.Name),

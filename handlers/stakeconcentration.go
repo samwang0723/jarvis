@@ -17,8 +17,9 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
+
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
 )
 
 func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error) {
@@ -60,4 +61,24 @@ func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string
 		Concentration_20: m[20],
 		Concentration_60: m[60],
 	}
+}
+
+func (h *handlerImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
+	res, err := h.dataService.GetStakeConcentration(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return &entity.StakeConcentration{
+		StockID:          res.StockID,
+		Date:             res.Date,
+		SumBuyShares:     res.SumBuyShares,
+		SumSellShares:    res.SumSellShares,
+		AvgBuyPrice:      res.AvgBuyPrice,
+		AvgSellPrice:     res.AvgSellPrice,
+		Concentration_1:  res.Concentration_1,
+		Concentration_5:  res.Concentration_5,
+		Concentration_10: res.Concentration_10,
+		Concentration_20: res.Concentration_20,
+		Concentration_60: res.Concentration_60,
+	}, nil
 }

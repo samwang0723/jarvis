@@ -17,12 +17,13 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"samwang0723/jarvis/concurrent"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/helper"
-	log "samwang0723/jarvis/logger"
 	"time"
+
+	"github.com/samwang0723/jarvis/concurrent"
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/helper"
+	log "github.com/samwang0723/jarvis/logger"
 )
 
 type refreshJob struct {

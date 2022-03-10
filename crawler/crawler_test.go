@@ -18,10 +18,11 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"samwang0723/jarvis/crawler/icrawler"
-	log "samwang0723/jarvis/logger"
-	logtest "samwang0723/jarvis/logger/structured"
 	"testing"
+
+	"github.com/samwang0723/jarvis/crawler/icrawler"
+	log "github.com/samwang0723/jarvis/logger"
+	logtest "github.com/samwang0723/jarvis/logger/structured"
 )
 
 func setup() {

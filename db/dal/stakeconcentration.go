@@ -17,8 +17,9 @@ package dal
 import (
 	"context"
 	"math"
-	"samwang0723/jarvis/db/dal/idal"
-	"samwang0723/jarvis/entity"
+
+	"github.com/samwang0723/jarvis/db/dal/idal"
+	"github.com/samwang0723/jarvis/entity"
 
 	"gorm.io/gorm/clause"
 )
@@ -28,9 +29,9 @@ func (i *dalImpl) CreateStakeConcentration(ctx context.Context, obj *entity.Stak
 	return err
 }
 
-func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID string) (*entity.StakeConcentration, error) {
+func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID string, date string) (*entity.StakeConcentration, error) {
 	res := &entity.StakeConcentration{}
-	if err := i.db.First(res, "stock_id = ?", stockID).Error; err != nil {
+	if err := i.db.First(res, "stock_id = ? and exchange_date = ?", stockID, date).Error; err != nil {
 		return nil, err
 	}
 	return res, nil

@@ -18,9 +18,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"samwang0723/jarvis/dto"
-	"samwang0723/jarvis/entity"
-	"samwang0723/jarvis/services/convert"
+
+	"github.com/samwang0723/jarvis/dto"
+	"github.com/samwang0723/jarvis/entity"
+	"github.com/samwang0723/jarvis/services/convert"
 )
 
 func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error {

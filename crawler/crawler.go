@@ -24,11 +24,11 @@ import (
 	"net/url"
 	"time"
 
-	log "samwang0723/jarvis/logger"
+	log "github.com/samwang0723/jarvis/logger"
 
-	"samwang0723/jarvis/crawler/icrawler"
-	"samwang0723/jarvis/crawler/proxy"
-	"samwang0723/jarvis/helper"
+	"github.com/samwang0723/jarvis/crawler/icrawler"
+	"github.com/samwang0723/jarvis/crawler/proxy"
+	"github.com/samwang0723/jarvis/helper"
 
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"

@@ -17,7 +17,7 @@ import (
 	"context"
 	"sync"
 
-	log "samwang0723/jarvis/logger"
+	log "github.com/samwang0723/jarvis/logger"
 )
 
 type Dispatcher struct {

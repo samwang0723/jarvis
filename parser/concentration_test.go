@@ -15,9 +15,10 @@
 package parser
 
 import (
-	"samwang0723/jarvis/entity"
 	"strings"
 	"testing"
+
+	"github.com/samwang0723/jarvis/entity"
 )
 
 func Test_parseConcentration(t *testing.T) {

@@ -15,8 +15,8 @@
 package services
 
 import (
-	"samwang0723/jarvis/cronjob/icronjob"
-	"samwang0723/jarvis/db/dal/idal"
+	"github.com/samwang0723/jarvis/cronjob/icronjob"
+	"github.com/samwang0723/jarvis/db/dal/idal"
 )
 
 type Option func(o *serviceImpl)

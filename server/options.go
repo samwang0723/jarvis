@@ -15,10 +15,10 @@
 package server
 
 import (
-	"samwang0723/jarvis/concurrent"
-	"samwang0723/jarvis/config"
-	"samwang0723/jarvis/handlers"
-	structuredlog "samwang0723/jarvis/logger/structured"
+	"github.com/samwang0723/jarvis/concurrent"
+	"github.com/samwang0723/jarvis/config"
+	"github.com/samwang0723/jarvis/handlers"
+	structuredlog "github.com/samwang0723/jarvis/logger/structured"
 
 	"google.golang.org/grpc"
 )

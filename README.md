@@ -26,6 +26,30 @@ FLUSH PRIVILEGES;
 ### Execute SQL Migration
 
 ```
-cd db/migration
-goose mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
+$ cd db/migration
+$ goose mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
+```
+
+### Generate Protobuf
+
+https://github.com/grpc-ecosystem/grpc-gateway
+
+Cloning google/api annotation files
+```
+$ mkdir google/api
+$ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto > pb/google/api/annotations.proto
+$ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto > pb/google/api/http.proto
+$ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/field_behavior.proto > pb/google/api/field_behavior.proto
+$ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/httpbody.proto > pb/google/api/httpbody.proto
+```
+
+Preparation of generate proto
+```
+$ go mod tidy
+$ go install \
+    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
+    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
+    google.golang.org/protobuf/cmd/protoc-gen-go \
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc
+$ make proto
 ```

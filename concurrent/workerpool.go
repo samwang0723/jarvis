@@ -14,10 +14,11 @@
 package concurrent
 
 import (
-	log "samwang0723/jarvis/logger"
-	"samwang0723/jarvis/utils"
 	"sync"
 	"time"
+
+	log "github.com/samwang0723/jarvis/logger"
+	"github.com/samwang0723/jarvis/utils"
 )
 
 type Job interface {

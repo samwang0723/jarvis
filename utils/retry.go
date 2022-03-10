@@ -15,8 +15,9 @@
 package utils
 
 import (
-	log "samwang0723/jarvis/logger"
 	"time"
+
+	log "github.com/samwang0723/jarvis/logger"
 )
 
 // Retry mechanism
