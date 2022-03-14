@@ -134,6 +134,21 @@ func (s *server) Start(ctx context.Context) error {
 		}
 	}
 
+	signature := `
+      _                  _                   _ 
+     | |                (_)                 (_)
+     | | __ _ _ ____   ___ ___    __ _ _ __  _ 
+ _   | |/ _' | '__\ \ / / / __|  / _' | '_ \| |
+| |__| | (_| | |   \ V /| \__ \ | (_| | |_) | |
+ \____/ \__,_|_|    \_/ |_|___/  \__,_| .__/|_|
+                                      | |      
+                                      |_|       Version (%s)
+High performance stock analysis tool
+_______________________________________________
+`
+	signatureOut := fmt.Sprintf(signature, "v1.0.0a")
+	fmt.Println(signatureOut)
+
 	// starting the workerpool
 	s.Dispatcher().Run(ctx)
 
