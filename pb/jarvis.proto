@@ -35,7 +35,16 @@ service Jarvis {
     rpc GetStakeConcentration(GetStakeConcentrationRequest) returns (GetStakeConcentrationResponse) {
         option idempotency_level = NO_SIDE_EFFECTS;
         option (google.api.http) = {
-            get: "/v1/stakeconcentration/{stockID}"
+            post: "/v1/stakeconcentration"
+            body: "*"
+        };
+    }
+
+    rpc StartCronjob(StartCronjobRequest) returns (StartCronjobResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/cronjob"
+            body: "*"
         };
     }
 }
@@ -139,3 +148,20 @@ message StakeConcentration {
 	float concentration_60 = 15;
 }
 
+message StartCronjobRequest {
+    string schedule = 1;
+    repeated DownloadType types = 2;
+}
+
+message StartCronjobResponse {
+    int32 code = 1;
+    string error = 2;
+    string messages = 3;
+}
+
+// Type of download
+enum DownloadType {
+    DAILYCLOSE = 0;
+    THREEPRIMARY = 1;
+    CONCENTRATION = 2;
+}

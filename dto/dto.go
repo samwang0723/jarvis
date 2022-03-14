@@ -15,6 +15,15 @@ package dto
 
 import "github.com/samwang0723/jarvis/entity"
 
+type DownloadType int32
+
+//go:generate stringer -type=DownloadType
+const (
+	DailyClose DownloadType = iota
+	ThreePrimary
+	Concentration
+)
+
 type ListDailyCloseSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
 	Start    string    `json:"start"`
@@ -78,10 +87,10 @@ type ListCategoriesResponse struct {
 }
 
 type DownloadRequest struct {
-	UTCTimestamp string  `json:"utcTimestamp"`
-	RewindLimit  int32   `json:"rewindLimit"`
-	RateLimit    int32   `json:"rateLimit"`
-	Types        []int32 `json:"types"`
+	UTCTimestamp string         `json:"utcTimestamp"`
+	RewindLimit  int32          `json:"rewindLimit"`
+	RateLimit    int32          `json:"rateLimit"`
+	Types        []DownloadType `json:"types"`
 }
 
 type CreateStakeConcentrationRequest struct {
@@ -100,4 +109,15 @@ type CreateStakeConcentrationResponse struct {
 type GetStakeConcentrationRequest struct {
 	StockID string `json:"stockID"`
 	Date    string `json:"date"`
+}
+
+type StartCronjobRequest struct {
+	Schedule string         `json:"schedule"`
+	Types    []DownloadType `json:"types"`
+}
+
+type StartCronjobResponse struct {
+	Code     int32  `json:"code"`
+	Error    string `json:"error"`
+	Messages string `json:"messages"`
 }

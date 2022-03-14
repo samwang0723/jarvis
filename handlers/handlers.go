@@ -23,7 +23,7 @@ import (
 
 type IHandler interface {
 	StockListDownload(ctx context.Context)
-	CronDownload(ctx context.Context, schedule string, downloadTypes []int32) error
+	CronDownload(ctx context.Context, req *dto.StartCronjobRequest) (*dto.StartCronjobResponse, error)
 	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)

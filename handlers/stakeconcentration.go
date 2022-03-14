@@ -68,7 +68,7 @@ func (h *handlerImpl) GetStakeConcentration(ctx context.Context, req *dto.GetSta
 	if err != nil {
 		return nil, err
 	}
-	return &entity.StakeConcentration{
+	stakeConcentration := &entity.StakeConcentration{
 		StockID:          res.StockID,
 		Date:             res.Date,
 		SumBuyShares:     res.SumBuyShares,
@@ -80,5 +80,11 @@ func (h *handlerImpl) GetStakeConcentration(ctx context.Context, req *dto.GetSta
 		Concentration_10: res.Concentration_10,
 		Concentration_20: res.Concentration_20,
 		Concentration_60: res.Concentration_60,
-	}, nil
+	}
+	stakeConcentration.ID = res.ID
+	stakeConcentration.CreatedAt = res.CreatedAt
+	stakeConcentration.UpdatedAt = res.UpdatedAt
+	stakeConcentration.DeletedAt = res.DeletedAt
+
+	return stakeConcentration, nil
 }

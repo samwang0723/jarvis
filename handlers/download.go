@@ -16,6 +16,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,9 +35,7 @@ import (
 )
 
 const (
-	DailyClose = iota
-	ThreePrimary
-	Concentration
+	StartCronjob = "START_CRON"
 )
 
 // download job to run in workerpool
@@ -48,14 +48,36 @@ type downloadJob struct {
 	origin    parser.Source
 }
 
-func (h *handlerImpl) CronDownload(ctx context.Context, schedule string, downloadTypes []int32) error {
-	return h.dataService.AddJob(ctx, schedule, func() {
+func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobRequest) (*dto.StartCronjobResponse, error) {
+	envCron := os.Getenv(StartCronjob)
+	startCron, err := strconv.ParseBool(envCron)
+	if err != nil || !startCron {
+		return &dto.StartCronjobResponse{
+			Code:     401,
+			Error:    "Unauthorized",
+			Messages: "Environment not allowed to trigger Cronjob",
+		}, err
+	}
+	err = h.dataService.AddJob(ctx, req.Schedule, func() {
 		h.BatchingDownload(ctx, &dto.DownloadRequest{
 			RewindLimit: 0,
 			RateLimit:   3000,
-			Types:       downloadTypes,
+			Types:       req.Types,
 		})
 	})
+
+	if err != nil {
+		return &dto.StartCronjobResponse{
+			Code:     400,
+			Error:    "Bad Request",
+			Messages: fmt.Sprintf("Failed to start the schedule: %s with Types: %+v", req.Schedule, req.Types),
+		}, err
+	}
+
+	return &dto.StartCronjobResponse{
+		Code:     200,
+		Messages: fmt.Sprintf("Successfully started the schedule: %s with Types: %+v", req.Schedule, req.Types),
+	}, nil
 }
 
 func (h *handlerImpl) StockListDownload(ctx context.Context) {
@@ -109,13 +131,13 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 
 	for _, t := range req.Types {
 		switch t {
-		case DailyClose:
+		case dto.DailyClose:
 			go h.generateJob(ctx, parser.TwseDailyClose, req, dailyCloseChan)
 			go h.generateJob(ctx, parser.TpexDailyClose, req, dailyCloseChan)
-		case ThreePrimary:
+		case dto.ThreePrimary:
 			go h.generateJob(ctx, parser.TwseThreePrimary, req, threePrimaryChan)
 			go h.generateJob(ctx, parser.TpexThreePrimary, req, threePrimaryChan)
-		case Concentration:
+		case dto.Concentration:
 			go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
 		}
 	}

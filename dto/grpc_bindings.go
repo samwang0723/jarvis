@@ -1,3 +1,16 @@
+// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package dto
 
 import (
@@ -281,4 +294,62 @@ func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetSta
 			DeletedAt:        pbDeletedAt,
 		},
 	}
+}
+
+func StartCronjobRequestFromPB(in *pb.StartCronjobRequest) *StartCronjobRequest {
+	if in == nil {
+		return nil
+	}
+
+	var types []DownloadType
+	for _, t := range in.Types {
+		types = append(types, DownloadTypeFromPB(t))
+	}
+
+	return &StartCronjobRequest{
+		Schedule: in.Schedule,
+		Types:    types,
+	}
+}
+
+func StartCronjobResponseToPB(in *StartCronjobResponse) *pb.StartCronjobResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbCode := in.Code
+	pbError := in.Error
+	pbMessages := in.Messages
+
+	return &pb.StartCronjobResponse{
+		Code:     pbCode,
+		Error:    pbError,
+		Messages: pbMessages,
+	}
+}
+
+func DownloadTypeToPB(in DownloadType) pb.DownloadType {
+	var resp pb.DownloadType
+	switch in {
+	case DailyClose:
+		resp = pb.DownloadType_DAILYCLOSE
+	case ThreePrimary:
+		resp = pb.DownloadType_THREEPRIMARY
+	case Concentration:
+		resp = pb.DownloadType_CONCENTRATION
+	}
+	return resp
+}
+
+func DownloadTypeFromPB(in pb.DownloadType) DownloadType {
+	var resp DownloadType
+	switch in {
+	case pb.DownloadType_DAILYCLOSE:
+		resp = DailyClose
+	case pb.DownloadType_THREEPRIMARY:
+		resp = ThreePrimary
+	case pb.DownloadType_CONCENTRATION:
+		resp = Concentration
+	}
+	return resp
 }

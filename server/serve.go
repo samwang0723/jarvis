@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 
@@ -30,8 +31,10 @@ import (
 	log "github.com/samwang0723/jarvis/logger"
 	structuredlog "github.com/samwang0723/jarvis/logger/structured"
 	pb "github.com/samwang0723/jarvis/pb"
+	gatewaypb "github.com/samwang0723/jarvis/pb/gateway"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	"google.golang.org/grpc"
 
@@ -134,13 +137,14 @@ func (s *server) Start(ctx context.Context) error {
 	// starting the workerpool
 	s.Dispatcher().Run(ctx)
 
-	//TODO: separate cron action to other place
-	err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int32{handlers.DailyClose, handlers.ThreePrimary})
-	err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int32{handlers.Concentration})
+	//err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int32{handlers.DailyClose, handlers.ThreePrimary})
+	//err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int32{handlers.Concentration})
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	// start revered proxy http server
+	go startGRPCGateway(ctx, addr)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -222,4 +226,24 @@ func (s *server) Dispatcher() *concurrent.Dispatcher {
 
 func (s *server) GRPCServer() *grpc.Server {
 	return s.opts.GRPCServer
+}
+
+func startGRPCGateway(ctx context.Context, addr string) {
+	c, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	err := gatewaypb.RegisterJarvisHandlerFromEndpoint(
+		c,
+		mux,
+		addr,
+		[]grpc.DialOption{grpc.WithInsecure()},
+	)
+	if err != nil {
+		log.Fatalf("cannot start grpc gateway: %v", err)
+	}
+	err = http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Fatalf("cannot listen and server: %v", err)
+	}
 }
