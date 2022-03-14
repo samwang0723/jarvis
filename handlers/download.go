@@ -58,8 +58,11 @@ func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobReq
 			Messages: "Environment not allowed to trigger Cronjob",
 		}, err
 	}
-	err = h.dataService.AddJob(ctx, req.Schedule, func() {
-		h.BatchingDownload(ctx, &dto.DownloadRequest{
+
+	// create a separate context since it's not rely on parent grpc.Dial()
+	longLiveCtx := context.Background()
+	err = h.dataService.AddJob(longLiveCtx, req.Schedule, func() {
+		h.BatchingDownload(longLiveCtx, &dto.DownloadRequest{
 			RewindLimit: 0,
 			RateLimit:   3000,
 			Types:       req.Types,
