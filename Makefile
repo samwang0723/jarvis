@@ -30,3 +30,10 @@ proto:
 		--grpc-gateway_opt paths=source_relative \
 		--grpc-gateway_opt standalone=true \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/pb
+
+docker-m1:
+	@docker build -t samwang0723/jarvis-api:m1 -f Dockerfile.local .
+
+docker-amd64:
+	@docker buildx use m1-builder
+	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .	

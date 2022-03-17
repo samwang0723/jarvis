@@ -1,23 +1,24 @@
 # Server configurations
 server:
   name: "jarvis"
-  host: "localhost"
-  port: 8000
+  host: "0.0.0.0"
+  port: 8080
+  grpcPort: 8081
 
 # Database credentials
 database:
-  user: ""
-  password: ""
-  host: "tcp(:3306)"
+  user: "admin"
+  password: "passwd"
+  host: "tcp(localhost:3306)"
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20
   maxOpenConns: 200
 
 replica:
-  user: ""
-  password: ""
-  host: "tcp(:3306)"
+  user: "admin"
+  password: "passwd"
+  host: "tcp(localhost:3306)"
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20
@@ -25,7 +26,7 @@ replica:
 
 # Logging
 log:
-  level: "DEBUG"
+  level: "ERROR"
 
 # WorkerPool
 workerpool:

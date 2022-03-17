@@ -14,9 +14,13 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
+	"net"
+	"os"
 	"time"
 
+	"github.com/samwang0723/jarvis/helper"
 	"github.com/sony/sonyflake"
 	"gorm.io/gorm"
 )
@@ -30,6 +34,9 @@ var sf *sonyflake.Sonyflake
 
 func init() {
 	var st sonyflake.Settings
+	if helper.GetCurrentEnv() == "prod" {
+		st.MachineID = machineID
+	}
 	sf = sonyflake.NewSonyflake(st)
 	if sf == nil {
 		panic("failed to init sonyflake for distributed ID generation")
@@ -52,6 +59,22 @@ func GenID() (ID, error) {
 
 func (id ID) Uint64() uint64 {
 	return uint64(id)
+}
+
+func machineID() (uint16, error) {
+	ipStr := os.Getenv("MY_IP")
+	if len(ipStr) == 0 {
+		return 0, errors.New("'MY_IP' environment variable not set")
+	}
+	ip := net.ParseIP(ipStr)
+	if ip == nil || len(ip) < 16 {
+		return 0, errors.New("invalid IP")
+	}
+	return uint16(ip[8])<<7 + uint16(ip[9])<<6 +
+			uint16(ip[10])<<5 + uint16(ip[11])<<4 +
+			uint16(ip[12])<<3 + uint16(ip[13])<<2 +
+			uint16(ip[14])<<1 + uint16(ip[15]),
+		nil
 }
 
 type Model struct {

@@ -28,6 +28,7 @@ import (
 	"github.com/samwang0723/jarvis/db"
 	"github.com/samwang0723/jarvis/db/dal"
 	"github.com/samwang0723/jarvis/handlers"
+	"github.com/samwang0723/jarvis/helper"
 	log "github.com/samwang0723/jarvis/logger"
 	structuredlog "github.com/samwang0723/jarvis/logger/structured"
 	pb "github.com/samwang0723/jarvis/pb"
@@ -144,20 +145,18 @@ func (s *server) Start(ctx context.Context) error {
                                       | |      
                                       |_|       Version (%s)
 High performance stock analysis tool
+Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.0.0a")
+	signatureOut := fmt.Sprintf(signature, "v1.0.0a", helper.GetCurrentEnv())
 	fmt.Println(signatureOut)
 
 	// starting the workerpool
 	s.Dispatcher().Run(ctx)
 
-	//err := s.Handler().CronDownload(ctx, "00 17 * * 1-5", []int32{handlers.DailyClose, handlers.ThreePrimary})
-	//err = s.Handler().CronDownload(ctx, "00 19 * * 1-5", []int32{handlers.Concentration})
-
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
-	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
 	// start revered proxy http server
 	go startGRPCGateway(ctx, addr)
 	lis, err := net.Listen("tcp", addr)
@@ -257,7 +256,9 @@ func startGRPCGateway(ctx context.Context, addr string) {
 	if err != nil {
 		log.Fatalf("cannot start grpc gateway: %v", err)
 	}
-	err = http.ListenAndServe(":8080", mux)
+	cfg := config.GetCurrentConfig()
+	host := fmt.Sprintf(":%d", cfg.Server.Port)
+	err = http.ListenAndServe(host, mux)
 	if err != nil {
 		log.Fatalf("cannot listen and server: %v", err)
 	}

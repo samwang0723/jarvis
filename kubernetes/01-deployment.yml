@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: jarvis-api
+  template:
+    metadata:
+      labels:
+        name: jarvis-api
+    spec:
+      containers:
+      - name: application
+        image: samwang0723/jarvis-api:latest
+        imagePullPolicy: Always
+        ports:
+        - name: rest-api-port
+          containerPort: 8080
+        - name: grpc-port
+          containerPort: 8081
+        - name: mysql-port
+          containerPort: 3306
+        env:
+        - name: MY_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: ENVIRONMENT
+          value: "production"
+        - name: START_CRON
+          value: "false"
+

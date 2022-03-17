@@ -15,6 +15,7 @@ package helper
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -177,4 +178,18 @@ func GetReadableSize(length int, decimals int) (out string) {
 	}
 
 	return fmt.Sprintf("%d.%s %s", i, remainderString[:decimals], unit)
+}
+
+func GetCurrentEnv() string {
+	env := os.Getenv("ENVIRONMENT")
+	output := "dev"
+	switch env {
+	case "development":
+		output = "dev"
+	case "staging":
+		output = "staging"
+	case "production":
+		output = "prod"
+	}
+	return output
 }

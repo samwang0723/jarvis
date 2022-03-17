@@ -5,7 +5,6 @@ FROM golang:1.17-alpine AS build_base
 LABEL maintainer="Sam Wang <sam.wang.0723@gmail.com>"
 
 RUN apk add --no-cache git
-RUN apk update && apk add ca-certificates && apk add tzdata
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -20,23 +19,21 @@ RUN go mod download
 COPY . .
 
 # Unit tests
-#RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test -v
+RUN CGO_ENABLED=0 go test -v
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /jarvis-api
+RUN go build -o /jarvis-api
 
 # Start fresh from a smaller image
-FROM scratch
+FROM alpine:3.9 
 
-#RUN apk add ca-certificates
-#RUN apk add --no-cache tzdata
+RUN apk add ca-certificates
+RUN apk add --no-cache tzdata
 
 WORKDIR /
 
-COPY --from=build_base /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=build_base /app/config.prod.yaml /config.prod.yaml
+COPY --from=build_base /app/config.dev.yaml /config.dev.yaml
 COPY --from=build_base /jarvis-api /jarvis-api
 
 # This container exposes ports to the outside world
@@ -49,4 +46,5 @@ ENV TZ=Asia/Taipei
 # Run the binary program
 ENTRYPOINT [ "/jarvis-api" ]
 
-#docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .
+# docker build -t samwang0723/jarvis-api:m1 -f Dockerfile.local .
+# docker run -p 8080-8081:8080-8081 --name jarvis-api-container --env-file=./.env samwang0723/jarvis-api:m1

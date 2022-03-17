@@ -14,16 +14,19 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/samwang0723/jarvis/helper"
 	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
 	Server struct {
-		Name string `yaml:"name"`
-		Port int    `yaml:"port"`
-		Host string `yaml:"host"`
+		Name     string `yaml:"name"`
+		Port     int    `yaml:"port"`
+		Host     string `yaml:"host"`
+		GrpcPort int    `yaml:"grpcPort"`
 	} `yaml:"server"`
 	Database struct {
 		User         string `yaml:"user"`
@@ -57,7 +60,8 @@ var (
 )
 
 func Load() {
-	f, err := os.Open("config.yaml")
+	yamlFile := fmt.Sprintf("config.%s.yaml", helper.GetCurrentEnv())
+	f, err := os.Open(yamlFile)
 	defer f.Close()
 	if err != nil {
 		panic(err)

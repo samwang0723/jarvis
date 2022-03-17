@@ -1,0 +1,27 @@
+# Use to identify the external aurora DNS record for internal Pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-mysql-read
+spec:
+  type: ExternalName
+  externalName: jarvis-database-instance-1-ap-southeast-1a.cjemwmweprl0.ap-southeast-1.rds.amazonaws.com
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aurora-mysql-write
+spec:
+  type: ExternalName
+  externalName: jarvis-database-instance-1.cjemwmweprl0.ap-southeast-1.rds.amazonaws.com
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+  sessionAffinity: None
+
