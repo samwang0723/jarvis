@@ -21,6 +21,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	SECRET_USERNAME = "SECRET_USERNAME"
+	SECRET_PASSWORD = "SECRET_PASSWORD"
+)
+
 type Config struct {
 	Server struct {
 		Name     string `yaml:"name"`
@@ -32,6 +37,7 @@ type Config struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
+		Port         int    `yaml:"port"`
 		Database     string `yaml:"database"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
 		MaxIdleConns int    `yaml:"maxIdleConns"`
@@ -41,6 +47,7 @@ type Config struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
+		Port         int    `yaml:"port"`
 		Database     string `yaml:"database"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
 		MaxIdleConns int    `yaml:"maxIdleConns"`
@@ -70,6 +77,16 @@ func Load() {
 	err = decoder.Decode(&instance)
 	if err != nil {
 		panic(err)
+	}
+
+	if user := os.Getenv(SECRET_USERNAME); len(user) > 0 {
+		instance.Database.User = user
+		instance.Replica.User = user
+	}
+
+	if passwd := os.Getenv(SECRET_PASSWORD); len(passwd) > 0 {
+		instance.Database.Password = passwd
+		instance.Replica.Password = passwd
 	}
 }
 

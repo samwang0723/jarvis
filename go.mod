@@ -20,9 +20,11 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.8.0
+	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb // indirect
 	github.com/johnbellone/grpc-middleware-sentry v0.2.0
 	github.com/joho/godotenv v1.4.0
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
+	github.com/prometheus/client_golang v1.12.1 // indirect
+	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
 	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
 	google.golang.org/grpc v1.44.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0

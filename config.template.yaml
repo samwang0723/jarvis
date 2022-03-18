@@ -9,7 +9,8 @@ server:
 database:
   user: "admin"
   password: "passwd"
-  host: "tcp(localhost:3306)"
+  host: "localhost"
+  port: 3306
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20
@@ -18,7 +19,8 @@ database:
 replica:
   user: "admin"
   password: "passwd"
-  host: "tcp(localhost:3306)"
+  host: "localhost"
+  port: 3306
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20

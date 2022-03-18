@@ -28,6 +28,7 @@ import (
 type ID uint64
 
 const ZeroID = ID(0)
+const MY_IP = "MY_IP"
 
 // use Sonyflake to support distributed unique IDs
 var sf *sonyflake.Sonyflake
@@ -62,7 +63,7 @@ func (id ID) Uint64() uint64 {
 }
 
 func machineID() (uint16, error) {
-	ipStr := os.Getenv("MY_IP")
+	ipStr := os.Getenv(MY_IP)
 	if len(ipStr) == 0 {
 		return 0, errors.New("'MY_IP' environment variable not set")
 	}

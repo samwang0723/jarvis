@@ -33,4 +33,14 @@ spec:
           value: "production"
         - name: START_CRON
           value: "false"
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: username
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: password
 

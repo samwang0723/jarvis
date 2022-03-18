@@ -15,6 +15,7 @@
 package server
 
 import (
+	"github.com/heptiolabs/healthcheck"
 	"github.com/samwang0723/jarvis/concurrent"
 	"github.com/samwang0723/jarvis/config"
 	"github.com/samwang0723/jarvis/handlers"
@@ -31,6 +32,7 @@ type Options struct {
 	Config           *config.Config
 	Dispatcher       *concurrent.Dispatcher
 	GRPCServer       *grpc.Server
+	HealthCheck      healthcheck.Handler
 
 	// Before funcs
 	BeforeStart []func() error
@@ -84,5 +86,11 @@ func Dispatcher(dispatcher *concurrent.Dispatcher) Option {
 func GRPCServer(gRPCServer *grpc.Server) Option {
 	return func(o *Options) {
 		o.GRPCServer = gRPCServer
+	}
+}
+
+func HealthCheck(healthCheck healthcheck.Handler) Option {
+	return func(o *Options) {
+		o.HealthCheck = healthCheck
 	}
 }

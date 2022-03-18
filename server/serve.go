@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/heptiolabs/healthcheck"
 	"github.com/samwang0723/jarvis/concurrent"
 	"github.com/samwang0723/jarvis/config"
 	"github.com/samwang0723/jarvis/cronjob"
@@ -89,6 +90,22 @@ func Serve() {
 		)),
 	)
 
+	//health check
+	health := healthcheck.NewHandler()
+	// Our app is not happy if we've got more than 100 goroutines running.
+	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(100))
+	// Our app is not ready if we can't resolve our upstream dependency in DNS.
+	health.AddReadinessCheck(
+		"upstream-database-read-dns",
+		healthcheck.DNSResolveCheck(cfg.Replica.Host, 200*time.Millisecond))
+	health.AddReadinessCheck(
+		"upstream-database-write-dns",
+		healthcheck.DNSResolveCheck(cfg.Database.Host, 200*time.Millisecond))
+
+	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
+	genericDB, _ := db.DB()
+	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(genericDB, 1*time.Second))
+
 	s := newServer(
 		Name(cfg.Server.Name),
 		Config(cfg),
@@ -96,6 +113,7 @@ func Serve() {
 		Handler(handler),
 		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
 		GRPCServer(gRPCServer),
+		HealthCheck(health),
 		BeforeStart(func() error {
 			// initialize global job queue
 			concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
@@ -158,7 +176,7 @@ _______________________________________________
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
 	// start revered proxy http server
-	go startGRPCGateway(ctx, addr)
+	go s.startGRPCGateway(ctx, addr)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -242,7 +260,11 @@ func (s *server) GRPCServer() *grpc.Server {
 	return s.opts.GRPCServer
 }
 
-func startGRPCGateway(ctx context.Context, addr string) {
+func (s *server) HealthCheck() healthcheck.Handler {
+	return s.opts.HealthCheck
+}
+
+func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	c, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -256,6 +278,15 @@ func startGRPCGateway(ctx context.Context, addr string) {
 	if err != nil {
 		log.Fatalf("cannot start grpc gateway: %v", err)
 	}
+
+	// add healthcheck into gRPC gateway mux
+	mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		s.HealthCheck().LiveEndpoint(w, r)
+	})
+	mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		s.HealthCheck().ReadyEndpoint(w, r)
+	})
+
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
 	err = http.ListenAndServe(host, mux)

@@ -58,7 +58,7 @@ func generateDSN(cfg *config.Config) map[string]string {
 	masterDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 		database.User,
 		database.Password,
-		database.Host,
+		fmt.Sprintf("tcp(%s:%d)", database.Host, database.Port),
 		database.Database,
 	)
 	resp["master"] = masterDsn
@@ -66,7 +66,7 @@ func generateDSN(cfg *config.Config) map[string]string {
 	replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 		replica.User,
 		replica.Password,
-		replica.Host,
+		fmt.Sprintf("tcp(%s:%d)", database.Host, database.Port),
 		replica.Database,
 	)
 	resp["replica"] = replicaDsn
