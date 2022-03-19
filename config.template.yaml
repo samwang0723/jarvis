@@ -7,8 +7,6 @@ server:
 
 # Database credentials
 database:
-  user: "admin"
-  password: "passwd"
   host: "localhost"
   port: 3306
   database: "jarvis"
@@ -17,8 +15,6 @@ database:
   maxOpenConns: 200
 
 replica:
-  user: "admin"
-  password: "passwd"
   host: "localhost"
   port: 3306
   database: "jarvis"

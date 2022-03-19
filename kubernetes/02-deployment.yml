@@ -24,6 +24,19 @@ spec:
           containerPort: 8081
         - name: mysql-port
           containerPort: 3306
+        # define a liveness probe that checks every 5 seconds, starting after 5 seconds
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # define a readiness probe that checks every 5 seconds
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          periodSeconds: 5
         env:
         - name: MY_IP
           valueFrom:
