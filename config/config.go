@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	SECRET_USERNAME = "SECRET_USERNAME"
-	SECRET_PASSWORD = "SECRET_PASSWORD"
+	SecretUsername = "SECRET_USERNAME"
+	SecretPassword = "SECRET_PASSWORD"
 )
 
 type Config struct {
@@ -79,12 +79,12 @@ func Load() {
 		panic(err)
 	}
 
-	if user := os.Getenv(SECRET_USERNAME); len(user) > 0 {
+	if user := os.Getenv(SecretUsername); len(user) > 0 {
 		instance.Database.User = user
 		instance.Replica.User = user
 	}
 
-	if passwd := os.Getenv(SECRET_PASSWORD); len(passwd) > 0 {
+	if passwd := os.Getenv(SecretPassword); len(passwd) > 0 {
 		instance.Database.Password = passwd
 		instance.Replica.Password = passwd
 	}

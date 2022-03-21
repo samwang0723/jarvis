@@ -22,9 +22,13 @@ import (
 	"github.com/samwang0723/jarvis/server"
 )
 
+const (
+	TimeZone = "TZ"
+)
+
 func main() {
 	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv("TZ"); tz != "" {
+	if tz := os.Getenv(TimeZone); tz != "" {
 		var err error
 		time.Local, err = time.LoadLocation(tz)
 		if err != nil {
