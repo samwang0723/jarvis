@@ -60,3 +60,12 @@ func (s *server) StartCronjob(ctx context.Context, req *pb.StartCronjobRequest) 
 	}
 	return dto.StartCronjobResponseToPB(res), nil
 }
+
+func (s *server) RefreshStakeConcentration(ctx context.Context, req *pb.RefreshStakeConcentrationRequest) (*pb.RefreshStakeConcentrationResponse, error) {
+	res, err := s.Handler().RefreshStakeConcentration(ctx, dto.RefreshStakeConcentrationRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+	return dto.RefreshStakeConcentrationResponseToPB(res), nil
+
+}

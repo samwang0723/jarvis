@@ -39,7 +39,7 @@ type IService interface {
 	HasStakeConcentration(ctx context.Context, date string) bool
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
-	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (map[int]float32, error)
+	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) ([]*entity.CalculationBase, error)
 	BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error
 }
 

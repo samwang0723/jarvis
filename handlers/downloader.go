@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samwang0723/jarvis/cache"
 	"github.com/samwang0723/jarvis/concurrent"
 	"github.com/samwang0723/jarvis/crawler"
 	"github.com/samwang0723/jarvis/crawler/icrawler"
@@ -62,11 +63,18 @@ func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobReq
 	// create a separate context since it's not rely on parent grpc.Dial()
 	longLiveCtx := context.Background()
 	err = h.dataService.AddJob(longLiveCtx, req.Schedule, func() {
-		h.BatchingDownload(longLiveCtx, &dto.DownloadRequest{
-			RewindLimit: 0,
-			RateLimit:   3000,
-			Types:       req.Types,
-		})
+		// since we will have multiple daemonSet in nodes, need to make sure same cronjob
+		// only running once at a time, here we use distrubted lock through Redis.
+		lockAquired := cache.ObtainLock(cache.CronjobLock, 2*time.Minute)
+		if lockAquired {
+			h.BatchingDownload(longLiveCtx, &dto.DownloadRequest{
+				RewindLimit: 0,
+				RateLimit:   3000,
+				Types:       req.Types,
+			})
+		} else {
+			log.Error("CronDownload: Redis distributed lock obtain failed.")
+		}
 	})
 
 	if err != nil {
@@ -98,10 +106,10 @@ func (h *handlerImpl) StockListDownload(ctx context.Context) {
 				origin:    t,
 			}
 			select {
-			case concurrent.JobQueue <- job:
 			case <-ctx.Done():
 				log.Debug("(StockListDownload): generateJob goroutine exit!")
 				return
+			case concurrent.JobQueue <- job:
 			}
 		}
 	}()
@@ -166,18 +174,36 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 				}
 			case objs, ok := <-stakeConcentrationChan:
 				if ok && len(*objs) > 0 {
-					if val, ok := (*objs)[0].(*entity.StakeConcentration); ok {
-						h.dataService.CreateStakeConcentration(ctx, &dto.CreateStakeConcentrationRequest{
-							StockID:       val.StockID,
-							Date:          val.Date,
-							SumBuyShares:  val.SumBuyShares,
-							SumSellShares: val.SumSellShares,
-							AvgBuyPrice:   val.AvgBuyPrice,
-							AvgSellPrice:  val.AvgSellPrice,
-						})
-						// refresh the concentration
-						h.RefreshStakeConcentration(ctx, val.StockID, val.Date)
+					diff := []int32{0, 0, 0, 0, 0}
+					stockId, date := "", ""
+					for _, obj := range *objs {
+						if val, ok := obj.(*entity.StakeConcentration); ok {
+							switch val.HiddenField {
+							case "1":
+								h.dataService.CreateStakeConcentration(ctx, &dto.CreateStakeConcentrationRequest{
+									StockID:       val.StockID,
+									Date:          val.Date,
+									SumBuyShares:  val.SumBuyShares,
+									SumSellShares: val.SumSellShares,
+									AvgBuyPrice:   val.AvgBuyPrice,
+									AvgSellPrice:  val.AvgSellPrice,
+								})
+								stockId = val.StockID
+								date = val.Date
+								diff[0] = int32(val.SumBuyShares - val.SumSellShares)
+							case "2":
+								diff[1] = int32(val.SumBuyShares - val.SumSellShares)
+							case "3":
+								diff[2] = int32(val.SumBuyShares - val.SumSellShares)
+							case "4":
+								diff[3] = int32(val.SumBuyShares - val.SumSellShares)
+							case "6":
+								diff[4] = int32(val.SumBuyShares - val.SumSellShares)
+							}
+						}
 					}
+					// refresh the concentration
+					h.RefreshStakeConcentration(ctx, &dto.RefreshStakeConcentrationRequest{StockID: stockId, Date: date, Diff: diff})
 				}
 			}
 		}
@@ -215,10 +241,10 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 					}
 
 					select {
-					case concurrent.JobQueue <- job:
 					case <-ctx.Done():
 						log.Debug("(BatchingDownload): generateJob goroutine exit!")
 						return
+					case concurrent.JobQueue <- job:
 					}
 				}
 			} else {
@@ -230,10 +256,10 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 					origin:    origin,
 				}
 				select {
-				case concurrent.JobQueue <- job:
 				case <-ctx.Done():
 					log.Debug("(BatchingDownload): generateJob goroutine exit!")
 					return
+				case concurrent.JobQueue <- job:
 				}
 			}
 		}
@@ -254,7 +280,9 @@ func (job *downloadJob) Do() error {
 			Type:     job.origin,
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		c.SetURL(icrawler.TwseDailyClose, job.date, icrawler.StockOnly)
+		url := fmt.Sprintf(icrawler.TwseDailyClose, job.date)
+		c.AppendURL(url)
+
 	case parser.TpexDailyClose:
 		config = parser.Config{
 			ParseDay: &job.date,
@@ -262,7 +290,9 @@ func (job *downloadJob) Do() error {
 			Type:     job.origin,
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		c.SetURL(icrawler.TpexDailyClose, job.date)
+		url := fmt.Sprintf(icrawler.TpexDailyClose, job.date)
+		c.AppendURL(url)
+
 	case parser.TwseThreePrimary:
 		config = parser.Config{
 			ParseDay: &job.date,
@@ -270,7 +300,9 @@ func (job *downloadJob) Do() error {
 			Type:     job.origin,
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		c.SetURL(icrawler.TwseThreePrimary, job.date, icrawler.StockOnly)
+		url := fmt.Sprintf(icrawler.TwseThreePrimary, job.date)
+		c.AppendURL(url)
+
 	case parser.TpexThreePrimary:
 		config = parser.Config{
 			ParseDay: &job.date,
@@ -278,41 +310,61 @@ func (job *downloadJob) Do() error {
 			Type:     job.origin,
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		c.SetURL(icrawler.TpexThreePrimary, job.date)
+		url := fmt.Sprintf(icrawler.TpexThreePrimary, job.date)
+		c.AppendURL(url)
+
 	case parser.TwseStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
 		c = crawler.New(nil)
-		c.SetURL(icrawler.TWSEStocks, "")
+		c.AppendURL(icrawler.TWSEStocks)
+
 	case parser.TpexStockList:
 		config = parser.Config{
 			Capacity: 6,
 			Type:     job.origin,
 		}
 		c = crawler.New(nil)
-		c.SetURL(icrawler.TPEXStocks, "")
+		c.AppendURL(icrawler.TPEXStocks)
+
 	case parser.StakeConcentration:
 		config = parser.Config{
 			ParseDay: &job.date,
 			Type:     job.origin,
 		}
 		c = crawler.New(&proxy.Proxy{Type: proxy.Concentration})
-		c.SetURL(icrawler.StakeConcentration, job.date, job.stockId)
+
+		// in order to get accurate data, we must query each page https://stockchannelnew.sinotrade.com.tw/z/zc/zco/zco_6598_6.djhtm
+		// as the top 15 brokers may different from day to day and not possible to store all detailed daily data
+		indexes := []int{1, 2, 3, 4, 6}
+		for _, idx := range indexes {
+			c.AppendURL(fmt.Sprintf(icrawler.ConcentrationDays, job.stockId, idx))
+		}
+
 	default:
 		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
 	}
 
-	stream, err := c.Fetch(job.ctx)
-	if err != nil {
-		sentry.CaptureException(err)
-		return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
-	}
-	err = p.Parse(config, stream)
-	if err != nil {
-		sentry.CaptureException(err)
-		return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
+	// looping to download all URLs
+	for {
+		urls := c.GetURLs()
+		if len(urls) <= 0 {
+			break
+		}
+
+		sourceURL, bytes, err := c.Fetch(job.ctx)
+		if err != nil {
+			sentry.CaptureException(err)
+			return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
+		}
+		config.SourceURL = sourceURL
+		err = p.Parse(config, bytes)
+		if err != nil {
+			sentry.CaptureException(err)
+			return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
+		}
 	}
 
 	job.respChan <- p.Flush()

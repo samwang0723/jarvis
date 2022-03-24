@@ -53,6 +53,10 @@ type Config struct {
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
+	RedisCache struct {
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+	} `yaml:"redis"`
 	Log struct {
 		Level string `yaml:"level"`
 	} `yaml:"log"`

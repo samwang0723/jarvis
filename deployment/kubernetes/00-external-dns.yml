@@ -24,4 +24,17 @@ spec:
     protocol: TCP
     targetPort: 3306
   sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cache
+spec:
+  type: ExternalName
+  externalName: jarvis-cache.g3crsc.0001.apse1.cache.amazonaws.com
+  ports:
+  - port: 6379
+    protocol: TCP
+    targetPort: 6379
+  sessionAffinity: None
 
