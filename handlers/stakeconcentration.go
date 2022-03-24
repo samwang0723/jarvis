@@ -17,6 +17,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/samwang0723/jarvis/dto"
 	"github.com/samwang0723/jarvis/entity"
@@ -34,33 +35,80 @@ func (h *handlerImpl) CreateStakeConcentration(ctx context.Context, req *dto.Cre
 	return &dto.CreateStakeConcentrationResponse{Entry: res}, nil
 }
 
-func (h *handlerImpl) RefreshStakeConcentration(ctx context.Context, stockId string, date string) error {
+func (h *handlerImpl) RefreshStakeConcentration(ctx context.Context, req *dto.RefreshStakeConcentrationRequest) (*dto.RefreshStakeConcentrationResponse, error) {
+	stockId := req.StockID
+	date := req.Date
 	if !h.dataService.HasStakeConcentration(ctx, date) {
-		return fmt.Errorf("not valid date for concentration")
+		return &dto.RefreshStakeConcentrationResponse{
+			Code:     400,
+			Error:    "Bad Request",
+			Messages: fmt.Sprintf("No valid date for concentration: %s, %s", stockId, date),
+		}, fmt.Errorf("No valid date for concentration: %s, %s", stockId, date)
 	}
 	concentrations := &[]interface{}{}
-	c := h.calculateConcentration(ctx, stockId, date)
+	c := h.calculateConcentration(ctx, stockId, date, req.Diff)
 	if c == nil {
-		return fmt.Errorf("failed to calculate concentration of %s, %s", stockId, date)
+		return &dto.RefreshStakeConcentrationResponse{
+			Code:     400,
+			Error:    "Bad Request",
+			Messages: fmt.Sprintf("Failed to calculate concentration: %s, %s", stockId, date),
+		}, fmt.Errorf("Failed to calculate concentration: %s, %s", stockId, date)
 	}
 	*concentrations = append(*concentrations, c)
-	return h.dataService.BatchUpdateStakeConcentration(ctx, concentrations)
+	err := h.dataService.BatchUpdateStakeConcentration(ctx, concentrations)
+	if err != nil {
+		return &dto.RefreshStakeConcentrationResponse{
+			Code:     500,
+			Error:    "Internal Server Error",
+			Messages: fmt.Sprintf("Failed to upate concentration (%s): %s, %s", err, stockId, date),
+		}, fmt.Errorf("Failed to update concentration(%s): %s, %s", err, stockId, date)
+	}
+
+	return &dto.RefreshStakeConcentrationResponse{
+		Code:     200,
+		Messages: fmt.Sprintf("Concentration updated successfully: %s, %s", stockId, date),
+	}, nil
 }
 
-func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string, date string) *entity.StakeConcentration {
-	m, err := h.dataService.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
-	if err != nil || len(m) < 5 {
+func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string, date string, diff []int32) *entity.StakeConcentration {
+	bases, err := h.dataService.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
+	if err != nil || len(bases) < 60 {
 		return nil
 	}
-	return &entity.StakeConcentration{
-		StockID:          stockId,
-		Date:             date,
-		Concentration_1:  m[1],
-		Concentration_5:  m[5],
-		Concentration_10: m[10],
-		Concentration_20: m[20],
-		Concentration_60: m[60],
+
+	resp := &entity.StakeConcentration{
+		StockID: stockId,
+		Date:    date,
 	}
+
+	sumTradeShares := uint64(0)
+	cursor := 0
+	for idx, c := range bases {
+		sumTradeShares += c.TradeShares
+
+		if idx == 0 || idx == 4 || idx == 9 || idx == 19 || idx == 59 {
+			p, op := 0.0, float32(0.0)
+			if diff[cursor] != 0 && sumTradeShares > 0 {
+				p = (float64(diff[cursor]) / float64(sumTradeShares/1000)) * 100
+				op = float32(math.Round(p*10) / 10)
+			}
+
+			switch idx {
+			case 0:
+				resp.Concentration_1 = op
+			case 4:
+				resp.Concentration_5 = op
+			case 9:
+				resp.Concentration_10 = op
+			case 19:
+				resp.Concentration_20 = op
+			case 59:
+				resp.Concentration_60 = op
+			}
+			cursor++
+		}
+	}
+	return resp
 }
 
 func (h *handlerImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {

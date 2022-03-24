@@ -22,6 +22,10 @@ replica:
   maxIdleConns: 20
   maxOpenConns: 800
 
+redis:
+  port: 6379
+  host: "localhost"
+
 # Logging
 log:
   level: "ERROR"

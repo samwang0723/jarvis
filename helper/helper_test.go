@@ -33,7 +33,7 @@ func Test_IsInteger(t *testing.T) {
 			want: true,
 		},
 		{
-		name: "non-integer string",
+			name: "non-integer string",
 			val:  "ABCD",
 			want: false,
 		},
@@ -175,7 +175,7 @@ func Test_FormalizeValidTimeWithLocation(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := FormalizeValidTimeWithLocation(tt.ti, tt.offset)
+			got := FormalizeValidTimeWithLocation(tt.ti, int32(tt.offset))
 			//t.Errorf("FormalizeValidTimeWithLocation(tt.ti, tt.offset) = %v, want %v", got, tt.want)
 			if got != nil {
 				assert.True(t, got.Equal(*tt.want))
@@ -252,7 +252,7 @@ func Test_GetDateFromOffset(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := GetDateFromOffset(tt.offset, tt.format); got != tt.want {
+			if got := GetDateFromOffset(int32(tt.offset), tt.format); got != tt.want {
 				t.Errorf("GetDateFromOffset(t.offset, tt.format) = %v, want %v", got, tt.want)
 			}
 		})

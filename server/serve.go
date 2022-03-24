@@ -101,6 +101,9 @@ func Serve() {
 	health.AddReadinessCheck(
 		"upstream-database-write-dns",
 		healthcheck.DNSResolveCheck(cfg.Database.Host, 200*time.Millisecond))
+	health.AddReadinessCheck(
+		"upstream-redis-dns",
+		healthcheck.DNSResolveCheck(cfg.RedisCache.Host, 200*time.Millisecond))
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	genericDB, _ := db.DB()
@@ -122,7 +125,8 @@ func Serve() {
 		}),
 		BeforeStop(func() error {
 			dataService.StopCron()
-			close(concurrent.JobQueue)
+			//no need to explictly close a channel, it will be garbage collected
+			//close(concurrent.JobQueue)
 
 			sqlDB, _ := db.DB()
 			return sqlDB.Close()

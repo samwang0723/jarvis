@@ -27,6 +27,7 @@ type JarvisClient interface {
 	ListCategories(ctx context.Context, in *ListCategoriesRequest, opts ...grpc.CallOption) (*ListCategoriesResponse, error)
 	GetStakeConcentration(ctx context.Context, in *GetStakeConcentrationRequest, opts ...grpc.CallOption) (*GetStakeConcentrationResponse, error)
 	StartCronjob(ctx context.Context, in *StartCronjobRequest, opts ...grpc.CallOption) (*StartCronjobResponse, error)
+	RefreshStakeConcentration(ctx context.Context, in *RefreshStakeConcentrationRequest, opts ...grpc.CallOption) (*RefreshStakeConcentrationResponse, error)
 }
 
 type jarvisClient struct {
@@ -82,6 +83,15 @@ func (c *jarvisClient) StartCronjob(ctx context.Context, in *StartCronjobRequest
 	return out, nil
 }
 
+func (c *jarvisClient) RefreshStakeConcentration(ctx context.Context, in *RefreshStakeConcentrationRequest, opts ...grpc.CallOption) (*RefreshStakeConcentrationResponse, error) {
+	out := new(RefreshStakeConcentrationResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.Jarvis/RefreshStakeConcentration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JarvisServer is the server API for Jarvis service.
 // All implementations should embed UnimplementedJarvisServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type JarvisServer interface {
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error)
 	GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error)
 	StartCronjob(context.Context, *StartCronjobRequest) (*StartCronjobResponse, error)
+	RefreshStakeConcentration(context.Context, *RefreshStakeConcentrationRequest) (*RefreshStakeConcentrationResponse, error)
 }
 
 // UnimplementedJarvisServer should be embedded to have forward compatible implementations.
@@ -111,6 +122,9 @@ func (UnimplementedJarvisServer) GetStakeConcentration(context.Context, *GetStak
 }
 func (UnimplementedJarvisServer) StartCronjob(context.Context, *StartCronjobRequest) (*StartCronjobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartCronjob not implemented")
+}
+func (UnimplementedJarvisServer) RefreshStakeConcentration(context.Context, *RefreshStakeConcentrationRequest) (*RefreshStakeConcentrationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshStakeConcentration not implemented")
 }
 
 // UnsafeJarvisServer may be embedded to opt out of forward compatibility for this service.
@@ -214,6 +228,24 @@ func _Jarvis_StartCronjob_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Jarvis_RefreshStakeConcentration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshStakeConcentrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisServer).RefreshStakeConcentration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.Jarvis/RefreshStakeConcentration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisServer).RefreshStakeConcentration(ctx, req.(*RefreshStakeConcentrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Jarvis_ServiceDesc is the grpc.ServiceDesc for Jarvis service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +272,10 @@ var Jarvis_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StartCronjob",
 			Handler:    _Jarvis_StartCronjob_Handler,
+		},
+		{
+			MethodName: "RefreshStakeConcentration",
+			Handler:    _Jarvis_RefreshStakeConcentration_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

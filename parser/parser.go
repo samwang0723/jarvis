@@ -15,8 +15,11 @@
 package parser
 
 import (
+	"bytes"
 	"fmt"
-	"io"
+
+	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/transform"
 )
 
 type Source int
@@ -33,7 +36,7 @@ const (
 )
 
 type IParser interface {
-	Parse(config Config, in io.Reader) error
+	Parse(config Config, in []byte) error
 	Flush() *[]interface{}
 }
 
@@ -42,9 +45,10 @@ type parserImpl struct {
 }
 
 type Config struct {
-	ParseDay *string
-	Capacity int
-	Type     Source
+	ParseDay  *string
+	SourceURL string
+	Capacity  int
+	Type      Source
 }
 
 func New() IParser {
@@ -54,18 +58,21 @@ func New() IParser {
 	return res
 }
 
-func (p *parserImpl) Parse(config Config, in io.Reader) error {
+func (p *parserImpl) Parse(config Config, in []byte) error {
 	if p.result == nil {
 		return fmt.Errorf("didn't initialized the result map\n")
 	}
 
+	raw := bytes.NewBuffer(in)
+	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
+
 	switch config.Type {
 	case TwseStockList, TpexStockList:
-		return p.parseHtml(config, in)
+		return p.parseHtml(config, reader)
 	case TwseDailyClose, TpexDailyClose, TwseThreePrimary, TpexThreePrimary:
-		return p.parseCsv(config, in)
+		return p.parseCsv(config, reader)
 	case StakeConcentration:
-		return p.parseConcentration(config, in)
+		return p.parseConcentration(config, reader)
 	}
 	return nil
 }

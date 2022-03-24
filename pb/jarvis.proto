@@ -47,6 +47,14 @@ service Jarvis {
             body: "*"
         };
     }
+
+    rpc RefreshStakeConcentration(RefreshStakeConcentrationRequest) returns (RefreshStakeConcentrationResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/stakeconcentration/{stockID}/refresh"
+            body: "*"
+        };
+    }
 }
 
 message ListDailyCloseRequest {
@@ -165,3 +173,16 @@ enum DownloadType {
     THREEPRIMARY = 1;
     CONCENTRATION = 2;
 }
+
+message RefreshStakeConcentrationRequest {
+    string stockID = 1;
+    string date = 2;
+    repeated int32 diff = 3;
+}
+
+message RefreshStakeConcentrationResponse {
+    int32 code = 1;
+    string error = 2;
+    string messages = 3;
+}
+

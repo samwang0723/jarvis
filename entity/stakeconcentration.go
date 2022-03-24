@@ -14,6 +14,12 @@
 
 package entity
 
+type CalculationBase struct {
+	TradeShares uint64 `gorm:"column:trade_shares"`
+	Diff        int    `gorm:"column:diff"`
+	Date        string `gorm:"column:exchange_date"`
+}
+
 type StakeConcentration struct {
 	Model
 
@@ -28,6 +34,7 @@ type StakeConcentration struct {
 	Concentration_10 float32 `gorm:"column:concentration_10"`
 	Concentration_20 float32 `gorm:"column:concentration_20"`
 	Concentration_60 float32 `gorm:"column:concentration_60"`
+	HiddenField      string  `gorm:"-"`
 }
 
 func (StakeConcentration) TableName() string {

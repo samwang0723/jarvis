@@ -39,9 +39,16 @@ func (p *parserImpl) parseConcentration(config Config, in io.Reader) error {
 		if len(t) <= 1 {
 			return fmt.Errorf("failed to parse title: %+v", t)
 		}
+
+		//TODO: can try to find a better way of parsing all concentration and calulate
+		hidden := ""
+		if len(config.SourceURL) > 7 && strings.HasSuffix(config.SourceURL, ".djhtm") {
+			hidden = config.SourceURL[len(config.SourceURL)-7 : len(config.SourceURL)-6]
+		}
 		concentration = &entity.StakeConcentration{
-			Date:    strings.ReplaceAll(*config.ParseDay, "-", ""),
-			StockID: strings.TrimSpace(t[1]),
+			Date:        strings.ReplaceAll(*config.ParseDay, "-", ""),
+			StockID:     strings.TrimSpace(t[1]),
+			HiddenField: hidden,
 		}
 	}
 	if concentration == nil {
@@ -129,7 +136,7 @@ func isTitleElement(n *html.Node) bool {
 }
 
 func traverseTitle(n *html.Node) (string, bool) {
-	if isTitleElement(n) {
+	if isTitleElement(n) && n.FirstChild != nil {
 		return n.FirstChild.Data, true
 	}
 

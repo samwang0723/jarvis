@@ -121,3 +121,15 @@ type StartCronjobResponse struct {
 	Error    string `json:"error"`
 	Messages string `json:"messages"`
 }
+
+type RefreshStakeConcentrationRequest struct {
+	Date    string  `json:"date"`
+	StockID string  `json:"stockID"`
+	Diff    []int32 `json:"diff"`
+}
+
+type RefreshStakeConcentrationResponse struct {
+	Code     int32  `json:"code"`
+	Error    string `json:"error"`
+	Messages string `json:"messages"`
+}

@@ -353,3 +353,35 @@ func DownloadTypeFromPB(in pb.DownloadType) DownloadType {
 	}
 	return resp
 }
+
+func RefreshStakeConcentrationRequestFromPB(in *pb.RefreshStakeConcentrationRequest) *RefreshStakeConcentrationRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbStockID := in.StockID
+	pbDate := in.Date
+	pbDiff := in.Diff
+
+	return &RefreshStakeConcentrationRequest{
+		StockID: pbStockID,
+		Date:    pbDate,
+		Diff:    pbDiff,
+	}
+}
+
+func RefreshStakeConcentrationResponseToPB(in *RefreshStakeConcentrationResponse) *pb.RefreshStakeConcentrationResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbCode := in.Code
+	pbError := in.Error
+	pbMessages := in.Messages
+
+	return &pb.RefreshStakeConcentrationResponse{
+		Code:     pbCode,
+		Error:    pbError,
+		Messages: pbMessages,
+	}
+}

@@ -29,7 +29,7 @@ type IHandler interface {
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
 	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
-	RefreshConcentration(ctx context.Context, rewindLimit int32) error
+	RefreshStakeConcentration(ctx context.Context, req *dto.RefreshStakeConcentrationRequest) (*dto.RefreshStakeConcentrationResponse, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 }
 

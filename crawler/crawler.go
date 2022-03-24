@@ -14,11 +14,9 @@
 package crawler
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -29,20 +27,16 @@ import (
 	"github.com/samwang0723/jarvis/crawler/icrawler"
 	"github.com/samwang0723/jarvis/crawler/proxy"
 	"github.com/samwang0723/jarvis/helper"
-
-	"golang.org/x/text/encoding/traditionalchinese"
-	"golang.org/x/text/transform"
 )
 
 type crawlerImpl struct {
-	url    string
+	urls   []string
 	client *http.Client
 	proxy  *proxy.Proxy
 }
 
 func New(p *proxy.Proxy) icrawler.ICrawler {
 	res := &crawlerImpl{
-		url: "",
 		client: &http.Client{
 			Timeout: time.Second * 60,
 			Transport: &http.Transport{
@@ -54,27 +48,37 @@ func New(p *proxy.Proxy) icrawler.ICrawler {
 	return res
 }
 
-func (c *crawlerImpl) SetURL(template string, date string, options ...string) {
-	if len(options) > 0 {
-		if template == icrawler.StakeConcentration {
-			c.url = fmt.Sprintf(template, options[0], date, date)
-		} else {
-			c.url = fmt.Sprintf(template, date, options[0])
-		}
-	} else {
-		if len(date) == 0 {
-			c.url = template
-		} else {
-			c.url = fmt.Sprintf(template, date)
-		}
-	}
+func (c *crawlerImpl) AppendURL(url string) {
+	c.urls = append(c.urls, url)
 }
 
-func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
-	uri := c.url
-	if c.proxy != nil {
-		uri = fmt.Sprintf("%s&url=%s", c.proxy.URI(), url.QueryEscape(c.url))
+func (c *crawlerImpl) GetURLs() []string {
+	return c.urls
+}
+
+func (c *crawlerImpl) Fetch(ctx context.Context) (string, []byte, error) {
+	if len(c.urls) <= 0 {
+		return "", nil, fmt.Errorf("no url to parse")
 	}
+	source := c.urls[0]
+	uri := source
+	if c.proxy != nil {
+		uri = fmt.Sprintf("%s&url=%s", c.proxy.URI(), url.QueryEscape(source))
+	}
+
+	res, err := download(ctx, c.client, uri)
+	if err != nil {
+		return source, nil, err
+	}
+
+	// dequeue the first element
+	if len(c.urls) > 0 {
+		c.urls = c.urls[1:]
+	}
+	return source, res, nil
+}
+
+func download(ctx context.Context, client *http.Client, uri string) ([]byte, error) {
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new fetch request initialize error: %v", err)
@@ -86,25 +90,23 @@ func (c *crawlerImpl) Fetch(ctx context.Context) (io.Reader, error) {
 	}
 	req = req.WithContext(ctx)
 	log.Debugf("download started: %s", uri)
-	resp, err := (*c.client).Do(req)
+
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("fetch request error: %v, url: %s", err, c.url)
+		return nil, fmt.Errorf("fetch request error: %v, url: %s", err, uri)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetch status error: %v, url: %s", resp.StatusCode, c.url)
+		return nil, fmt.Errorf("fetch status error: %v, url: %s", resp.StatusCode, uri)
 	}
 
 	// copy stream from response body, although it consumes memory but
 	// better helps on concurrent handling in goroutine.
 	f, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("fetch unable to read body: %v, url: %s", err, c.url)
+		return nil, fmt.Errorf("fetch unable to read body: %v, url: %s", err, uri)
 	}
 
-	log.Debugf("download completed (%s), URL: %s", helper.GetReadableSize(len(f), 2), c.url)
-	raw := bytes.NewBuffer(f)
-	reader := transform.NewReader(raw, traditionalchinese.Big5.NewDecoder())
-
-	return reader, nil
+	log.Debugf("download completed (%s), URL: %s", helper.GetReadableSize(len(f), 2), uri)
+	return f, nil
 }

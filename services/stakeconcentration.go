@@ -40,7 +40,7 @@ func (s *serviceImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context
 	return s.dal.ListBackfillStakeConcentrationStockIDs(ctx, date)
 }
 
-func (s *serviceImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (map[int]float32, error) {
+func (s *serviceImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) ([]*entity.CalculationBase, error) {
 	return s.dal.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
 }
 

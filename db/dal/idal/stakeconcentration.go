@@ -24,7 +24,7 @@ type IStakeConcentrationDAL interface {
 	CreateStakeConcentration(ctx context.Context, obj *entity.StakeConcentration) error
 	GetStakeConcentrationByStockID(ctx context.Context, stockID string, date string) (*entity.StakeConcentration, error)
 	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
-	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (map[int]float32, error)
+	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (objs []*entity.CalculationBase, err error)
 	BatchUpdateStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error
 	HasStakeConcentration(ctx context.Context, date string) bool
 }
