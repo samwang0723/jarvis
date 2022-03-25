@@ -23,31 +23,16 @@ import (
 
 	"github.com/samwang0723/jarvis/cache"
 	"github.com/samwang0723/jarvis/concurrent"
-	"github.com/samwang0723/jarvis/crawler"
-	"github.com/samwang0723/jarvis/crawler/icrawler"
-	"github.com/samwang0723/jarvis/crawler/proxy"
 	"github.com/samwang0723/jarvis/dto"
 	"github.com/samwang0723/jarvis/entity"
 	"github.com/samwang0723/jarvis/helper"
 	log "github.com/samwang0723/jarvis/logger"
 	"github.com/samwang0723/jarvis/parser"
-
-	"github.com/getsentry/sentry-go"
 )
 
 const (
 	StartCronjob = "START_CRON"
 )
-
-// download job to run in workerpool
-type downloadJob struct {
-	ctx       context.Context
-	date      string
-	stockId   string
-	respChan  chan *[]interface{}
-	rateLimit int32
-	origin    parser.Source
-}
 
 func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobRequest) (*dto.StartCronjobResponse, error) {
 	envCron := os.Getenv(StartCronjob)
@@ -105,12 +90,8 @@ func (h *handlerImpl) StockListDownload(ctx context.Context) {
 				rateLimit: 1000,
 				origin:    t,
 			}
-			select {
-			case <-ctx.Done():
-				log.Debug("(StockListDownload): generateJob goroutine exit!")
-				return
-			case concurrent.JobQueue <- job:
-			}
+
+			concurrent.JobQueue <- job
 		}
 	}()
 
@@ -223,6 +204,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 		}
 
 		if len(date) > 0 {
+			var jobs []*downloadJob
 			if origin == parser.StakeConcentration {
 				// align the date format to be 20220107, but remains the query date as 2022-01-07
 				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
@@ -239,13 +221,7 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 						rateLimit: req.RateLimit,
 						origin:    origin,
 					}
-
-					select {
-					case <-ctx.Done():
-						log.Debug("(BatchingDownload): generateJob goroutine exit!")
-						return
-					case concurrent.JobQueue <- job:
-					}
+					jobs = append(jobs, job)
 				}
 			} else {
 				job := &downloadJob{
@@ -255,126 +231,13 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 					rateLimit: req.RateLimit,
 					origin:    origin,
 				}
-				select {
-				case <-ctx.Done():
-					log.Debug("(BatchingDownload): generateJob goroutine exit!")
-					return
-				case concurrent.JobQueue <- job:
-				}
+				jobs = append(jobs, job)
+			}
+
+			for _, job := range jobs {
+				concurrent.JobQueue <- job
 			}
 		}
 	}
 	log.Debug("(BatchingDownload): all download jobs sent!")
-}
-
-func (job *downloadJob) Do() error {
-	var c icrawler.ICrawler
-	p := parser.New()
-	var config parser.Config
-
-	switch job.origin {
-	case parser.TwseDailyClose:
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 17,
-			Type:     job.origin,
-		}
-		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		url := fmt.Sprintf(icrawler.TwseDailyClose, job.date)
-		c.AppendURL(url)
-
-	case parser.TpexDailyClose:
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 17,
-			Type:     job.origin,
-		}
-		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		url := fmt.Sprintf(icrawler.TpexDailyClose, job.date)
-		c.AppendURL(url)
-
-	case parser.TwseThreePrimary:
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 19,
-			Type:     job.origin,
-		}
-		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		url := fmt.Sprintf(icrawler.TwseThreePrimary, job.date)
-		c.AppendURL(url)
-
-	case parser.TpexThreePrimary:
-		config = parser.Config{
-			ParseDay: &job.date,
-			Capacity: 24,
-			Type:     job.origin,
-		}
-		c = crawler.New(&proxy.Proxy{Type: proxy.DailyClose})
-		url := fmt.Sprintf(icrawler.TpexThreePrimary, job.date)
-		c.AppendURL(url)
-
-	case parser.TwseStockList:
-		config = parser.Config{
-			Capacity: 6,
-			Type:     job.origin,
-		}
-		c = crawler.New(nil)
-		c.AppendURL(icrawler.TWSEStocks)
-
-	case parser.TpexStockList:
-		config = parser.Config{
-			Capacity: 6,
-			Type:     job.origin,
-		}
-		c = crawler.New(nil)
-		c.AppendURL(icrawler.TPEXStocks)
-
-	case parser.StakeConcentration:
-		config = parser.Config{
-			ParseDay: &job.date,
-			Type:     job.origin,
-		}
-		c = crawler.New(&proxy.Proxy{Type: proxy.Concentration})
-
-		// in order to get accurate data, we must query each page https://stockchannelnew.sinotrade.com.tw/z/zc/zco/zco_6598_6.djhtm
-		// as the top 15 brokers may different from day to day and not possible to store all detailed daily data
-		indexes := []int{1, 2, 3, 4, 6}
-		for _, idx := range indexes {
-			c.AppendURL(fmt.Sprintf(icrawler.ConcentrationDays, job.stockId, idx))
-		}
-
-	default:
-		return fmt.Errorf("no recognized job source being specified: %s", job.origin)
-	}
-
-	// looping to download all URLs
-	for {
-		urls := c.GetURLs()
-		if len(urls) <= 0 {
-			break
-		}
-
-		sourceURL, bytes, err := c.Fetch(job.ctx)
-		if err != nil {
-			sentry.CaptureException(err)
-			return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
-		}
-		config.SourceURL = sourceURL
-		err = p.Parse(config, bytes)
-		if err != nil {
-			sentry.CaptureException(err)
-			return fmt.Errorf("(%s/%s): %+v", job.origin, job.date, err)
-		}
-	}
-
-	job.respChan <- p.Flush()
-
-	// rate limit protection and context.cancel
-	select {
-	case <-time.After(time.Duration(job.rateLimit) * time.Millisecond):
-	case <-job.ctx.Done():
-		//log.Warn("(downloadJob) - context cancelled!")
-	}
-
-	return nil
 }
