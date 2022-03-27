@@ -34,7 +34,7 @@ type StakeConcentration struct {
 	Concentration_10 float32 `gorm:"column:concentration_10"`
 	Concentration_20 float32 `gorm:"column:concentration_20"`
 	Concentration_60 float32 `gorm:"column:concentration_60"`
-	HiddenField      string  `gorm:"-"`
+	HiddenField      string  `gorm:"-"` // this field is use to identify which period the SumBuyShares/SumSellShares are
 }
 
 func (StakeConcentration) TableName() string {

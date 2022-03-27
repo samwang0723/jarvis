@@ -37,7 +37,7 @@ COPY --from=build_base /app/config.dev.yaml /config.dev.yaml
 COPY --from=build_base /jarvis-api /jarvis-api
 
 # This container exposes ports to the outside world
-EXPOSE 8080 8081 80 443 22 3306
+EXPOSE 8080 8081 80 443 22 3306 6379
 
 #USER nonroot:nonroot
 #RUN chmod +x /jarvis-api
