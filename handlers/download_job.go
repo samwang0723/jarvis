@@ -21,13 +21,13 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/labstack/gommon/log"
 	"github.com/samwang0723/jarvis/concurrent"
 	"github.com/samwang0723/jarvis/crawler"
 	"github.com/samwang0723/jarvis/crawler/icrawler"
 	"github.com/samwang0723/jarvis/crawler/proxy"
 	"github.com/samwang0723/jarvis/dto"
 	"github.com/samwang0723/jarvis/helper"
+	log "github.com/samwang0723/jarvis/logger"
 	"github.com/samwang0723/jarvis/parser"
 )
 
@@ -166,45 +166,36 @@ func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req
 		}
 
 		var jobs []*downloadJob
-		if len(date) > 0 {
-			if origin == parser.StakeConcentration {
-				// align the date format to be 20220107, but remains the query date as 2022-01-07
-				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
-				if err != nil {
-					log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
-					continue
-				}
-				for _, id := range res {
-					job := &downloadJob{
-						ctx:       ctx,
-						date:      date,
-						stockId:   id,
-						respChan:  respChan,
-						rateLimit: req.RateLimit,
-						origin:    origin,
-					}
-					jobs = append(jobs, job)
-				}
-			} else {
+		if len(date) > 0 && origin == parser.StakeConcentration {
+			// align the date format to be 20220107, but remains the query date as 2022-01-07
+			res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
+			if err != nil {
+				log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
+				continue
+			}
+			for _, id := range res {
 				job := &downloadJob{
 					ctx:       ctx,
 					date:      date,
+					stockId:   id,
 					respChan:  respChan,
 					rateLimit: req.RateLimit,
 					origin:    origin,
 				}
 				jobs = append(jobs, job)
 			}
-		} else {
-			job := &downloadJob{
-				ctx:       ctx,
-				respChan:  respChan,
-				rateLimit: req.RateLimit,
-				origin:    origin,
-			}
-			jobs = append(jobs, job)
 		}
 
+		job := &downloadJob{
+			ctx:       ctx,
+			date:      date, // it could be empty date but doesn't matter, will identify use origin
+			respChan:  respChan,
+			rateLimit: req.RateLimit,
+			origin:    origin,
+		}
+		jobs = append(jobs, job)
+
+		// batch put into job queue
 		for _, job := range jobs {
 			concurrent.JobQueue <- job
 		}
