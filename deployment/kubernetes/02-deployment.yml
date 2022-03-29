@@ -26,6 +26,10 @@ spec:
           containerPort: 3306
         - name: redis-port
           containerPort: 6379
+        - name: http-port
+          containerPort: 80
+        - name: https-port
+          containerPort: 443
         # define a liveness probe that checks every 5 seconds, starting after 5 seconds
         livenessProbe:
           httpGet:
@@ -58,4 +62,13 @@ spec:
             secretKeyRef:
               name: database-secret
               key: password
-
+        - name: DAILYCLOSE_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: proxy-secret-dailyclose
+              key: token
+        - name: CONCENTRATION_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: proxy-secret-concentration
+              key: token

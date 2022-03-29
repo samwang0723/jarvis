@@ -22,6 +22,7 @@ const (
 	DailyClose DownloadType = iota
 	ThreePrimary
 	Concentration
+	StockList
 )
 
 type ListDailyCloseSearchParams struct {

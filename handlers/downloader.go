@@ -18,14 +18,11 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/samwang0723/jarvis/cache"
-	"github.com/samwang0723/jarvis/concurrent"
 	"github.com/samwang0723/jarvis/dto"
 	"github.com/samwang0723/jarvis/entity"
-	"github.com/samwang0723/jarvis/helper"
 	log "github.com/samwang0723/jarvis/logger"
 	"github.com/samwang0723/jarvis/parser"
 )
@@ -76,50 +73,12 @@ func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobReq
 	}, nil
 }
 
-func (h *handlerImpl) StockListDownload(ctx context.Context) {
-	respChan := make(chan *[]interface{})
-	types := []parser.Source{
-		parser.TwseStockList,
-		parser.TpexStockList,
-	}
-	go func() {
-		for _, t := range types {
-			job := &downloadJob{
-				ctx:       ctx,
-				respChan:  respChan,
-				rateLimit: 1000,
-				origin:    t,
-			}
-
-			concurrent.JobQueue <- job
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			// since its hard to predict how many records already been processed,
-			// sync.WaitGroup hard to apply in this scenario, use timeout instead
-			case <-time.After(20 * time.Minute):
-				log.Warn("(StockListDownload): timeout")
-				return
-			case <-ctx.Done():
-				log.Warn("(StockListDownload): context cancel")
-				return
-			case objs, ok := <-respChan:
-				if ok {
-					h.dataService.BatchUpsertStocks(ctx, objs)
-				}
-			}
-		}
-	}()
-}
-
 // batching download all the historical stock data
 func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadRequest) {
 	dailyCloseChan := make(chan *[]interface{})
 	stakeConcentrationChan := make(chan *[]interface{})
 	threePrimaryChan := make(chan *[]interface{})
+	stockListChan := make(chan *[]interface{})
 
 	for _, t := range req.Types {
 		switch t {
@@ -131,6 +90,9 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 			go h.generateJob(ctx, parser.TpexThreePrimary, req, threePrimaryChan)
 		case dto.Concentration:
 			go h.generateJob(ctx, parser.StakeConcentration, req, stakeConcentrationChan)
+		case dto.StockList:
+			go h.generateJob(ctx, parser.TwseStockList, req, stockListChan)
+			go h.generateJob(ctx, parser.TpexStockList, req, stockListChan)
 		}
 	}
 
@@ -152,6 +114,10 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 			case objs, ok := <-threePrimaryChan:
 				if ok {
 					h.dataService.BatchUpsertThreePrimary(ctx, objs)
+				}
+			case objs, ok := <-stockListChan:
+				if ok {
+					h.dataService.BatchUpsertStocks(ctx, objs)
 				}
 			case objs, ok := <-stakeConcentrationChan:
 				if ok && len(*objs) > 0 {
@@ -189,55 +155,4 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 			}
 		}
 	}()
-}
-
-func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req *dto.DownloadRequest, respChan chan *[]interface{}) {
-	for i := req.RewindLimit * -1; i <= 0; i++ {
-		var date string
-		switch origin {
-		case parser.TwseDailyClose, parser.TwseThreePrimary:
-			date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
-		case parser.TpexDailyClose, parser.TpexThreePrimary:
-			date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
-		case parser.StakeConcentration:
-			date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)
-		}
-
-		if len(date) > 0 {
-			var jobs []*downloadJob
-			if origin == parser.StakeConcentration {
-				// align the date format to be 20220107, but remains the query date as 2022-01-07
-				res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
-				if err != nil {
-					log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
-					continue
-				}
-				for _, id := range res {
-					job := &downloadJob{
-						ctx:       ctx,
-						date:      date,
-						stockId:   id,
-						respChan:  respChan,
-						rateLimit: req.RateLimit,
-						origin:    origin,
-					}
-					jobs = append(jobs, job)
-				}
-			} else {
-				job := &downloadJob{
-					ctx:       ctx,
-					date:      date,
-					respChan:  respChan,
-					rateLimit: req.RateLimit,
-					origin:    origin,
-				}
-				jobs = append(jobs, job)
-			}
-
-			for _, job := range jobs {
-				concurrent.JobQueue <- job
-			}
-		}
-	}
-	log.Debug("(BatchingDownload): all download jobs sent!")
 }

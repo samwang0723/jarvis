@@ -31,7 +31,7 @@ metadata:
   name: redis-cache
 spec:
   type: ExternalName
-  externalName: jarvis-cache.g3crsc.0001.apse1.cache.amazonaws.com
+  externalName: jarvis-cluster-001.g3crsc.0001.apse1.cache.amazonaws.com
   ports:
   - port: 6379
     protocol: TCP
