@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE stake_concentration 
+ALTER TABLE stake_concentration
     MODIFY concentration_1 DECIMAL(5,2),
     MODIFY concentration_5 DECIMAL(5,2),
     MODIFY concentration_10 DECIMAL(5,2),
@@ -10,7 +10,7 @@ ALTER TABLE stake_concentration
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE stake_concentration 
+ALTER TABLE stake_concentration
     MODIFY concentration_1 DECIMAL(3,2),
     MODIFY concentration_5 DECIMAL(3,2),
     MODIFY concentration_10 DECIMAL(3,2),

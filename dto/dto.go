@@ -27,60 +27,60 @@ const (
 
 type ListDailyCloseSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
-	Start    string    `json:"start"`
 	End      *string   `json:"end,omitempty"`
+	Start    string    `json:"start"`
 }
 
 type ListDailyCloseRequest struct {
+	SearchParams *ListDailyCloseSearchParams `json:"searchParams"`
 	Offset       int32                       `json:"offset"`
 	Limit        int32                       `json:"limit"`
-	SearchParams *ListDailyCloseSearchParams `json:"searchParams"`
 }
 
 type ListDailyCloseResponse struct {
+	Entries    []*entity.DailyClose `json:"entries"`
 	Offset     int32                `json:"offset"`
 	Limit      int32                `json:"limit"`
 	TotalCount int64                `json:"totalCount"`
-	Entries    []*entity.DailyClose `json:"entries"`
 }
 
 type ListThreePrimarySearchParams struct {
+	End     *string `json:"end,omitempty"`
 	StockID string  `json:"stockID,omitempty"`
 	Start   string  `json:"start"`
-	End     *string `json:"end,omitempty"`
 }
 
 type ListThreePrimaryRequest struct {
+	SearchParams *ListThreePrimarySearchParams `json:"searchParams"`
 	Offset       int32                         `json:"offset"`
 	Limit        int32                         `json:"limit"`
-	SearchParams *ListThreePrimarySearchParams `json:"searchParams"`
 }
 
 type ListThreePrimaryResponse struct {
+	Entries    []*entity.ThreePrimary `json:"entries"`
 	Offset     int32                  `json:"offset"`
 	Limit      int32                  `json:"limit"`
 	TotalCount int64                  `json:"totalCount"`
-	Entries    []*entity.ThreePrimary `json:"entries"`
 }
 
 type ListStockSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
-	Country  string    `json:"country"`
 	Name     *string   `json:"name,omitempty"`
 	Category *string   `json:"category,omitempty"`
+	Country  string    `json:"country"`
 }
 
 type ListStockRequest struct {
+	SearchParams *ListStockSearchParams `json:"searchParams"`
 	Offset       int32                  `json:"offset"`
 	Limit        int32                  `json:"limit"`
-	SearchParams *ListStockSearchParams `json:"searchParams"`
 }
 
 type ListStockResponse struct {
+	Entries    []*entity.Stock `json:"entries"`
 	Offset     int32           `json:"offset"`
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`
-	Entries    []*entity.Stock `json:"entries"`
 }
 
 type ListCategoriesResponse struct {
@@ -89,9 +89,9 @@ type ListCategoriesResponse struct {
 
 type DownloadRequest struct {
 	UTCTimestamp string         `json:"utcTimestamp"`
+	Types        []DownloadType `json:"types"`
 	RewindLimit  int32          `json:"rewindLimit"`
 	RateLimit    int32          `json:"rateLimit"`
-	Types        []DownloadType `json:"types"`
 }
 
 type CreateStakeConcentrationRequest struct {
@@ -118,9 +118,9 @@ type StartCronjobRequest struct {
 }
 
 type StartCronjobResponse struct {
-	Code     int32  `json:"code"`
 	Error    string `json:"error"`
 	Messages string `json:"messages"`
+	Code     int32  `json:"code"`
 }
 
 type RefreshStakeConcentrationRequest struct {
@@ -130,7 +130,7 @@ type RefreshStakeConcentrationRequest struct {
 }
 
 type RefreshStakeConcentrationResponse struct {
-	Code     int32  `json:"code"`
 	Error    string `json:"error"`
 	Messages string `json:"messages"`
+	Code     int32  `json:"code"`
 }

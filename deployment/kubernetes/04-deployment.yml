@@ -2,16 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jarvis-api
+  namespace: development
+  name: jarvis-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      name: jarvis-api
+      app: jarvis-api
   template:
     metadata:
       labels:
-        name: jarvis-api
+        namespace: development
+        app: jarvis-api
     spec:
       containers:
       - name: application

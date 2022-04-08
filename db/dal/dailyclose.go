@@ -50,8 +50,8 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
-	sql = fmt.Sprintf(`select t.* from 
-		(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q 
+	sql = fmt.Sprintf(`select t.* from
+		(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q
 		join daily_closes t on t.id = q.id`, buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit)
 	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err

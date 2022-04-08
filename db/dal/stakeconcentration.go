@@ -51,8 +51,8 @@ func (i *dalImpl) BatchUpdateStakeConcentration(ctx context.Context, objs []*ent
 }
 
 func (i *dalImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) (objs []*entity.CalculationBase, err error) {
-	if err = i.db.Raw(`SELECT a.trade_shares, CAST(b.sum_buy_shares AS SIGNED) - CAST(b.sum_sell_shares as SIGNED) as diff, a.exchange_date FROM daily_closes a 
-		left join stake_concentration b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date) 
+	if err = i.db.Raw(`SELECT a.trade_shares, CAST(b.sum_buy_shares AS SIGNED) - CAST(b.sum_sell_shares as SIGNED) as diff, a.exchange_date FROM daily_closes a
+		left join stake_concentration b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date)
 		where a.stock_id=? and a.exchange_date <= ? order by a.exchange_date desc limit 60`, stockId, date).Scan(&objs).Error; err != nil {
 		return nil, err
 	}
@@ -62,8 +62,8 @@ func (i *dalImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId
 func (i *dalImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
 	res := []string{}
 	// using reference from daily_closes to keep data alignment
-	if err := i.db.Raw(`select a.stock_id from daily_closes as a 
-		left join stake_concentration as b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date) 
+	if err := i.db.Raw(`select a.stock_id from daily_closes as a
+		left join stake_concentration as b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date)
 		where b.stock_id is null and a.exchange_date = ?`, date).Scan(&res).Error; err != nil {
 		return res, err
 	}

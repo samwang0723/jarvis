@@ -11,11 +11,12 @@ func _() {
 	_ = x[DailyClose-0]
 	_ = x[ThreePrimary-1]
 	_ = x[Concentration-2]
+	_ = x[StockList-3]
 }
 
-const _DownloadType_name = "DailyCloseThreePrimaryConcentration"
+const _DownloadType_name = "DailyCloseThreePrimaryConcentrationStockList"
 
-var _DownloadType_index = [...]uint8{0, 10, 22, 35}
+var _DownloadType_index = [...]uint8{0, 10, 22, 35, 44}
 
 func (i DownloadType) String() string {
 	if i < 0 || i >= DownloadType(len(_DownloadType_index)-1) {

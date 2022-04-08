@@ -147,7 +147,7 @@ message StakeConcentration {
     string date = 6;
     uint64 sumBuyShares = 7;
     uint64 sumSellShares = 8;
-	float avgBuyPrice = 9;     
+	float avgBuyPrice = 9;
 	float avgSellPrice = 10;
 	float concentration_1 = 11;
 	float concentration_5 = 12;
@@ -185,4 +185,3 @@ message RefreshStakeConcentrationResponse {
     string error = 2;
     string messages = 3;
 }
-

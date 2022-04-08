@@ -71,6 +71,8 @@ func (h *handlerImpl) RefreshStakeConcentration(ctx context.Context, req *dto.Re
 }
 
 func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string, date string, diff []int32) *entity.StakeConcentration {
+	// we need to pull sum of traded volumes in order to calculate the concentration percentage
+	// TODO: use SQL to calculate the range of summary instead from application layer
 	bases, err := h.dataService.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
 	if err != nil || len(bases) < 60 {
 		return nil
@@ -82,6 +84,7 @@ func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string
 	}
 
 	sumTradeShares := uint64(0)
+	// cursor for the "diff" array, contains from 1, 5, 10, 20, 60 Buy-Sell diff records
 	cursor := 0
 	for idx, c := range bases {
 		sumTradeShares += c.TradeShares
@@ -102,7 +105,7 @@ func (h *handlerImpl) calculateConcentration(ctx context.Context, stockId string
 				resp.Concentration_10 = op
 			case 19:
 				resp.Concentration_20 = op
-			case 59:
+			case 60:
 				resp.Concentration_60 = op
 			}
 			cursor++

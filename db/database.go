@@ -38,7 +38,10 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 		Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
 	}
 	readWritePlugin := dbresolver.Register(dbResolverCfg)
-	session.Use(readWritePlugin)
+	err = session.Use(readWritePlugin)
+	if err != nil {
+		panic("cannot use read/write plugin: " + err.Error())
+	}
 
 	sqlDB, err := session.DB()
 	if err != nil {

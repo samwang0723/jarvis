@@ -150,7 +150,10 @@ func (h *handlerImpl) BatchingDownload(ctx context.Context, req *dto.DownloadReq
 						}
 					}
 					// refresh the concentration
-					h.RefreshStakeConcentration(ctx, &dto.RefreshStakeConcentrationRequest{StockID: stockId, Date: date, Diff: diff})
+					_, err := h.RefreshStakeConcentration(ctx, &dto.RefreshStakeConcentrationRequest{StockID: stockId, Date: date, Diff: diff})
+					if err != nil {
+						log.Errorf("Error inserting stake_concentration: %s", err)
+					}
 				}
 			}
 		}

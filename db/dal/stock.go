@@ -60,8 +60,8 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
-	sql = fmt.Sprintf(`select t.* from 
-		(select id from stocks where %s order by stock_id limit %d, %d) q 
+	sql = fmt.Sprintf(`select t.* from
+		(select id from stocks where %s order by stock_id limit %d, %d) q
 		join stocks t on t.id = q.id`, buildQueryFromListStockSearchParams(searchParams), offset, limit)
 	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err

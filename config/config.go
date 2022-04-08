@@ -73,10 +73,10 @@ var (
 func Load() {
 	yamlFile := fmt.Sprintf("config.%s.yaml", helper.GetCurrentEnv())
 	f, err := os.Open(yamlFile)
-	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close()
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&instance)
 	if err != nil {

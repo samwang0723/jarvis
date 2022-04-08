@@ -2,3 +2,6 @@
 config.dev.yaml
 config.prod.yaml
 coverage.txt
+tls.crt
+tls.key
+terraform/

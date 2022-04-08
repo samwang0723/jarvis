@@ -34,11 +34,11 @@ import (
 // download job to run in workerpool
 type downloadJob struct {
 	ctx       context.Context
+	rateLimit int32
+	origin    parser.Source
 	date      string
 	stockId   string
 	respChan  chan *[]interface{}
-	rateLimit int32
-	origin    parser.Source
 }
 
 func (job *downloadJob) Do() error {
@@ -154,51 +154,80 @@ func (job *downloadJob) Do() error {
 }
 
 func (h *handlerImpl) generateJob(ctx context.Context, origin parser.Source, req *dto.DownloadRequest, respChan chan *[]interface{}) {
-	for i := req.RewindLimit * -1; i <= 0; i++ {
+	for _, d := range getParseDates(origin, req) {
+		if err := h.queueJobs(ctx, origin, d, req.RateLimit, respChan); err != nil {
+			log.Error(err)
+			continue
+		}
+	}
+	log.Debug("(BatchingDownload): all download jobs sent!")
+}
+
+func getParseDates(origin parser.Source, req *dto.DownloadRequest) []string {
+	var dates []string
+	if len(req.UTCTimestamp) > 0 {
+		// parsing for specific date
 		var date string
 		switch origin {
 		case parser.TwseDailyClose, parser.TwseThreePrimary:
-			date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
+			date = helper.GetDateFromUTC(req.UTCTimestamp, helper.TwseDateFormat)
 		case parser.TpexDailyClose, parser.TpexThreePrimary:
-			date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
+			date = helper.GetDateFromUTC(req.UTCTimestamp, helper.TpexDateFormat)
 		case parser.StakeConcentration:
-			date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)
+			date = helper.GetDateFromUTC(req.UTCTimestamp, helper.StakeConcentrationFormat)
 		}
-
-		var jobs []*downloadJob
-		if len(date) > 0 && origin == parser.StakeConcentration {
-			// align the date format to be 20220107, but remains the query date as 2022-01-07
-			res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
-			if err != nil {
-				log.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
-				continue
+		dates = append(dates, date)
+	} else {
+		// parsing for sequence dates using date rewind number
+		for i := req.RewindLimit * -1; i <= 0; i++ {
+			var date string
+			switch origin {
+			case parser.TwseDailyClose, parser.TwseThreePrimary:
+				date = helper.GetDateFromOffset(i, helper.TwseDateFormat)
+			case parser.TpexDailyClose, parser.TpexThreePrimary:
+				date = helper.GetDateFromOffset(i, helper.TpexDateFormat)
+			case parser.StakeConcentration:
+				date = helper.GetDateFromOffset(i, helper.StakeConcentrationFormat)
 			}
-			for _, id := range res {
-				job := &downloadJob{
-					ctx:       ctx,
-					date:      date,
-					stockId:   id,
-					respChan:  respChan,
-					rateLimit: req.RateLimit,
-					origin:    origin,
-				}
-				jobs = append(jobs, job)
-			}
+			dates = append(dates, date)
 		}
+	}
+	return dates
+}
 
+func (h *handlerImpl) queueJobs(ctx context.Context, origin parser.Source, date string, rateLimit int32, respChan chan *[]interface{}) error {
+	var jobs []*downloadJob
+	if len(date) > 0 && origin == parser.StakeConcentration {
+		// align the date format to be 20220107, but remains the query date as 2022-01-07
+		res, err := h.dataService.ListBackfillStakeConcentrationStockIDs(ctx, strings.ReplaceAll(date, "-", ""))
+		if err != nil {
+			return fmt.Errorf("ListBackfillStakeConcentrationStockIDs error: %+v", err)
+		}
+		for _, id := range res {
+			job := &downloadJob{
+				ctx:       ctx,
+				date:      date,
+				stockId:   id,
+				respChan:  respChan,
+				rateLimit: rateLimit,
+				origin:    origin,
+			}
+			jobs = append(jobs, job)
+		}
+	} else {
 		job := &downloadJob{
 			ctx:       ctx,
 			date:      date, // it could be empty date but doesn't matter, will identify use origin
 			respChan:  respChan,
-			rateLimit: req.RateLimit,
+			rateLimit: rateLimit,
 			origin:    origin,
 		}
 		jobs = append(jobs, job)
-
-		// batch put into job queue
-		for _, job := range jobs {
-			concurrent.JobQueue <- job
-		}
 	}
-	log.Debug("(BatchingDownload): all download jobs sent!")
+
+	// batch put into job queue
+	for _, job := range jobs {
+		concurrent.JobQueue <- job
+	}
+	return nil
 }

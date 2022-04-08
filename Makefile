@@ -1,6 +1,6 @@
 .PHONY: test lint
 
-test: 
+test:
 	@echo "[go test] running tests and collecting coverage metrics"
 	@go test -v -tags all_tests -race -coverprofile=coverage.txt -covermode=atomic ./...
 
@@ -36,4 +36,4 @@ docker-m1:
 
 docker-amd64:
 	@docker buildx use m1-builder
-	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .	
+	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .

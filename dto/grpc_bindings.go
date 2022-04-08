@@ -16,8 +16,8 @@ package dto
 import (
 	"github.com/samwang0723/jarvis/entity"
 	pb "github.com/samwang0723/jarvis/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
@@ -130,17 +130,17 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
-		pbCreatedAt, _ = ptypes.TimestampProto(*in.CreatedAt)
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamp.Timestamp
 	if in.UpdatedAt != nil {
-		pbUpdatedAt, _ = ptypes.TimestampProto(*in.UpdatedAt)
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
 	if in.DeletedAt != nil {
-		pbDeletedAt, _ = ptypes.TimestampProto(*in.DeletedAt)
+		pbDeletedAt = timestamppb.New(*in.DeletedAt)
 	}
 
 	return &pb.DailyClose{
@@ -192,17 +192,17 @@ func StockToPB(in *entity.Stock) *pb.Stock {
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
-		pbCreatedAt, _ = ptypes.TimestampProto(*in.CreatedAt)
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamp.Timestamp
 	if in.UpdatedAt != nil {
-		pbUpdatedAt, _ = ptypes.TimestampProto(*in.UpdatedAt)
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
 	if in.DeletedAt != nil {
-		pbDeletedAt, _ = ptypes.TimestampProto(*in.DeletedAt)
+		pbDeletedAt = timestamppb.New(*in.DeletedAt)
 	}
 
 	return &pb.Stock{
@@ -223,9 +223,7 @@ func ListCategoriesResponseToPB(in *ListCategoriesResponse) *pb.ListCategoriesRe
 	}
 
 	var entries []string
-	for _, obj := range in.Entries {
-		entries = append(entries, obj)
-	}
+	entries = append(entries, in.Entries...)
 
 	return &pb.ListCategoriesResponse{
 		Entries: entries,
@@ -262,17 +260,17 @@ func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetSta
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
-		pbCreatedAt, _ = ptypes.TimestampProto(*in.CreatedAt)
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamp.Timestamp
 	if in.UpdatedAt != nil {
-		pbUpdatedAt, _ = ptypes.TimestampProto(*in.UpdatedAt)
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
 	if in.DeletedAt != nil {
-		pbDeletedAt, _ = ptypes.TimestampProto(*in.DeletedAt)
+		pbDeletedAt = timestamppb.New(*in.DeletedAt)
 	}
 
 	return &pb.GetStakeConcentrationResponse{

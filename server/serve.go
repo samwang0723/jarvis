@@ -28,6 +28,7 @@ import (
 	"github.com/samwang0723/jarvis/cronjob"
 	"github.com/samwang0723/jarvis/db"
 	"github.com/samwang0723/jarvis/db/dal"
+	"github.com/samwang0723/jarvis/dto"
 	"github.com/samwang0723/jarvis/handlers"
 	"github.com/samwang0723/jarvis/helper"
 	log "github.com/samwang0723/jarvis/logger"
@@ -39,6 +40,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"syscall"
 	"time"
@@ -158,23 +160,35 @@ func (s *server) Start(ctx context.Context) error {
 	}
 
 	signature := `
-      _                  _                   _ 
+      _                  _                   _
      | |                (_)                 (_)
-     | | __ _ _ ____   ___ ___    __ _ _ __  _ 
+     | | __ _ _ ____   ___ ___    __ _ _ __  _
  _   | |/ _' | '__\ \ / / / __|  / _' | '_ \| |
 | |__| | (_| | |   \ V /| \__ \ | (_| | |_) | |
  \____/ \__,_|_|    \_/ |_|___/  \__,_| .__/|_|
-                                      | |      
+                                      | |
                                       |_|       Version (%s)
 High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.0.0a", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.0.1a", helper.GetCurrentEnv())
 	fmt.Println(signatureOut)
 
 	// starting the workerpool
 	s.Dispatcher().Run(ctx)
+
+	// by default starting cronjob for regular daily updates pulling
+	// cronjob using redis distrubted lock to prevent multiple instances
+	// pulling same content
+	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
+		Schedule: "00 17 * * 1-5",
+		Types:    []dto.DownloadType{dto.DailyClose, dto.ThreePrimary},
+	})
+	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
+		Schedule: "00 19 * * 1-5",
+		Types:    []dto.DownloadType{dto.Concentration},
+	})
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
@@ -277,7 +291,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		c,
 		mux,
 		addr,
-		[]grpc.DialOption{grpc.WithInsecure()},
+		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	)
 	if err != nil {
 		log.Fatalf("cannot start grpc gateway: %v", err)
