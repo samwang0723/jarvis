@@ -34,7 +34,6 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 		panic("connect database error: " + err.Error())
 	}
 	dbResolverCfg := dbresolver.Config{
-		Sources:  []gorm.Dialector{mysql.Open(dsns["master"])},
 		Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
 	}
 	readWritePlugin := dbresolver.Register(dbResolverCfg)

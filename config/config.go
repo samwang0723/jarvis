@@ -27,18 +27,12 @@ const (
 )
 
 type Config struct {
-	Server struct {
-		Name     string `yaml:"name"`
-		Port     int    `yaml:"port"`
-		Host     string `yaml:"host"`
-		GrpcPort int    `yaml:"grpcPort"`
-	} `yaml:"server"`
 	Database struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
-		Port         int    `yaml:"port"`
 		Database     string `yaml:"database"`
+		Port         int    `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
@@ -47,12 +41,18 @@ type Config struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
-		Port         int    `yaml:"port"`
 		Database     string `yaml:"database"`
+		Port         int    `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
+	Server struct {
+		Name     string `yaml:"name"`
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		GrpcPort int    `yaml:"grpcPort"`
+	} `yaml:"server"`
 	RedisCache struct {
 		Host string `yaml:"host"`
 		Port int    `yaml:"port"`

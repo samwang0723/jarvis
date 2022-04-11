@@ -16,5 +16,5 @@ spec:
           backend:
             service:
               name: jarvis-service
-              port: 
+              port:
                 number: 8080

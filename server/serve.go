@@ -95,7 +95,7 @@ func Serve() {
 	//health check
 	health := healthcheck.NewHandler()
 	// Our app is not happy if we've got more than 100 goroutines running.
-	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(100))
+	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(10000))
 	// Our app is not ready if we can't resolve our upstream dependency in DNS.
 	health.AddReadinessCheck(
 		"upstream-database-read-dns",
@@ -130,8 +130,13 @@ func Serve() {
 			//no need to explictly close a channel, it will be garbage collected
 			//close(concurrent.JobQueue)
 
-			sqlDB, _ := db.DB()
-			return sqlDB.Close()
+			sqlDB, err := db.DB()
+			if err != nil {
+				return err
+			}
+			defer sqlDB.Close()
+
+			return nil
 		}),
 	)
 
