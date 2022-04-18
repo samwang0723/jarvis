@@ -30,6 +30,7 @@ type IHandler interface {
 	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
 	RefreshStakeConcentration(ctx context.Context, req *dto.RefreshStakeConcentrationRequest) (*dto.RefreshStakeConcentrationResponse, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
+	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 }
 
 type handlerImpl struct {

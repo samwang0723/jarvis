@@ -55,6 +55,14 @@ service Jarvis {
             body: "*"
         };
     }
+
+    rpc ListThreePrimary(ListThreePrimaryRequest) returns (ListThreePrimaryResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/threeprimary"
+            body: "*"
+        };
+    }
 }
 
 message ListDailyCloseRequest {
@@ -184,4 +192,36 @@ message RefreshStakeConcentrationResponse {
     int32 code = 1;
     string error = 2;
     string messages = 3;
+}
+
+message ListThreePrimaryRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListThreePrimarySearchParams searchParams = 3;
+}
+
+message ListThreePrimarySearchParams {
+    string stockID = 1;
+    string start = 2;
+    string end = 3;
+}
+
+message ListThreePrimaryResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated ThreePrimary entries = 4;
+}
+
+message ThreePrimary {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    int64 foreignTradeShares = 7;
+    int64 trustTradeShares = 8;
+    int64 dealerTradeShares = 9;
+    int64 hedgingTradeShares = 10;
 }

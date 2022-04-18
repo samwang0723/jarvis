@@ -16,11 +16,11 @@ package dal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/samwang0723/jarvis/db/dal/idal"
 	"github.com/samwang0723/jarvis/entity"
 
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -38,29 +38,31 @@ func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.Th
 
 func (i *dalImpl) ListThreePrimary(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListThreePrimarySearchParams) (objs []*entity.ThreePrimary, totalCount int64, err error) {
-	query := i.db.Model(&entity.ThreePrimary{})
-	query = buildQueryFromListThreePrimarySearchParams(query, searchParams)
-	err = query.Count(&totalCount).Error
-	if err != nil {
+	sql := fmt.Sprintf("select count(*) from three_primary where %s", buildQueryFromListThreePrimarySearchParams(searchParams))
+	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+	sql = fmt.Sprintf(`select t.* from
+		(select id from three_primary where %s order by exchange_date desc limit %d, %d) q
+		join three_primary t on t.id = q.id`, buildQueryFromListThreePrimarySearchParams(searchParams), offset, limit)
+
+	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}
 
-	err = query.Offset(int(offset)).Limit(int(limit)).Find(&objs).Error
-	if err != nil {
-		return nil, 0, err
-	}
 	return objs, totalCount, nil
 }
 
-func buildQueryFromListThreePrimarySearchParams(query *gorm.DB, params *idal.ListThreePrimarySearchParams) *gorm.DB {
+func buildQueryFromListThreePrimarySearchParams(params *idal.ListThreePrimarySearchParams) string {
 	if params == nil {
-		return query
+		return ""
 	}
-	query = query.Where("exchange_date >= ?", params.Start)
+	query := fmt.Sprintf("exchange_date >= %s", params.Start)
 	if params.End != nil {
 		dateStr := *params.End
-		query = query.Where("exchange_date < ?", dateStr)
+		query = fmt.Sprintf("%s and exchange_date < %s", query, dateStr)
 	}
-	query = query.Where("stock_id = ?", params.StockID)
+
+	query = fmt.Sprintf("%s and stock_id = %s", query, params.StockID)
 	return query
 }

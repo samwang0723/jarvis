@@ -69,3 +69,12 @@ func (s *server) RefreshStakeConcentration(ctx context.Context, req *pb.RefreshS
 	return dto.RefreshStakeConcentrationResponseToPB(res), nil
 
 }
+
+func (s *server) ListThreePrimary(ctx context.Context, req *pb.ListThreePrimaryRequest) (*pb.ListThreePrimaryResponse, error) {
+	res, err := s.Handler().ListThreePrimary(ctx, dto.ListThreePrimaryRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListThreePrimaryResponseToPB(res), nil
+}

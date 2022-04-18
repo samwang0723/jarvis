@@ -383,3 +383,93 @@ func RefreshStakeConcentrationResponseToPB(in *RefreshStakeConcentrationResponse
 		Messages: pbMessages,
 	}
 }
+
+func ListThreePrimaryRequestFromPB(in *pb.ListThreePrimaryRequest) *ListThreePrimaryRequest {
+	if in == nil {
+		return nil
+	}
+	out := &ListThreePrimaryRequest{
+		Offset:       in.Offset,
+		Limit:        in.Limit,
+		SearchParams: ListThreePrimarySearchParamsFromPB(in.SearchParams),
+	}
+
+	return out
+}
+
+func ListThreePrimarySearchParamsFromPB(in *pb.ListThreePrimarySearchParams) *ListThreePrimarySearchParams {
+	if in == nil {
+		return nil
+	}
+
+	out := &ListThreePrimarySearchParams{
+		Start: in.Start,
+	}
+
+	out.StockID = in.StockID
+	end := in.End
+	if len(end) > 0 {
+		out.End = &end
+	}
+	return out
+}
+
+func ListThreePrimaryResponseToPB(in *ListThreePrimaryResponse) *pb.ListThreePrimaryResponse {
+	if in == nil {
+		return nil
+	}
+
+	var entries []*pb.ThreePrimary
+	for _, obj := range in.Entries {
+		entries = append(entries, ThreePrimaryToPB(obj))
+	}
+
+	return &pb.ListThreePrimaryResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbStockID := in.StockID
+	pbDate := in.Date
+	pbForeignTradeShares := in.ForeignTradeShares
+	pbTrustTradeShares := in.TrustTradeShares
+	pbDealerTradeShares := in.DealerTradeShares
+	pbHedgingTradeShares := in.HedgingTradeShares
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	}
+
+	return &pb.ThreePrimary{
+		Id:                 pbID.Uint64(),
+		StockID:            pbStockID,
+		Date:               pbDate,
+		ForeignTradeShares: pbForeignTradeShares,
+		TrustTradeShares:   pbTrustTradeShares,
+		DealerTradeShares:  pbDealerTradeShares,
+		HedgingTradeShares: pbHedgingTradeShares,
+		CreatedAt:          pbCreatedAt,
+		UpdatedAt:          pbUpdatedAt,
+		DeletedAt:          pbDeletedAt,
+	}
+}
