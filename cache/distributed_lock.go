@@ -29,7 +29,7 @@ const (
 	CronjobLock = "cronjob-lock"
 )
 
-func ObtainLock(key string, expire time.Duration) bool {
+func ObtainLock(key string, expire time.Duration) *redislock.Lock {
 	cfg := config.GetCurrentConfig().RedisCache
 	client := redis.NewClient(&redis.Options{
 		Network: "tcp",
@@ -43,12 +43,14 @@ func ObtainLock(key string, expire time.Duration) bool {
 	// Try to obtain lock.
 	ctx := context.Background()
 	lock, err := locker.Obtain(ctx, key, expire, nil)
-	defer lock.Release(ctx)
-	if err == nil {
-		log.Debugf("(%s) redis lock obtained successfully!", key)
-		return true
+	if err == redislock.ErrNotObtained {
+		log.Errorf("Could not obtain lock! reason: %s", err)
+		return nil
+	} else if err != nil {
+		log.Fatal(err)
 	}
+	//defer lock.Release(ctx)
 
-	log.Errorf("Could not obtain lock! reason: %s", err)
-	return false
+	log.Debugf("(%s) redis lock obtained successfully!", key)
+	return lock
 }
