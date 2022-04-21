@@ -49,7 +49,6 @@ func ObtainLock(key string, expire time.Duration) *redislock.Lock {
 	} else if err != nil {
 		log.Fatal(err)
 	}
-	//defer lock.Release(ctx)
 
 	log.Debugf("(%s) redis lock obtained successfully!", key)
 	return lock

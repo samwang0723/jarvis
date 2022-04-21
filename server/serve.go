@@ -187,11 +187,11 @@ _______________________________________________
 	// cronjob using redis distrubted lock to prevent multiple instances
 	// pulling same content
 	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
-		Schedule: "00 17 * * 1-5",
+		Schedule: "30 16 * * 1-5",
 		Types:    []dto.DownloadType{dto.DailyClose, dto.ThreePrimary},
 	})
 	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
-		Schedule: "00 19 * * 1-5",
+		Schedule: "30 17 * * 1-5",
 		Types:    []dto.DownloadType{dto.Concentration},
 	})
 

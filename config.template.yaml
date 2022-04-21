@@ -7,7 +7,7 @@ server:
 
 # Database credentials
 database:
-  host: "localhost"
+  host: "host.docker.internal"
   port: 3306
   database: "jarvis"
   maxLifetime:  10
@@ -15,7 +15,7 @@ database:
   maxOpenConns: 200
 
 replica:
-  host: "localhost"
+  host: "host.docker.internal"
   port: 3306
   database: "jarvis"
   maxLifetime:  10
@@ -24,7 +24,7 @@ replica:
 
 redis:
   port: 6379
-  host: "localhost"
+  host: "redis"
 
 # Logging
 log:

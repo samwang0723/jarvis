@@ -54,7 +54,6 @@ func (h *handlerImpl) CronDownload(ctx context.Context, req *dto.StartCronjobReq
 				RateLimit:   3000,
 				Types:       req.Types,
 			})
-			//defer lock.Release(longLiveCtx)
 		} else {
 			log.Error("CronDownload: Redis distributed lock obtain failed.")
 		}

@@ -33,13 +33,15 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 	if err != nil {
 		panic("connect database error: " + err.Error())
 	}
-	dbResolverCfg := dbresolver.Config{
-		Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
-	}
-	readWritePlugin := dbresolver.Register(dbResolverCfg)
-	err = session.Use(readWritePlugin)
-	if err != nil {
-		panic("cannot use read/write plugin: " + err.Error())
+	if len(dsns["replica"]) > 0 {
+		dbResolverCfg := dbresolver.Config{
+			Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
+		}
+		readWritePlugin := dbresolver.Register(dbResolverCfg)
+		err = session.Use(readWritePlugin)
+		if err != nil {
+			panic("cannot use read/write plugin: " + err.Error())
+		}
 	}
 
 	sqlDB, err := session.DB()
@@ -64,14 +66,17 @@ func generateDSN(cfg *config.Config) map[string]string {
 		database.Database,
 	)
 	resp["master"] = masterDsn
-	replica := cfg.Replica
-	replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
-		replica.User,
-		replica.Password,
-		fmt.Sprintf("tcp(%s:%d)", database.Host, database.Port),
-		replica.Database,
-	)
-	resp["replica"] = replicaDsn
+
+	if len(cfg.Replica.User) > 0 {
+		replica := cfg.Replica
+		replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
+			replica.User,
+			replica.Password,
+			fmt.Sprintf("tcp(%s:%d)", database.Host, database.Port),
+			replica.Database,
+		)
+		resp["replica"] = replicaDsn
+	}
 
 	return resp
 }
