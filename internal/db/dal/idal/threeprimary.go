@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package idal
 
 import (
-	"log"
-	"os"
-	"time"
+	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/server"
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-const (
-	TimeZone = "TZ"
-)
+type ListThreePrimarySearchParams struct {
+	End     *string // End = nil means it's querying to up-to-date data
+	StockID string
+	Start   string
+}
 
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
-	}
-
-	server.Serve()
+type IThreePrimaryDAL interface {
+	CreateThreePrimary(ctx context.Context, obj *entity.ThreePrimary) error
+	BatchUpsertThreePrimary(ctx context.Context, objs []*entity.ThreePrimary) error
+	ListThreePrimary(ctx context.Context, offset int32, limit int32,
+		searchParam *ListThreePrimarySearchParams) (objs []*entity.ThreePrimary, totalCount int64, err error)
 }

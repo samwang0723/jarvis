@@ -11,30 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package main
+package dal
 
 import (
-	"log"
-	"os"
-	"time"
+	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 
-	"github.com/samwang0723/jarvis/internal/app/server"
+	"gorm.io/gorm"
 )
 
-const (
-	TimeZone = "TZ"
-)
+type dalImpl struct {
+	db *gorm.DB
+}
 
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
+// functional options design pattern
+func New(opts ...Option) idal.IDAL {
+	impl := &dalImpl{}
+	for _, opt := range opts {
+		opt(impl)
 	}
-
-	server.Serve()
+	return impl
 }

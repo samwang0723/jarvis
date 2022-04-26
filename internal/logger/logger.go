@@ -12,29 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package logger
 
 import (
-	"log"
-	"os"
-	"time"
-
-	"github.com/samwang0723/jarvis/internal/app/server"
+	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 )
 
-const (
-	TimeZone = "TZ"
+var (
+	instance structuredlog.ILogger
 )
 
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
+func Initialize(l structuredlog.ILogger) {
+	if instance == nil {
+		instance = l
 	}
-
-	server.Serve()
 }
