@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package services
 
 import (
-	"log"
-	"os"
-	"time"
-
-	"github.com/samwang0723/jarvis/internal/app/server"
+	"github.com/samwang0723/jarvis/internal/cronjob/icronjob"
+	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 )
 
-const (
-	TimeZone = "TZ"
-)
+type Option func(o *serviceImpl)
 
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
+func WithDAL(dal idal.IDAL) Option {
+	return func(i *serviceImpl) {
+		i.dal = dal
 	}
+}
 
-	server.Serve()
+func WithCronJob(cronjob icronjob.ICronJob) Option {
+	return func(i *serviceImpl) {
+		i.cronjob = cronjob
+	}
 }

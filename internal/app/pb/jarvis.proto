@@ -1,0 +1,227 @@
+syntax = "proto3";
+
+package jarvis;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+
+option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
+
+service Jarvis {
+    rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/dailycloses"
+            body: "*"
+        };
+    }
+
+    rpc ListStocks(ListStockRequest) returns (ListStockResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/stocks"
+            body: "*"
+        };
+    }
+
+    rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            get: "/v1/categories"
+        };
+    }
+
+    rpc GetStakeConcentration(GetStakeConcentrationRequest) returns (GetStakeConcentrationResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/stakeconcentration"
+            body: "*"
+        };
+    }
+
+    rpc StartCronjob(StartCronjobRequest) returns (StartCronjobResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/cronjob"
+            body: "*"
+        };
+    }
+
+    rpc RefreshStakeConcentration(RefreshStakeConcentrationRequest) returns (RefreshStakeConcentrationResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/stakeconcentration/{stockID}/refresh"
+            body: "*"
+        };
+    }
+
+    rpc ListThreePrimary(ListThreePrimaryRequest) returns (ListThreePrimaryResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/threeprimary"
+            body: "*"
+        };
+    }
+}
+
+message ListDailyCloseRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListDailyCloseSearchParams searchParams = 3;
+}
+
+message ListDailyCloseResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated DailyClose entries = 4;
+}
+
+message ListDailyCloseSearchParams {
+    repeated string stockIDs = 1;
+    string start = 2;
+    string end = 3;
+}
+
+message DailyClose {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    uint64 tradeShares = 7;
+    uint64 transactions = 8;
+    uint64 turnover = 9;
+    float open = 10;
+    float close = 11;
+    float high = 12;
+    float low = 13;
+    float diff = 14;
+}
+
+message ListStockRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListStockSearchParams searchParams = 3;
+}
+
+message ListStockSearchParams {
+    repeated string stockIDs = 1;
+    string country = 2;
+    string name = 3;
+    string category = 4;
+}
+
+message ListStockResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated Stock entries = 4;
+}
+
+message Stock {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string name = 6;
+    string country = 7;
+    string category = 8;
+}
+
+message ListCategoriesRequest {}
+message ListCategoriesResponse {
+    repeated string entries = 1;
+}
+
+message GetStakeConcentrationRequest {
+    string stockID = 1;
+    string date = 2;
+}
+
+message GetStakeConcentrationResponse {
+    StakeConcentration stakeConcentration = 1;
+}
+
+message StakeConcentration {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    uint64 sumBuyShares = 7;
+    uint64 sumSellShares = 8;
+	float avgBuyPrice = 9;
+	float avgSellPrice = 10;
+	float concentration_1 = 11;
+	float concentration_5 = 12;
+	float concentration_10 = 13;
+	float concentration_20 = 14;
+	float concentration_60 = 15;
+}
+
+message StartCronjobRequest {
+    string schedule = 1;
+    repeated DownloadType types = 2;
+}
+
+message StartCronjobResponse {
+    int32 code = 1;
+    string error = 2;
+    string messages = 3;
+}
+
+// Type of download
+enum DownloadType {
+    DAILYCLOSE = 0;
+    THREEPRIMARY = 1;
+    CONCENTRATION = 2;
+}
+
+message RefreshStakeConcentrationRequest {
+    string stockID = 1;
+    string date = 2;
+    repeated int32 diff = 3;
+}
+
+message RefreshStakeConcentrationResponse {
+    int32 code = 1;
+    string error = 2;
+    string messages = 3;
+}
+
+message ListThreePrimaryRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    ListThreePrimarySearchParams searchParams = 3;
+}
+
+message ListThreePrimarySearchParams {
+    string stockID = 1;
+    string start = 2;
+    string end = 3;
+}
+
+message ListThreePrimaryResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated ThreePrimary entries = 4;
+}
+
+message ThreePrimary {
+    uint64 id = 1;
+    google.protobuf.Timestamp createdAt = 2;
+    google.protobuf.Timestamp updatedAt = 3;
+    google.protobuf.Timestamp deletedAt = 4;
+    string stockID = 5;
+    string date = 6;
+    int64 foreignTradeShares = 7;
+    int64 trustTradeShares = 8;
+    int64 dealerTradeShares = 9;
+    int64 hedgingTradeShares = 10;
+}

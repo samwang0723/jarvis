@@ -22,18 +22,20 @@ lint-check-deps:
 
 proto:
 	@protoc jarvis.proto -I . \
-		--go_out ./pb --go_opt paths=source_relative \
+		-I $$GOPATH/src/github.com/samwang0723/jarvis/third_party \
+		--go_out ./internal/app/pb --go_opt paths=source_relative \
 		--go-grpc_opt=require_unimplemented_servers=false \
-    	--go-grpc_out ./pb --go-grpc_opt paths=source_relative  \
-		--grpc-gateway_out ./pb/gateway \
+    	--go-grpc_out ./internal/app/pb --go-grpc_opt paths=source_relative  \
+		--grpc-gateway_out ./internal/app/pb/gateway \
 		--grpc-gateway_opt logtostderr=true \
 		--grpc-gateway_opt paths=source_relative \
 		--grpc-gateway_opt standalone=true \
-		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/pb
+		--swagger_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
+		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
 docker-m1:
-	@docker build -t samwang0723/jarvis-api:m1 -f Dockerfile.local .
+	@docker build -t samwang0723/jarvis-api:m1 -f build/docker/Dockerfile.local .
 
 docker-amd64:
 	@docker buildx use m1-builder
-	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .
+	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f build/docker/Dockerfile .

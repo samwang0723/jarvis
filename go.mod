@@ -21,16 +21,18 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.8.0
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/johnbellone/grpc-middleware-sentry v0.2.0
 	github.com/joho/godotenv v1.4.0
+	github.com/olivere/elastic/v7 v7.0.32
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
-	google.golang.org/grpc v1.44.0
+	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731
+	google.golang.org/grpc v1.45.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gorm.io/plugin/dbresolver v1.1.0
 )

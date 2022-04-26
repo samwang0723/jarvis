@@ -1,0 +1,738 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "jarvis.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/categories": {
+      "get": {
+        "operationId": "Jarvis_ListCategories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisListCategoriesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/cronjob": {
+      "post": {
+        "operationId": "Jarvis_StartCronjob",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisStartCronjobResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisStartCronjobRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/dailycloses": {
+      "post": {
+        "operationId": "Jarvis_ListDailyClose",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisListDailyCloseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisListDailyCloseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/stakeconcentration": {
+      "post": {
+        "operationId": "Jarvis_GetStakeConcentration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisGetStakeConcentrationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisGetStakeConcentrationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/stakeconcentration/{stockID}/refresh": {
+      "post": {
+        "operationId": "Jarvis_RefreshStakeConcentration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisRefreshStakeConcentrationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "stockID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisRefreshStakeConcentrationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/stocks": {
+      "post": {
+        "operationId": "Jarvis_ListStocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisListStockResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisListStockRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    },
+    "/v1/threeprimary": {
+      "post": {
+        "operationId": "Jarvis_ListThreePrimary",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/jarvisListThreePrimaryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/jarvisListThreePrimaryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Jarvis"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "jarvisDailyClose": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "tradeShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "transactions": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "turnover": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "open": {
+          "type": "number",
+          "format": "float"
+        },
+        "close": {
+          "type": "number",
+          "format": "float"
+        },
+        "high": {
+          "type": "number",
+          "format": "float"
+        },
+        "low": {
+          "type": "number",
+          "format": "float"
+        },
+        "diff": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "jarvisDownloadType": {
+      "type": "string",
+      "enum": [
+        "DAILYCLOSE",
+        "THREEPRIMARY",
+        "CONCENTRATION"
+      ],
+      "default": "DAILYCLOSE",
+      "title": "Type of download"
+    },
+    "jarvisGetStakeConcentrationRequest": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisGetStakeConcentrationResponse": {
+      "type": "object",
+      "properties": {
+        "stakeConcentration": {
+          "$ref": "#/definitions/jarvisStakeConcentration"
+        }
+      }
+    },
+    "jarvisListCategoriesResponse": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "jarvisListDailyCloseRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/jarvisListDailyCloseSearchParams"
+        }
+      }
+    },
+    "jarvisListDailyCloseResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jarvisDailyClose"
+          }
+        }
+      }
+    },
+    "jarvisListDailyCloseSearchParams": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "start": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisListStockRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/jarvisListStockSearchParams"
+        }
+      }
+    },
+    "jarvisListStockResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jarvisStock"
+          }
+        }
+      }
+    },
+    "jarvisListStockSearchParams": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "country": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisListThreePrimaryRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/jarvisListThreePrimarySearchParams"
+        }
+      }
+    },
+    "jarvisListThreePrimaryResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jarvisThreePrimary"
+          }
+        }
+      }
+    },
+    "jarvisListThreePrimarySearchParams": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "start": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisRefreshStakeConcentrationRequest": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "diff": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    },
+    "jarvisRefreshStakeConcentrationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisStakeConcentration": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "sumBuyShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "sumSellShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "avgBuyPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "avgSellPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_1": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_5": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_10": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_20": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_60": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "jarvisStartCronjobRequest": {
+      "type": "object",
+      "properties": {
+        "schedule": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/jarvisDownloadType"
+          }
+        }
+      }
+    },
+    "jarvisStartCronjobResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisStock": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "jarvisThreePrimary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "foreignTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "trustTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "dealerTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "hedgingTradeShares": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

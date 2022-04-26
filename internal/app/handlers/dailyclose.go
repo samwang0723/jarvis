@@ -11,30 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package main
+package handlers
 
 import (
-	"log"
-	"os"
-	"time"
+	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/server"
+	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-const (
-	TimeZone = "TZ"
-)
-
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
+func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error) {
+	entries, totalCount, err := h.dataService.ListDailyClose(ctx, req)
+	if err != nil {
+		return nil, err
 	}
-
-	server.Serve()
+	return &dto.ListDailyCloseResponse{
+		Offset:     req.Offset,
+		Limit:      req.Limit,
+		Entries:    entries,
+		TotalCount: totalCount,
+	}, nil
 }

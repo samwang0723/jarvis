@@ -12,29 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package retry
 
 import (
-	"log"
-	"os"
 	"time"
 
-	"github.com/samwang0723/jarvis/internal/app/server"
+	log "github.com/samwang0723/jarvis/internal/logger"
 )
 
-const (
-	TimeZone = "TZ"
-)
-
-func main() {
-	// manually set time zone, docker image may not have preset timezone
-	if tz := os.Getenv(TimeZone); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
+// Retry mechanism
+func Retry(attempts int, sleep time.Duration, fn func() error) error {
+	if err := fn(); err != nil {
+		if s, ok := err.(stop); ok {
+			return s.error
 		}
-	}
 
-	server.Serve()
+		if attempts--; attempts > 0 {
+			log.Warnf("retry func error: %s. attemps #%d after %s.", err.Error(), attempts, sleep)
+			time.Sleep(sleep)
+			// if continue to fail on retry, double the interval
+			return Retry(attempts, 2*sleep, fn)
+		}
+		return err
+	}
+	return nil
+}
+
+type stop struct {
+	error
+}
+
+// If don't want to retry, pass this instead of error
+func NoRetryError(err error) stop {
+	return stop{err}
 }

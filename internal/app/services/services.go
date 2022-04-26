@@ -1,0 +1,57 @@
+// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package services
+
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/dto"
+	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/cronjob/icronjob"
+	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+)
+
+type IService interface {
+	StartCron()
+	StopCron()
+	AddJob(ctx context.Context, spec string, job func()) error
+	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
+	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
+	HasDailyClose(ctx context.Context, date string) bool
+	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
+	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
+	ListCategories(ctx context.Context) (objs []string, err error)
+	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
+	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
+	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
+	HasStakeConcentration(ctx context.Context, date string) bool
+	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
+	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
+	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) ([]*entity.CalculationBase, error)
+	BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error
+}
+
+type serviceImpl struct {
+	dal     idal.IDAL
+	cronjob icronjob.ICronJob
+}
+
+func New(opts ...Option) IService {
+	impl := &serviceImpl{}
+	for _, opt := range opts {
+		opt(impl)
+	}
+	return impl
+}
