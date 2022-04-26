@@ -21,7 +21,7 @@ lint-check-deps:
 	fi
 
 proto:
-	@protoc jarvis.proto -I . \
+	@protoc jarvis.v1.proto -I . \
 		-I $$GOPATH/src/github.com/samwang0723/jarvis/third_party \
 		--go_out ./internal/app/pb --go_opt paths=source_relative \
 		--go-grpc_opt=require_unimplemented_servers=false \

@@ -1,0 +1,744 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Javis smart stock analysis API",
+    "version": "1.0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/categories": {
+      "get": {
+        "operationId": "JarvisV1_ListCategories",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListCategoriesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/cronjob": {
+      "post": {
+        "operationId": "JarvisV1_StartCronjob",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1StartCronjobResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1StartCronjobRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/dailycloses": {
+      "post": {
+        "operationId": "JarvisV1_ListDailyClose",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListDailyCloseResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListDailyCloseRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/stakeconcentration": {
+      "post": {
+        "operationId": "JarvisV1_GetStakeConcentration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetStakeConcentrationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetStakeConcentrationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/stakeconcentration/{stockID}/refresh": {
+      "post": {
+        "operationId": "JarvisV1_RefreshStakeConcentration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RefreshStakeConcentrationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "stockID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RefreshStakeConcentrationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/stocks": {
+      "post": {
+        "operationId": "JarvisV1_ListStocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListStockResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListStockRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/threeprimary": {
+      "post": {
+        "operationId": "JarvisV1_ListThreePrimary",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListThreePrimaryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListThreePrimaryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := \u0026pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1DailyClose": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "tradeShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "transactions": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "turnover": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "open": {
+          "type": "number",
+          "format": "float"
+        },
+        "close": {
+          "type": "number",
+          "format": "float"
+        },
+        "high": {
+          "type": "number",
+          "format": "float"
+        },
+        "low": {
+          "type": "number",
+          "format": "float"
+        },
+        "diff": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "v1DownloadType": {
+      "type": "string",
+      "enum": [
+        "DAILYCLOSE",
+        "THREEPRIMARY",
+        "CONCENTRATION"
+      ],
+      "default": "DAILYCLOSE",
+      "title": "Type of download"
+    },
+    "v1GetStakeConcentrationRequest": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetStakeConcentrationResponse": {
+      "type": "object",
+      "properties": {
+        "stakeConcentration": {
+          "$ref": "#/definitions/v1StakeConcentration"
+        }
+      }
+    },
+    "v1ListCategoriesResponse": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1ListDailyCloseRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/v1ListDailyCloseSearchParams"
+        }
+      }
+    },
+    "v1ListDailyCloseResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1DailyClose"
+          }
+        }
+      }
+    },
+    "v1ListDailyCloseSearchParams": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "start": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListStockRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/v1ListStockSearchParams"
+        }
+      }
+    },
+    "v1ListStockResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Stock"
+          }
+        }
+      }
+    },
+    "v1ListStockSearchParams": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "country": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListThreePrimaryRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/v1ListThreePrimarySearchParams"
+        }
+      }
+    },
+    "v1ListThreePrimaryResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ThreePrimary"
+          }
+        }
+      }
+    },
+    "v1ListThreePrimarySearchParams": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "start": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        }
+      }
+    },
+    "v1RefreshStakeConcentrationRequest": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "diff": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    },
+    "v1RefreshStakeConcentrationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "string"
+        }
+      }
+    },
+    "v1StakeConcentration": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "sumBuyShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "sumSellShares": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "avgBuyPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "avgSellPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_1": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_5": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_10": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_20": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration_60": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "v1StartCronjobRequest": {
+      "type": "object",
+      "properties": {
+        "schedule": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1DownloadType"
+          }
+        }
+      }
+    },
+    "v1StartCronjobResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Stock": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ThreePrimary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "foreignTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "trustTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "dealerTradeShares": {
+          "type": "string",
+          "format": "int64"
+        },
+        "hedgingTradeShares": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

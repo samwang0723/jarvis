@@ -18,7 +18,9 @@ require (
 
 require (
 	github.com/bsm/redislock v0.7.2
+	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
