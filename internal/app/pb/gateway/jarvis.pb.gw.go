@@ -15,6 +15,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
+	extPb "github.com/samwang0723/jarvis/internal/app/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -31,8 +32,8 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
-func request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListDailyCloseRequest
+func request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListDailyCloseRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -48,8 +49,8 @@ func request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
-func local_request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListDailyCloseRequest
+func local_request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListDailyCloseRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -65,8 +66,8 @@ func local_request_Jarvis_ListDailyClose_0(ctx context.Context, marshaler runtim
 
 }
 
-func request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListStockRequest
+func request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListStockRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -82,8 +83,8 @@ func request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Marshale
 
 }
 
-func local_request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListStockRequest
+func local_request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListStockRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -99,8 +100,8 @@ func local_request_Jarvis_ListStocks_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
-func request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListCategoriesRequest
+func request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListCategoriesRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.ListCategories(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -108,8 +109,8 @@ func request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
-func local_request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListCategoriesRequest
+func local_request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListCategoriesRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.ListCategories(ctx, &protoReq)
@@ -117,8 +118,8 @@ func local_request_Jarvis_ListCategories_0(ctx context.Context, marshaler runtim
 
 }
 
-func request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetStakeConcentrationRequest
+func request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.GetStakeConcentrationRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -134,8 +135,8 @@ func request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler runti
 
 }
 
-func local_request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetStakeConcentrationRequest
+func local_request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.GetStakeConcentrationRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -151,8 +152,8 @@ func local_request_Jarvis_GetStakeConcentration_0(ctx context.Context, marshaler
 
 }
 
-func request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StartCronjobRequest
+func request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.StartCronjobRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -168,8 +169,8 @@ func request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.Marsha
 
 }
 
-func local_request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq StartCronjobRequest
+func local_request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.StartCronjobRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -185,8 +186,8 @@ func local_request_Jarvis_StartCronjob_0(ctx context.Context, marshaler runtime.
 
 }
 
-func request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RefreshStakeConcentrationRequest
+func request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.RefreshStakeConcentrationRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -219,8 +220,8 @@ func request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marshaler r
 
 }
 
-func local_request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq RefreshStakeConcentrationRequest
+func local_request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.RefreshStakeConcentrationRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -253,8 +254,8 @@ func local_request_Jarvis_RefreshStakeConcentration_0(ctx context.Context, marsh
 
 }
 
-func request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runtime.Marshaler, client JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListThreePrimaryRequest
+func request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runtime.Marshaler, client extPb.JarvisClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListThreePrimaryRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -270,8 +271,8 @@ func request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
-func local_request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runtime.Marshaler, server JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListThreePrimaryRequest
+func local_request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runtime.Marshaler, server extPb.JarvisServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq extPb.ListThreePrimaryRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -291,7 +292,7 @@ func local_request_Jarvis_ListThreePrimary_0(ctx context.Context, marshaler runt
 // UnaryRPC     :call JarvisServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterJarvisHandlerFromEndpoint instead.
-func RegisterJarvisHandlerServer(ctx context.Context, mux *runtime.ServeMux, server JarvisServer) error {
+func RegisterJarvisHandlerServer(ctx context.Context, mux *runtime.ServeMux, server extPb.JarvisServer) error {
 
 	mux.Handle("POST", pattern_Jarvis_ListDailyClose_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -485,15 +486,15 @@ func RegisterJarvisHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMu
 // RegisterJarvisHandler registers the http handlers for service Jarvis to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
 func RegisterJarvisHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterJarvisHandlerClient(ctx, mux, NewJarvisClient(conn))
+	return RegisterJarvisHandlerClient(ctx, mux, extPb.NewJarvisClient(conn))
 }
 
 // RegisterJarvisHandlerClient registers the http handlers for service Jarvis
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "JarvisClient".
-// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "JarvisClient"
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "extPb.JarvisClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "extPb.JarvisClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "JarvisClient" to call the correct interceptors.
-func RegisterJarvisHandlerClient(ctx context.Context, mux *runtime.ServeMux, client JarvisClient) error {
+// "extPb.JarvisClient" to call the correct interceptors.
+func RegisterJarvisHandlerClient(ctx context.Context, mux *runtime.ServeMux, client extPb.JarvisClient) error {
 
 	mux.Handle("POST", pattern_Jarvis_ListDailyClose_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())

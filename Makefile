@@ -21,13 +21,16 @@ lint-check-deps:
 	fi
 
 proto:
-	@protoc jarvis.proto -I ./internal/app/pb \
+	@protoc jarvis.proto -I . \
+		-I $$GOPATH/src/github.com/samwang0723/jarvis/third_party \
 		--go_out ./internal/app/pb --go_opt paths=source_relative \
 		--go-grpc_opt=require_unimplemented_servers=false \
     	--go-grpc_out ./internal/app/pb --go-grpc_opt paths=source_relative  \
-		--grpc-gateway_out ./internal/app/pb \
+		--grpc-gateway_out ./internal/app/pb/gateway \
 		--grpc-gateway_opt logtostderr=true \
 		--grpc-gateway_opt paths=source_relative \
+		--grpc-gateway_opt standalone=true \
+		--swagger_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
 docker-m1:

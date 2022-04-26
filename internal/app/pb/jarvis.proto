@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 
-option go_package = "github.com/samwang0723/jarvis/pb";
+option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
 
 service Jarvis {
     rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {

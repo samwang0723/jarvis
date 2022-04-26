@@ -29,6 +29,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
+	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
 	"github.com/samwang0723/jarvis/internal/concurrent"
 	"github.com/samwang0723/jarvis/internal/cronjob"
@@ -289,7 +290,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
-	err := pb.RegisterJarvisHandlerFromEndpoint(
+	err := gatewaypb.RegisterJarvisHandlerFromEndpoint(
 		c,
 		mux,
 		addr,
