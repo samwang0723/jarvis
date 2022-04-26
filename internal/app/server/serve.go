@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
+	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
@@ -204,7 +205,7 @@ _______________________________________________
 	}
 	log.Info("gRPC server running.")
 
-	pb.RegisterJarvisServer(s.GRPCServer(), s)
+	pb.RegisterJarvisV1Server(s.GRPCServer(), s)
 	go func() {
 		if err = s.GRPCServer().Serve(lis); err != nil {
 			log.Fatalf("gRPC server serve failed: %s", err)
@@ -290,7 +291,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
-	err := gatewaypb.RegisterJarvisHandlerFromEndpoint(
+	err := gatewaypb.RegisterJarvisV1HandlerFromEndpoint(
 		c,
 		mux,
 		addr,
@@ -301,16 +302,22 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	}
 
 	// add healthcheck into gRPC gateway mux
-	mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+	mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().LiveEndpoint(w, r)
 	})
-	mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+	mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().ReadyEndpoint(w, r)
 	})
 
+	// support swagger-ui API document
+	httpMux := http.NewServeMux()
+	httpMux.Handle("/", mux)
+	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
+	swagger.ServeSwaggerUI(httpMux)
+
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
-	err = http.ListenAndServe(host, mux)
+	err = http.ListenAndServe(host, httpMux)
 	if err != nil {
 		log.Fatalf("cannot listen and server: %v", err)
 	}
