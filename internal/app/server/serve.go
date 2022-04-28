@@ -193,6 +193,11 @@ _______________________________________________
 		Schedule: "30 18 * * 1-5",
 		Types:    []dto.DownloadType{dto.Concentration},
 	})
+	// backfill failed concentration records
+	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
+		Schedule: "20 19 * * 1-5",
+		Types:    []dto.DownloadType{dto.Concentration},
+	})
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
@@ -311,6 +316,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 
 	// support swagger-ui API document
 	httpMux := http.NewServeMux()
+	// merge grpc gateway endpoint handling
 	httpMux.Handle("/", mux)
 	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
 	swagger.ServeSwaggerUI(httpMux)

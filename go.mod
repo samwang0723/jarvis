@@ -31,6 +31,7 @@ require (
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/genproto v0.0.0-20220422154200-b37d22cd5731
 	google.golang.org/grpc v1.45.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
