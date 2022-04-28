@@ -26,7 +26,7 @@ FLUSH PRIVILEGES;
 ### Execute SQL Migration
 
 ```
-$ cd db/migration
+$ cd internal/db/migration
 $ goose mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
 ```
 
@@ -36,7 +36,7 @@ https://github.com/grpc-ecosystem/grpc-gateway
 
 Cloning google/api annotation files
 ```
-$ mkdir google/api
+$ mkdir third_party/google/api
 $ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto > pb/google/api/annotations.proto
 $ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto > pb/google/api/http.proto
 $ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/field_behavior.proto > pb/google/api/field_behavior.proto
@@ -52,4 +52,19 @@ $ go install \
     google.golang.org/protobuf/cmd/protoc-gen-go \
     google.golang.org/grpc/cmd/protoc-gen-go-grpc
 $ make proto
+```
+
+### Use swagger-ui
+
+Clone swagger-ui static files into `third_party/swagger-ui/`
+https://github.com/swagger-api/swagger-ui/tree/master/dist
+``` 
+$ go get -u github.com/jteeuwen/go-bindata/...
+$ go get -u github.com/elazarl/go-bindata-assetfs/...
+$ go-bindata --nocompress -pkg swagger -o api/swagger/datafile.go third_party/swagger-ui/...
+```
+
+Import "protoc-gen-swagger/options/openapiv2.proto" was not found or had errors.
+```
+$ cp -R $GOPATH/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@v1.16.0/protoc-gen-swagger ./third_party
 ```

@@ -20,6 +20,11 @@ lint-check-deps:
 		GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint;\
 	fi
 
+migrate:
+	@echo "[goose up] do mysql schema migration"
+	@cd internal/db/migration
+	@goose mysql "Jarvis:password@tcp(0.0.0.0:3306)/jarvis?charset=utf8" up
+
 build:
 	@echo "[go build] build executable binary for development"
 	@go build -o jarvis-api cmd/main.go
