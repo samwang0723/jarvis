@@ -25,18 +25,20 @@ import (
 )
 
 type Options struct {
-	Name             string
-	Logger           structuredlog.ILogger
-	Handler          handlers.IHandler
-	ProfilingEnabled bool
-	Config           *config.Config
-	Dispatcher       *concurrent.Dispatcher
-	GRPCServer       *grpc.Server
-	HealthCheck      healthcheck.Handler
+	Name    string
+	Logger  structuredlog.ILogger
+	Handler handlers.IHandler
+
+	Config      *config.Config
+	Dispatcher  *concurrent.Dispatcher
+	GRPCServer  *grpc.Server
+	HealthCheck healthcheck.Handler
 
 	// Before funcs
 	BeforeStart []func() error
 	BeforeStop  []func() error
+
+	ProfilingEnabled bool
 }
 
 type Option func(o *Options)
