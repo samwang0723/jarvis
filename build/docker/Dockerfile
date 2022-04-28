@@ -20,7 +20,7 @@ RUN go mod download
 COPY . .
 
 # Unit tests
-#RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test -v
+RUN CGO_ENABLED=0 go test -v -tags all_tests -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v /third_party/)
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /jarvis-api cmd/main.go
@@ -36,6 +36,7 @@ WORKDIR /
 COPY --from=build_base /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
+COPY --from=build_base /app/api/jarvis.v1.swagger.json /api/jarvis.v1.swagger.json
 COPY --from=build_base /app/configs/config.prod.yaml /configs/config.prod.yaml
 COPY --from=build_base /jarvis-api /jarvis-api
 
