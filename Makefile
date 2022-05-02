@@ -21,7 +21,7 @@ lint-check-deps:
 	fi
 
 migrate:
-	@echo "[goose up] do mysql schema migration" 
+	@echo "[goose up] do mysql schema migration"
 	@goose -dir internal/db/migration mysql "Jarvis:password@tcp(0.0.0.0:3306)/jarvis?charset=utf8" up
 
 build:
