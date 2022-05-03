@@ -58,11 +58,11 @@ func buildQueryFromListThreePrimarySearchParams(params *idal.ListThreePrimarySea
 		return ""
 	}
 
-	query := fmt.Sprintf("stock_id = %s", params.StockID)
-	query = fmt.Sprintf("%s and exchange_date >= %s", query, params.Start)
+	query := fmt.Sprintf("stock_id = '%s'", params.StockID)
+	query = fmt.Sprintf("%s and exchange_date >= '%s'", query, params.Start)
 	if params.End != nil {
 		dateStr := *params.End
-		query = fmt.Sprintf("%s and exchange_date < %s", query, dateStr)
+		query = fmt.Sprintf("%s and exchange_date < '%s'", query, dateStr)
 	}
 
 	return query

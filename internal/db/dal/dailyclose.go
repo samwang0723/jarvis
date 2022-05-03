@@ -64,10 +64,10 @@ func buildQueryFromListDailyCloseSearchParams(params *idal.ListDailyCloseSearchP
 	if params == nil {
 		return ""
 	}
-	query := fmt.Sprintf("exchange_date >= %s", params.Start)
+	query := fmt.Sprintf("exchange_date >= '%s'", params.Start)
 	if params.End != nil {
 		dateStr := *params.End
-		query = fmt.Sprintf("%s and exchange_date < %s", query, dateStr)
+		query = fmt.Sprintf("%s and exchange_date < '%s'", query, dateStr)
 	}
 	if params.StockIDs != nil {
 		idList := ""
