@@ -13,7 +13,7 @@ services:
         source: mysql_data
         target: /var/lib/mysql/
       - type: bind
-        source: ./db/mysql-master.cnf
+        source: /Users/samwang/Workspace/src/github.com/samwang0723/jarvis/internal/db/mysql-master.cnf
         target: /etc/mysql/conf.d/mysql-master.cnf
     restart: always
     ports:
