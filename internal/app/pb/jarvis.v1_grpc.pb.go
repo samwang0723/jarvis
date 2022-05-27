@@ -26,8 +26,6 @@ type JarvisV1Client interface {
 	ListStocks(ctx context.Context, in *ListStockRequest, opts ...grpc.CallOption) (*ListStockResponse, error)
 	ListCategories(ctx context.Context, in *ListCategoriesRequest, opts ...grpc.CallOption) (*ListCategoriesResponse, error)
 	GetStakeConcentration(ctx context.Context, in *GetStakeConcentrationRequest, opts ...grpc.CallOption) (*GetStakeConcentrationResponse, error)
-	StartCronjob(ctx context.Context, in *StartCronjobRequest, opts ...grpc.CallOption) (*StartCronjobResponse, error)
-	RefreshStakeConcentration(ctx context.Context, in *RefreshStakeConcentrationRequest, opts ...grpc.CallOption) (*RefreshStakeConcentrationResponse, error)
 	ListThreePrimary(ctx context.Context, in *ListThreePrimaryRequest, opts ...grpc.CallOption) (*ListThreePrimaryResponse, error)
 }
 
@@ -75,24 +73,6 @@ func (c *jarvisV1Client) GetStakeConcentration(ctx context.Context, in *GetStake
 	return out, nil
 }
 
-func (c *jarvisV1Client) StartCronjob(ctx context.Context, in *StartCronjobRequest, opts ...grpc.CallOption) (*StartCronjobResponse, error) {
-	out := new(StartCronjobResponse)
-	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/StartCronjob", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *jarvisV1Client) RefreshStakeConcentration(ctx context.Context, in *RefreshStakeConcentrationRequest, opts ...grpc.CallOption) (*RefreshStakeConcentrationResponse, error) {
-	out := new(RefreshStakeConcentrationResponse)
-	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/RefreshStakeConcentration", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *jarvisV1Client) ListThreePrimary(ctx context.Context, in *ListThreePrimaryRequest, opts ...grpc.CallOption) (*ListThreePrimaryResponse, error) {
 	out := new(ListThreePrimaryResponse)
 	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/ListThreePrimary", in, out, opts...)
@@ -110,8 +90,6 @@ type JarvisV1Server interface {
 	ListStocks(context.Context, *ListStockRequest) (*ListStockResponse, error)
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error)
 	GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error)
-	StartCronjob(context.Context, *StartCronjobRequest) (*StartCronjobResponse, error)
-	RefreshStakeConcentration(context.Context, *RefreshStakeConcentrationRequest) (*RefreshStakeConcentrationResponse, error)
 	ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error)
 }
 
@@ -130,12 +108,6 @@ func (UnimplementedJarvisV1Server) ListCategories(context.Context, *ListCategori
 }
 func (UnimplementedJarvisV1Server) GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStakeConcentration not implemented")
-}
-func (UnimplementedJarvisV1Server) StartCronjob(context.Context, *StartCronjobRequest) (*StartCronjobResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StartCronjob not implemented")
-}
-func (UnimplementedJarvisV1Server) RefreshStakeConcentration(context.Context, *RefreshStakeConcentrationRequest) (*RefreshStakeConcentrationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RefreshStakeConcentration not implemented")
 }
 func (UnimplementedJarvisV1Server) ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListThreePrimary not implemented")
@@ -224,42 +196,6 @@ func _JarvisV1_GetStakeConcentration_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JarvisV1_StartCronjob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StartCronjobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JarvisV1Server).StartCronjob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/jarvis.v1.JarvisV1/StartCronjob",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JarvisV1Server).StartCronjob(ctx, req.(*StartCronjobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _JarvisV1_RefreshStakeConcentration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefreshStakeConcentrationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JarvisV1Server).RefreshStakeConcentration(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/jarvis.v1.JarvisV1/RefreshStakeConcentration",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JarvisV1Server).RefreshStakeConcentration(ctx, req.(*RefreshStakeConcentrationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _JarvisV1_ListThreePrimary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListThreePrimaryRequest)
 	if err := dec(in); err != nil {
@@ -300,14 +236,6 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStakeConcentration",
 			Handler:    _JarvisV1_GetStakeConcentration_Handler,
-		},
-		{
-			MethodName: "StartCronjob",
-			Handler:    _JarvisV1_StartCronjob_Handler,
-		},
-		{
-			MethodName: "RefreshStakeConcentration",
-			Handler:    _JarvisV1_RefreshStakeConcentration_Handler,
 		},
 		{
 			MethodName: "ListThreePrimary",

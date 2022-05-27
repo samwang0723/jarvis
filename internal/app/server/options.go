@@ -18,7 +18,6 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
-	"github.com/samwang0723/jarvis/internal/concurrent"
 	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 
 	"google.golang.org/grpc"
@@ -30,7 +29,6 @@ type Options struct {
 	Handler handlers.IHandler
 
 	Config      *config.Config
-	Dispatcher  *concurrent.Dispatcher
 	GRPCServer  *grpc.Server
 	HealthCheck healthcheck.Handler
 
@@ -76,12 +74,6 @@ func Config(cfg *config.Config) Option {
 func Name(name string) Option {
 	return func(o *Options) {
 		o.Name = name
-	}
-}
-
-func Dispatcher(dispatcher *concurrent.Dispatcher) Option {
-	return func(o *Options) {
-		o.Dispatcher = dispatcher
 	}
 }
 

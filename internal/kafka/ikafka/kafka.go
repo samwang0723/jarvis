@@ -11,21 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+package ikafka
 
-package services
+import "context"
 
-import (
-	"context"
+const (
+	DailyClosesV1        = "dailycloses-v1"
+	StocksV1             = "stocks-v1"
+	ThreePrimaryV1       = "threeprimary-v1"
+	StakeConcentrationV1 = "stakeconcentration-v1"
 )
 
-func (s *serviceImpl) StartCron() {
-	s.cronjob.Start()
+type IKafka interface {
+	ReadMessage(ctx context.Context) (ReceivedMessage, error)
+	Close() error
 }
 
-func (s *serviceImpl) StopCron() {
-	s.cronjob.Stop()
-}
-
-func (s *serviceImpl) AddJob(ctx context.Context, spec string, job func()) error {
-	return s.cronjob.AddJob(ctx, spec, job)
+type ReceivedMessage struct {
+	Topic   string
+	Message []byte
 }
