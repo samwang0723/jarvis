@@ -53,23 +53,6 @@ func (s *server) GetStakeConcentration(ctx context.Context, req *pb.GetStakeConc
 	return dto.GetStakeConcentrationResponseToPB(res), nil
 }
 
-func (s *server) StartCronjob(ctx context.Context, req *pb.StartCronjobRequest) (*pb.StartCronjobResponse, error) {
-	res, err := s.Handler().CronDownload(ctx, dto.StartCronjobRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-	return dto.StartCronjobResponseToPB(res), nil
-}
-
-func (s *server) RefreshStakeConcentration(ctx context.Context, req *pb.RefreshStakeConcentrationRequest) (*pb.RefreshStakeConcentrationResponse, error) {
-	res, err := s.Handler().RefreshStakeConcentration(ctx, dto.RefreshStakeConcentrationRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-	return dto.RefreshStakeConcentrationResponseToPB(res), nil
-
-}
-
 func (s *server) ListThreePrimary(ctx context.Context, req *pb.ListThreePrimaryRequest) (*pb.ListThreePrimaryResponse, error) {
 	res, err := s.Handler().ListThreePrimary(ctx, dto.ListThreePrimaryRequestFromPB(req))
 	if err != nil {

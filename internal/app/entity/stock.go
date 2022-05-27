@@ -16,10 +16,10 @@ package entity
 type Stock struct {
 	Model
 
-	StockID  string `gorm:"column:stock_id"`
-	Name     string `gorm:"column:name"`
-	Country  string `gorm:"column:country"`
-	Category string `gorm:"column:category"`
+	StockID  string `gorm:"column:stock_id" json:"stockId"`
+	Name     string `gorm:"column:name" json:"name"`
+	Country  string `gorm:"column:country" json:"country"`
+	Category string `gorm:"column:category" json:"category"`
 }
 
 func (Stock) TableName() string {

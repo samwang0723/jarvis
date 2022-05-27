@@ -23,11 +23,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (i *dalImpl) CreateStakeConcentration(ctx context.Context, obj *entity.StakeConcentration) error {
-	err := i.db.Clauses(clause.OnConflict{UpdateAll: true}).Create(obj).Error
-	return err
-}
-
 func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID string, date string) (*entity.StakeConcentration, error) {
 	res := &entity.StakeConcentration{}
 	if err := i.db.First(res, "stock_id = ? and exchange_date = ?", stockID, date).Error; err != nil {
@@ -36,16 +31,9 @@ func (i *dalImpl) GetStakeConcentrationByStockID(ctx context.Context, stockID st
 	return res, nil
 }
 
-func (i *dalImpl) BatchUpdateStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error {
+func (i *dalImpl) BatchUpsertStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error {
 	err := i.db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "stock_id"}, {Name: "exchange_date"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"concentration_1",
-			"concentration_5",
-			"concentration_10",
-			"concentration_20",
-			"concentration_60",
-		}),
+		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
 	return err
 }
@@ -57,23 +45,4 @@ func (i *dalImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId
 		return nil, err
 	}
 	return objs, nil
-}
-
-func (i *dalImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
-	res := []string{}
-	// using reference from daily_closes to keep data alignment
-	if err := i.db.Raw(`select a.stock_id from daily_closes as a
-		left join stake_concentration as b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date)
-		where b.stock_id is null and a.exchange_date = ?`, date).Scan(&res).Error; err != nil {
-		return res, err
-	}
-	return res, nil
-}
-
-func (i *dalImpl) HasStakeConcentration(ctx context.Context, date string) bool {
-	res := []string{}
-	if err := i.db.Raw(`select stock_id from stake_concentration where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
-		return false
-	}
-	return len(res) > 0
 }

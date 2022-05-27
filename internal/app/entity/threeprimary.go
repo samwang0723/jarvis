@@ -16,12 +16,12 @@ package entity
 type ThreePrimary struct {
 	Model
 
-	StockID            string `gorm:"column:stock_id"`
-	Date               string `gorm:"column:exchange_date"`
-	ForeignTradeShares int64  `gorm:"column:foreign_trade_shares"`
-	TrustTradeShares   int64  `gorm:"column:trust_trade_shares"`
-	DealerTradeShares  int64  `gorm:"column:dealer_trade_shares"`
-	HedgingTradeShares int64  `gorm:"column:hedging_trade_shares"`
+	StockID            string `gorm:"column:stock_id" json:"stockId"`
+	Date               string `gorm:"column:exchange_date" json:"exchangeDate"`
+	ForeignTradeShares int64  `gorm:"column:foreign_trade_shares" json:"foreignTradeShares"`
+	TrustTradeShares   int64  `gorm:"column:trust_trade_shares" json:"trustTradeShares"`
+	DealerTradeShares  int64  `gorm:"column:dealer_trade_shares" json:"dealerTradeShares"`
+	HedgingTradeShares int64  `gorm:"column:hedging_trade_shares" json:"hedgingTradeShares"`
 }
 
 func (ThreePrimary) TableName() string {

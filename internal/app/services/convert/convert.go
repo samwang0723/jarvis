@@ -15,10 +15,7 @@
 package convert
 
 import (
-	"fmt"
-
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 )
 
@@ -60,18 +57,4 @@ func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListSto
 		res.Category = obj.Category
 	}
 	return res
-}
-
-func StakeConcentrationCreateRequestToEntity(obj *dto.CreateStakeConcentrationRequest) (*entity.StakeConcentration, error) {
-	if obj == nil {
-		return nil, fmt.Errorf("dto.CreateConcentrationRequest: %+v", obj)
-	}
-	return &entity.StakeConcentration{
-		StockID:       obj.StockID,
-		Date:          obj.Date,
-		SumBuyShares:  obj.SumBuyShares,
-		SumSellShares: obj.SumSellShares,
-		AvgBuyPrice:   obj.AvgBuyPrice,
-		AvgSellPrice:  obj.AvgSellPrice,
-	}, nil
 }

@@ -22,13 +22,9 @@ import (
 )
 
 type IHandler interface {
-	CronDownload(ctx context.Context, req *dto.StartCronjobRequest) (*dto.StartCronjobResponse, error)
-	BatchingDownload(ctx context.Context, req *dto.DownloadRequest)
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
 	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
-	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) (*dto.CreateStakeConcentrationResponse, error)
-	RefreshStakeConcentration(ctx context.Context, req *dto.RefreshStakeConcentrationRequest) (*dto.RefreshStakeConcentrationResponse, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 }
