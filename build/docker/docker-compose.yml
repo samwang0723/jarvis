@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  mysql:
+  mysql-master:
     image: mysql:5.7
     platform: linux/amd64
     container_name: mysql-master
@@ -17,7 +17,23 @@ services:
         target: /etc/mysql/conf.d/mysql-master.cnf
     restart: always
     ports:
-      - "3306:3306"
-
+      - "3307:3306"
+  mysql-slave:
+    image: mysql:5.7
+    platform: linux/amd64
+    container_name: mysql-slave
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - type: volume
+        source: mysql_data
+        target: /var/lib/mysql/
+      - type: bind
+        source: /Users/samwang/Workspace/src/github.com/samwang0723/jarvis/internal/db/mysql-slave.cnf
+        target: /etc/mysql/conf.d/mysql-slave.cnf
+    restart: always
+    ports:
+      - "3308:3306"
 volumes:
   mysql_data: {}
