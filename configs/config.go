@@ -27,6 +27,24 @@ const (
 )
 
 type Config struct {
+	Log struct {
+		Level string `yaml:"level"`
+	} `yaml:"log"`
+	Server struct {
+		Name     string `yaml:"name"`
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		GrpcPort int    `yaml:"grpcPort"`
+	} `yaml:"server"`
+	ElasticSearch struct {
+		Host                string `yaml:"host"`
+		Port                int    `yaml:"port"`
+		HealthCheckInterval int    `yaml:"healthCheckInterval"`
+	} `yaml:"elasticsearch"`
+	RedisCache struct {
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+	} `yaml:"redis"`
 	Database struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
@@ -47,28 +65,10 @@ type Config struct {
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
-	Server struct {
-		Name     string `yaml:"name"`
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		GrpcPort int    `yaml:"grpcPort"`
-	} `yaml:"server"`
-	RedisCache struct {
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
-	} `yaml:"redis"`
-	Log struct {
-		Level string `yaml:"level"`
-	} `yaml:"log"`
 	WorkerPool struct {
 		MaxPoolSize  int `yaml:"maxPoolSize"`
 		MaxQueueSize int `yaml:"maxQueueSize"`
 	} `yaml:"workerpool"`
-	ElasticSearch struct {
-		Host                string `yaml:"host"`
-		Port                int    `yaml:"port"`
-		HealthCheckInterval int    `yaml:"healthCheckInterval"`
-	} `yaml:"elasticsearch"`
 }
 
 var (
