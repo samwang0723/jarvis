@@ -22,7 +22,7 @@ lint-check-deps:
 
 migrate:
 	@echo "[goose up] do mysql schema migration"
-	@goose -dir internal/db/migration mysql "Jarvis:password@tcp(0.0.0.0:3306)/jarvis?charset=utf8" up
+	@goose -dir internal/db/migration mysql "jarvis:password@tcp(0.0.0.0:3306)/jarvis?charset=utf8" up
 
 build:
 	@echo "[go build] build executable binary for development"
@@ -39,12 +39,12 @@ proto:
 		--grpc-gateway_opt logtostderr=true \
 		--grpc-gateway_opt paths=source_relative \
 		--grpc-gateway_opt standalone=true \
-		--swagger_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
+		--openapiv2_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
 docker-m1:
 	@echo "[docker build] build local docker image on Mac M1"
-	@docker build -t samwang0723/jarvis-api:m1 -f build/docker/Dockerfile.local .
+	@docker build -t samwang0723/jarvis-api:m1 -f build/docker/app/Dockerfile.local .
 
 docker-amd64-deps:
 	@echo "[docker buildx] install buildx depedency"
@@ -55,4 +55,4 @@ docker-amd64-deps:
 docker-amd64:
 	@echo "[docker buildx] build amd64 version docker image for Ubuntu AWS EC2 instance"
 	@docker buildx use m1-builder
-	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f build/docker/Dockerfile .
+	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f build/docker/app/Dockerfile .

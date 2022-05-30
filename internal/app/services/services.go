@@ -19,33 +19,28 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/cronjob/icronjob"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 
 type IService interface {
-	StartCron()
-	StopCron()
-	AddJob(ctx context.Context, spec string, job func()) error
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 	HasDailyClose(ctx context.Context, date string) bool
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	ListCategories(ctx context.Context) (objs []string, err error)
-	CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error
-	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
-	ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error)
-	HasStakeConcentration(ctx context.Context, date string) bool
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
-	GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) ([]*entity.CalculationBase, error)
-	BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error
+	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
+	BatchUpsertStakeConcentration(ctx context.Context, objs *[]interface{}) error
+	ListeningKafkaInput(ctx context.Context)
+	StopKafka() error
 }
 
 type serviceImpl struct {
-	dal     idal.IDAL
-	cronjob icronjob.ICronJob
+	dal      idal.IDAL
+	consumer ikafka.IKafka
 }
 
 func New(opts ...Option) IService {

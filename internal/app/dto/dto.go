@@ -15,16 +15,6 @@ package dto
 
 import "github.com/samwang0723/jarvis/internal/app/entity"
 
-type DownloadType int32
-
-//go:generate stringer -type=DownloadType
-const (
-	DailyClose DownloadType = iota
-	ThreePrimary
-	Concentration
-	StockList
-)
-
 type ListDailyCloseSearchParams struct {
 	StockIDs *[]string `json:"stockIDs,omitempty"`
 	End      *string   `json:"end,omitempty"`
@@ -87,50 +77,7 @@ type ListCategoriesResponse struct {
 	Entries []string `json:"entries"`
 }
 
-type DownloadRequest struct {
-	UTCTimestamp string         `json:"utcTimestamp"`
-	Types        []DownloadType `json:"types"`
-	RewindLimit  int32          `json:"rewindLimit"`
-	RateLimit    int32          `json:"rateLimit"`
-}
-
-type CreateStakeConcentrationRequest struct {
-	StockID       string  `json:"stockID"`
-	Date          string  `json:"date"`
-	SumBuyShares  uint64  `json:"sumBuyShares"`
-	SumSellShares uint64  `json:"sumSellShares"`
-	AvgBuyPrice   float32 `json:"avgBuyPrice"`
-	AvgSellPrice  float32 `json:"avgSellPrice"`
-}
-
-type CreateStakeConcentrationResponse struct {
-	Entry *entity.StakeConcentration `json:"entry"`
-}
-
 type GetStakeConcentrationRequest struct {
 	StockID string `json:"stockID"`
 	Date    string `json:"date"`
-}
-
-type StartCronjobRequest struct {
-	Schedule string         `json:"schedule"`
-	Types    []DownloadType `json:"types"`
-}
-
-type StartCronjobResponse struct {
-	Error    string `json:"error"`
-	Messages string `json:"messages"`
-	Code     int32  `json:"code"`
-}
-
-type RefreshStakeConcentrationRequest struct {
-	Date    string  `json:"date"`
-	StockID string  `json:"stockID"`
-	Diff    []int32 `json:"diff"`
-}
-
-type RefreshStakeConcentrationResponse struct {
-	Error    string `json:"error"`
-	Messages string `json:"messages"`
-	Code     int32  `json:"code"`
 }

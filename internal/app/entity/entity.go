@@ -47,7 +47,7 @@ func init() {
 func GenID() (ID, error) {
 	rawID, err := sf.NextID()
 	if err != nil {
-		return ZeroID, fmt.Errorf("Cannot get sf.NextID(): %s\n", err)
+		return ZeroID, fmt.Errorf("Cannot get sf.NextID(): %w\n", err)
 	}
 
 	id := ID(rawID)

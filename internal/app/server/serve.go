@@ -27,16 +27,14 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
-	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
-	"github.com/samwang0723/jarvis/internal/concurrent"
-	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/db"
 	"github.com/samwang0723/jarvis/internal/db/dal"
 	"github.com/samwang0723/jarvis/internal/helper"
+	"github.com/samwang0723/jarvis/internal/kafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
 	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 
@@ -56,7 +54,6 @@ type IServer interface {
 	Logger() structuredlog.ILogger
 	Handler() handlers.IHandler
 	Config() *config.Config
-	Dispatcher() *concurrent.Dispatcher
 	GRPCServer() *grpc.Server
 	Run(context.Context) error
 	Start(context.Context) error
@@ -78,7 +75,7 @@ func Serve() {
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
-		services.WithCronJob(cronjob.New(logger)),
+		services.WithKafka(kafka.New(cfg)),
 	)
 	// associate service with handler
 	handler := handlers.New(dataService)
@@ -102,9 +99,6 @@ func Serve() {
 	health.AddReadinessCheck(
 		"upstream-database-write-dns",
 		healthcheck.DNSResolveCheck(cfg.Database.Host, 200*time.Millisecond))
-	health.AddReadinessCheck(
-		"upstream-redis-dns",
-		healthcheck.DNSResolveCheck(cfg.RedisCache.Host, 200*time.Millisecond))
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	genericDB, _ := db.DB()
@@ -115,20 +109,16 @@ func Serve() {
 		Config(cfg),
 		Logger(logger),
 		Handler(handler),
-		Dispatcher(concurrent.NewDispatcher(cfg.WorkerPool.MaxPoolSize)),
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
 		BeforeStart(func() error {
-			// initialize global job queue
-			concurrent.JobQueue = make(concurrent.JobChan, cfg.WorkerPool.MaxQueueSize)
-			dataService.StartCron()
 			return nil
 		}),
 		BeforeStop(func() error {
-			dataService.StopCron()
-			//no need to explictly close a channel, it will be garbage collected
-			//close(concurrent.JobQueue)
-
+			err := dataService.StopKafka()
+			if err != nil {
+				log.Errorf("StopKafka error: %w", err)
+			}
 			sqlDB, err := db.DB()
 			if err != nil {
 				return err
@@ -176,28 +166,8 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.1.1a", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.2.0", helper.GetCurrentEnv())
 	fmt.Println(signatureOut)
-
-	// starting the workerpool
-	s.Dispatcher().Run(ctx)
-
-	// by default starting cronjob for regular daily updates pulling
-	// cronjob using redis distrubted lock to prevent multiple instances
-	// pulling same content
-	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
-		Schedule: "30 16 * * 1-5",
-		Types:    []dto.DownloadType{dto.DailyClose, dto.ThreePrimary},
-	})
-	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
-		Schedule: "30 18 * * 1-5",
-		Types:    []dto.DownloadType{dto.Concentration},
-	})
-	// backfill failed concentration records
-	s.Handler().CronDownload(ctx, &dto.StartCronjobRequest{
-		Schedule: "20 19 * * 1-5",
-		Types:    []dto.DownloadType{dto.Concentration},
-	})
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
@@ -213,9 +183,12 @@ _______________________________________________
 	pb.RegisterJarvisV1Server(s.GRPCServer(), s)
 	go func() {
 		if err = s.GRPCServer().Serve(lis); err != nil {
-			log.Fatalf("gRPC server serve failed: %s", err)
+			log.Fatalf("gRPC server serve failed: %w", err)
 		}
 	}()
+
+	// listening kafka
+	s.Handler().ListeningKafkaInput(ctx)
 
 	return err
 }
@@ -228,8 +201,6 @@ func (s *server) Stop() error {
 		}
 	}
 
-	// graceful shutdown workerpool
-	s.Dispatcher().WaitGroup().Wait()
 	s.GRPCServer().GracefulStop()
 
 	<-time.After(gracefulShutdownPeriod)
@@ -279,10 +250,6 @@ func (s *server) Config() *config.Config {
 	return s.opts.Config
 }
 
-func (s *server) Dispatcher() *concurrent.Dispatcher {
-	return s.opts.Dispatcher
-}
-
 func (s *server) GRPCServer() *grpc.Server {
 	return s.opts.GRPCServer
 }
@@ -303,7 +270,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	)
 	if err != nil {
-		log.Fatalf("cannot start grpc gateway: %v", err)
+		log.Fatalf("cannot start grpc gateway: %w", err)
 	}
 
 	// add healthcheck into gRPC gateway mux
@@ -325,6 +292,6 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
 	err = http.ListenAndServe(host, httpMux)
 	if err != nil {
-		log.Fatalf("cannot listen and server: %v", err)
+		log.Fatalf("cannot listen and server: %w", err)
 	}
 }

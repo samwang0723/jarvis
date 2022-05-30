@@ -15,11 +15,15 @@
 package services
 
 import (
-	"github.com/samwang0723/jarvis/internal/cronjob/icronjob"
+	"sync"
+
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 
 type Option func(o *serviceImpl)
+
+var once sync.Once
 
 func WithDAL(dal idal.IDAL) Option {
 	return func(i *serviceImpl) {
@@ -27,8 +31,8 @@ func WithDAL(dal idal.IDAL) Option {
 	}
 }
 
-func WithCronJob(cronjob icronjob.ICronJob) Option {
+func WithKafka(consumer ikafka.IKafka) Option {
 	return func(i *serviceImpl) {
-		i.cronjob = cronjob
+		i.consumer = consumer
 	}
 }

@@ -17,47 +17,65 @@ package services
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
-
-func (s *serviceImpl) CreateStakeConcentration(ctx context.Context, req *dto.CreateStakeConcentrationRequest) error {
-	obj, err := convert.StakeConcentrationCreateRequestToEntity(req)
-	if err != nil {
-		return err
-	}
-	return s.dal.CreateStakeConcentration(ctx, obj)
-}
 
 func (s *serviceImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
 	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID, req.Date)
 }
 
-func (s *serviceImpl) ListBackfillStakeConcentrationStockIDs(ctx context.Context, date string) ([]string, error) {
-	return s.dal.ListBackfillStakeConcentrationStockIDs(ctx, date)
-}
-
-func (s *serviceImpl) GetStakeConcentrationsWithVolumes(ctx context.Context, stockId string, date string) ([]*entity.CalculationBase, error) {
-	return s.dal.GetStakeConcentrationsWithVolumes(ctx, stockId, date)
-}
-
-func (s *serviceImpl) BatchUpdateStakeConcentration(ctx context.Context, objs *[]interface{}) error {
+func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.StakeConcentration
 	stakeConcentrations := []*entity.StakeConcentration{}
 	for _, v := range *objs {
 		if val, ok := v.(*entity.StakeConcentration); ok {
+			s.calculateConcentration(ctx, val)
 			stakeConcentrations = append(stakeConcentrations, val)
 		} else {
 			return fmt.Errorf("cannot cast interface to *dto.StakeConcentration: %v\n", reflect.TypeOf(v).Elem())
 		}
 	}
 
-	return s.dal.BatchUpdateStakeConcentration(ctx, stakeConcentrations)
+	return s.dal.BatchUpsertStakeConcentration(ctx, stakeConcentrations)
 }
 
-func (s *serviceImpl) HasStakeConcentration(ctx context.Context, date string) bool {
-	return s.dal.HasStakeConcentration(ctx, date)
+func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *entity.StakeConcentration) {
+	// pull the sum of traded volumes in order to calculate the concentration percentage
+	bases, err := s.dal.GetStakeConcentrationsWithVolumes(ctx, ref.StockID, ref.Date)
+	if err != nil || len(bases) < 60 {
+		return
+	}
+
+	sumTradeShares := uint64(0)
+	// cursor for the "diff" array, contains from 1, 5, 10, 20, 60 Buy-Sell diff records
+	cursor := 0
+	for idx, c := range bases {
+		sumTradeShares += c.TradeShares
+
+		if idx == 0 || idx == 4 || idx == 9 || idx == 19 || idx == 59 {
+			p, op := 0.0, float32(0.0)
+			if ref.Diff[cursor] != 0 && sumTradeShares > 0 {
+				p = (float64(ref.Diff[cursor]) / float64(sumTradeShares/1000)) * 100
+				op = float32(math.Round(p*10) / 10)
+			}
+
+			switch idx {
+			case 0:
+				ref.Concentration_1 = op
+			case 4:
+				ref.Concentration_5 = op
+			case 9:
+				ref.Concentration_10 = op
+			case 19:
+				ref.Concentration_20 = op
+			case 59:
+				ref.Concentration_60 = op
+			}
+			cursor++
+		}
+	}
 }

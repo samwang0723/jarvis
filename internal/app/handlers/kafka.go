@@ -11,15 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+package handlers
 
-package icronjob
+import "context"
 
-import (
-	"context"
-)
-
-type ICronJob interface {
-	Start()
-	Stop()
-	AddJob(ctx context.Context, spec string, job func()) error
+func (h *handlerImpl) ListeningKafkaInput(ctx context.Context) {
+	h.dataService.ListeningKafkaInput(ctx)
 }

@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/samwang0723/jarvis/internal/helper"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -53,22 +53,19 @@ type Config struct {
 		Port     int    `yaml:"port"`
 		GrpcPort int    `yaml:"grpcPort"`
 	} `yaml:"server"`
-	RedisCache struct {
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
-	} `yaml:"redis"`
 	Log struct {
 		Level string `yaml:"level"`
 	} `yaml:"log"`
-	WorkerPool struct {
-		MaxPoolSize  int `yaml:"maxPoolSize"`
-		MaxQueueSize int `yaml:"maxQueueSize"`
-	} `yaml:"workerpool"`
 	ElasticSearch struct {
 		Host                string `yaml:"host"`
 		Port                int    `yaml:"port"`
 		HealthCheckInterval int    `yaml:"healthCheckInterval"`
 	} `yaml:"elasticsearch"`
+	Kafka struct {
+		GroupId string   `yaml:"groupId"`
+		Brokers []string `yaml:"brokers"`
+		Topics  []string `yaml:"topics"`
+	} `yaml:"kafka"`
 }
 
 var (

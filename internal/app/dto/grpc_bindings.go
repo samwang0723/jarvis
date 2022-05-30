@@ -16,9 +16,9 @@ package dto
 import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func ListDailyCloseRequestFromPB(in *pb.ListDailyCloseRequest) *ListDailyCloseRequest {
@@ -291,96 +291,6 @@ func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetSta
 			UpdatedAt:        pbUpdatedAt,
 			DeletedAt:        pbDeletedAt,
 		},
-	}
-}
-
-func StartCronjobRequestFromPB(in *pb.StartCronjobRequest) *StartCronjobRequest {
-	if in == nil {
-		return nil
-	}
-
-	var types []DownloadType
-	for _, t := range in.Types {
-		types = append(types, DownloadTypeFromPB(t))
-	}
-
-	return &StartCronjobRequest{
-		Schedule: in.Schedule,
-		Types:    types,
-	}
-}
-
-func StartCronjobResponseToPB(in *StartCronjobResponse) *pb.StartCronjobResponse {
-	if in == nil {
-		return nil
-	}
-
-	pbCode := in.Code
-	pbError := in.Error
-	pbMessages := in.Messages
-
-	return &pb.StartCronjobResponse{
-		Code:     pbCode,
-		Error:    pbError,
-		Messages: pbMessages,
-	}
-}
-
-func DownloadTypeToPB(in DownloadType) pb.DownloadType {
-	var resp pb.DownloadType
-	switch in {
-	case DailyClose:
-		resp = pb.DownloadType_DAILYCLOSE
-	case ThreePrimary:
-		resp = pb.DownloadType_THREEPRIMARY
-	case Concentration:
-		resp = pb.DownloadType_CONCENTRATION
-	}
-	return resp
-}
-
-func DownloadTypeFromPB(in pb.DownloadType) DownloadType {
-	var resp DownloadType
-	switch in {
-	case pb.DownloadType_DAILYCLOSE:
-		resp = DailyClose
-	case pb.DownloadType_THREEPRIMARY:
-		resp = ThreePrimary
-	case pb.DownloadType_CONCENTRATION:
-		resp = Concentration
-	}
-	return resp
-}
-
-func RefreshStakeConcentrationRequestFromPB(in *pb.RefreshStakeConcentrationRequest) *RefreshStakeConcentrationRequest {
-	if in == nil {
-		return nil
-	}
-
-	pbStockID := in.StockID
-	pbDate := in.Date
-	pbDiff := in.Diff
-
-	return &RefreshStakeConcentrationRequest{
-		StockID: pbStockID,
-		Date:    pbDate,
-		Diff:    pbDiff,
-	}
-}
-
-func RefreshStakeConcentrationResponseToPB(in *RefreshStakeConcentrationResponse) *pb.RefreshStakeConcentrationResponse {
-	if in == nil {
-		return nil
-	}
-
-	pbCode := in.Code
-	pbError := in.Error
-	pbMessages := in.Messages
-
-	return &pb.RefreshStakeConcentrationResponse{
-		Code:     pbCode,
-		Error:    pbError,
-		Messages: pbMessages,
 	}
 }
 
