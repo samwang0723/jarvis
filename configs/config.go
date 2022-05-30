@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/samwang0723/jarvis/internal/helper"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -62,10 +62,9 @@ type Config struct {
 		HealthCheckInterval int    `yaml:"healthCheckInterval"`
 	} `yaml:"elasticsearch"`
 	Kafka struct {
-		Brokers   []string `yaml:"brokers"`
-		Topics    []string `yaml:"topics"`
-		GroupId   string   `yaml:"groupId"`
-		Partition int      `yaml:"partition"`
+		GroupId string   `yaml:"groupId"`
+		Brokers []string `yaml:"brokers"`
+		Topics  []string `yaml:"topics"`
 	} `yaml:"kafka"`
 }
 

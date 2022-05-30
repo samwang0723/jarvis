@@ -27,6 +27,7 @@ type IHandler interface {
 	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
+	ListeningKafkaInput(ctx context.Context)
 }
 
 type handlerImpl struct {

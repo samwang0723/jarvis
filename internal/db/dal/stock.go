@@ -71,7 +71,7 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
 }
 
 func (i *dalImpl) ListCategories(ctx context.Context) (objs []string, err error) {
-	if err = i.db.Raw("SELECT category FROM stocks group by category order by stock_id").Scan(&objs).Error; err != nil {
+	if err = i.db.Raw("SELECT category FROM stocks group by category").Scan(&objs).Error; err != nil {
 		return []string{}, err
 	}
 	return objs, nil

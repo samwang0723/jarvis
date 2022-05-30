@@ -15,8 +15,10 @@ package kafka
 
 import (
 	"context"
+	"time"
 
 	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/helper"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
 	"github.com/segmentio/kafka-go"
@@ -29,19 +31,22 @@ type kafkaImpl struct {
 func New(cfg *config.Config) ikafka.IKafka {
 	return &kafkaImpl{
 		instance: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:     cfg.Kafka.Brokers,
-			GroupTopics: cfg.Kafka.Topics,
-			GroupID:     cfg.Kafka.GroupId, // having consumer group id to prevent duplication of message consumption
-			Partition:   cfg.Kafka.Partition,
-			MinBytes:    10e3, // 10KB
-			MaxBytes:    10e6, // 10MB
+			Brokers:          cfg.Kafka.Brokers,
+			GroupTopics:      cfg.Kafka.Topics,
+			GroupID:          cfg.Kafka.GroupId, // having consumer group id to prevent duplication of message consumption
+			QueueCapacity:    1024,
+			SessionTimeout:   10 * time.Second,
+			RebalanceTimeout: 5 * time.Second,
+			MaxWait:          1 * time.Second,
+			MinBytes:         1,    // 1B
+			MaxBytes:         10e6, // 10MB
 		}),
 	}
 }
 
 func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, error) {
 	msg, err := k.instance.ReadMessage(ctx)
-	log.Infof("Kafka:ReadMessage: read data: %+v, err: %s", msg, err)
+	log.Infof("Kafka:ReadMessage: read data: %s, err: %s", helper.Bytes2String(msg.Value), err)
 
 	return ikafka.ReceivedMessage{
 		Topic:   msg.Topic,

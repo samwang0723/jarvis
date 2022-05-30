@@ -187,6 +187,9 @@ _______________________________________________
 		}
 	}()
 
+	// listening kafka
+	s.Handler().ListeningKafkaInput(ctx)
+
 	return err
 }
 

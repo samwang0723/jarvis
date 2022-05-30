@@ -17,7 +17,6 @@ import (
 	"context"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/helper"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
 
@@ -35,19 +34,27 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
 	go func() {
 		for {
-			m, err := s.consumer.ReadMessage(ctx)
+			msg, err := s.consumer.ReadMessage(ctx)
 			if err != nil {
 				log.Errorf("Kafka:ReadMessage error: %w", err)
 				return
 			}
 
-			handleKafkaInput(m, respChan)
+			entity, err := unmarshalMessageToEntity(msg)
+			if err != nil {
+				log.Errorf("Unmarshal (%s) failed: %w", msg.Topic, err)
+				return
+			}
+			respChan <- data{
+				topic:  msg.Topic,
+				values: &[]interface{}{entity},
+			}
 
 			select {
 			case <-ctx.Done():
 				log.Warn("ListeningKafkaInput: context cancel")
 				return
-
+			default:
 			}
 		}
 	}()
@@ -82,34 +89,26 @@ func (s *serviceImpl) StopKafka() error {
 	return s.consumer.Close()
 }
 
-func handleKafkaInput(msg ikafka.ReceivedMessage, respChan chan data) {
+func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (interface{}, error) {
 	var err error
-	var output *[]interface{}
+	var output interface{}
 	switch msg.Topic {
 	case ikafka.DailyClosesV1:
-		var objs []entity.DailyClose
-		err = json.Unmarshal(msg.Message, &objs)
-		output = helper.CastInterfaceSlice(objs)
+		var obj entity.DailyClose
+		err = json.Unmarshal(msg.Message, &obj)
+		output = &obj
 	case ikafka.StakeConcentrationV1:
-		var objs []entity.StakeConcentration
-		err = json.Unmarshal(msg.Message, &objs)
-		output = helper.CastInterfaceSlice(objs)
+		var obj entity.StakeConcentration
+		err = json.Unmarshal(msg.Message, &obj)
+		output = &obj
 	case ikafka.StocksV1:
-		var objs []entity.Stock
-		err = json.Unmarshal(msg.Message, &objs)
-		output = helper.CastInterfaceSlice(objs)
+		var obj entity.Stock
+		err = json.Unmarshal(msg.Message, &obj)
+		output = &obj
 	case ikafka.ThreePrimaryV1:
-		var objs []entity.ThreePrimary
-		err = json.Unmarshal(msg.Message, &objs)
-		output = helper.CastInterfaceSlice(objs)
+		var obj entity.ThreePrimary
+		err = json.Unmarshal(msg.Message, &obj)
+		output = &obj
 	}
-
-	if err != nil {
-		log.Errorf("Unmarshal (%s) failed: %w", msg.Topic, err)
-		return
-	}
-	respChan <- data{
-		topic:  msg.Topic,
-		values: output,
-	}
+	return output, err
 }
