@@ -6,14 +6,12 @@ Machine Learning Stock Analysis and Buy Selection
 ### Start Docker Container
 
 ```
-docker-compose up
-docker ps
+$ docker-compose -p mysql -f build/docker/mysql/docker-compose.yml up
 ```
 
-### Configure Database and Access
+### Configure Database(master)
 ```
-docker exec -it mysql-master bin/bash
-mysql -h 127.0.0.1 -P 3306 -u root
+$ docker exec -it mysql-master mysql -u root -p
 
 CREATE USER 'jarvis'@'%' IDENTIFIED BY 'password';
 SELECT host, user FROM mysql.user;
@@ -21,13 +19,40 @@ SELECT host, user FROM mysql.user;
 CREATE DATABASE jarvis CHARACTER SET utf8 COLLATE utf8_general_ci;
 GRANT ALL PRIVILEGES ON jarvis.* TO 'jarvis'@'%';
 FLUSH PRIVILEGES;
+
+GRANT REPLICATION SLAVE ON *.* TO ‘jarvis’@‘%’;
+```
+
+### Configure Database(slave)
+```
+$ docker exec -it mysql-slave mysql -u root -p
+
+CHANGE MASTER TO
+MASTER_HOST='mysql-master',
+MASTER_PORT=3306,
+MASTER_USER='jarvis',
+MASTER_PASSWORD='password',
+MASTER_AUTO_POSITION=1;
+
+START SLAVE;
+SHOW SLAVE STATUS \G
 ```
 
 ### Execute SQL Migration
 
 ```
-$ cd internal/db/migration
-$ goose mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
+$ make migrate
+```
+
+#### mysqldump
+```
+$ docker exec mysql-master /usr/bin/mysqldump -u root --all-databases --triggers --routines --events --set-gtid-purged=OFF > backup.sql
+$ docker exec -i mysql-master mysql -u root < backup.sql
+```
+
+### Start Application Container
+```
+$ docker-compose -p jarvis -f build/docker/app/docker-compose.yml up
 ```
 
 ### Generate Protobuf

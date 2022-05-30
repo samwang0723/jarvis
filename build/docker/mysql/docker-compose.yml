@@ -8,6 +8,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      TZ: "Asia/Taipei"
     volumes:
       - type: volume
         source: mysql_master_data
@@ -27,6 +28,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      TZ: "Asia/Taipei"
     command: ["--skip-log-bin", "--skip-log-slave-updates", "--skip-slave-start"]
     volumes:
       - type: volume

@@ -6,3 +6,4 @@ coverage.txt
 tls.crt
 tls.key
 terraform/
+backup.sql

@@ -8,7 +8,7 @@ server:
 # Database credentials
 database:
   host: "host.docker.internal"
-  port: 3306
+  port: 3307
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20
@@ -16,7 +16,7 @@ database:
 
 replica:
   host: "host.docker.internal"
-  port: 3306
+  port: 3308
   database: "jarvis"
   maxLifetime:  10
   maxIdleConns: 20
@@ -24,7 +24,9 @@ replica:
 
 kafka:
   brokers: ["kafka-1:9092", "kafka-2:9092", "kafka-3:9092"]
+  topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
+  groupId: "jarvis"
 
 # Logging
 log:
-  level: "ERROR"
+  level: "DEBUG"
