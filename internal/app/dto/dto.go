@@ -14,7 +14,6 @@
 package dto
 
 import (
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
@@ -31,11 +30,10 @@ type ListDailyCloseRequest struct {
 }
 
 type ListDailyCloseResponse struct {
-	Averages   []*businessmodel.Average `json:"averages"`
-	Entries    []*entity.DailyClose     `json:"entries"`
-	Offset     int32                    `json:"offset"`
-	Limit      int32                    `json:"limit"`
-	TotalCount int64                    `json:"totalCount"`
+	Entries    []*entity.DailyClose `json:"entries"`
+	Offset     int32                `json:"offset"`
+	Limit      int32                `json:"limit"`
+	TotalCount int64                `json:"totalCount"`
 }
 
 type ListThreePrimarySearchParams struct {

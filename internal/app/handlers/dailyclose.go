@@ -16,7 +16,6 @@ package handlers
 import (
 	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
@@ -26,13 +25,12 @@ func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 		return nil, err
 	}
 
-	avgs := []*businessmodel.Average{}
-	for _, stockID := range *req.SearchParams.StockIDs {
-		avg, err := h.dataService.GetAverages(ctx, stockID)
+	for _, obj := range entries {
+		avg, err := h.dataService.GetAverages(ctx, obj.StockID, obj.Date)
 		if err != nil {
 			return nil, err
 		}
-		avgs = append(avgs, avg)
+		obj.Average = avg
 	}
 
 	return &dto.ListDailyCloseResponse{
@@ -40,6 +38,5 @@ func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 		Limit:      req.Limit,
 		Entries:    entries,
 		TotalCount: totalCount,
-		Averages:   avgs,
 	}, nil
 }

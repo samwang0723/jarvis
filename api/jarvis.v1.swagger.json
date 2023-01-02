@@ -211,9 +211,6 @@
     "v1Average": {
       "type": "object",
       "properties": {
-        "stockID": {
-          "type": "string"
-        },
         "ma": {
           "type": "object"
         },
@@ -278,6 +275,9 @@
         "diff": {
           "type": "number",
           "format": "float"
+        },
+        "average": {
+          "$ref": "#/definitions/v1Average"
         }
       }
     },
@@ -346,12 +346,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1DailyClose"
-          }
-        },
-        "averages": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Average"
           }
         }
       }

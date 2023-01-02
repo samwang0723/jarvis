@@ -28,7 +28,7 @@ type IService interface {
 	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error)
 	HasDailyClose(ctx context.Context, date string) bool
-	GetAverages(ctx context.Context, stockID string) (*businessmodel.Average, error)
+	GetAverages(ctx context.Context, stockID string, startDate string) (*businessmodel.Average, error)
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	ListCategories(ctx context.Context) (objs []string, err error)

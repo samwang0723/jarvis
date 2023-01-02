@@ -20,8 +20,8 @@ import (
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
-func (s *serviceImpl) GetAverages(ctx context.Context, stockID string) (*businessmodel.Average, error) {
-	objs, err := s.dal.GetHistoricalDailyCloses(ctx, stockID)
+func (s *serviceImpl) GetAverages(ctx context.Context, stockID string, startDate string) (*businessmodel.Average, error) {
+	objs, err := s.dal.GetHistoricalDailyCloses(ctx, stockID, startDate)
 	if err != nil {
 		return nil, err
 	}

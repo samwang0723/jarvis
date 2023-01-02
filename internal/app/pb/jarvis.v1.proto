@@ -70,7 +70,6 @@ message ListDailyCloseResponse {
     int32 limit = 2;
     int64 totalCount = 3;
     repeated DailyClose entries = 4;
-    repeated Average averages = 5;
 }
 
 message ListDailyCloseSearchParams {
@@ -80,9 +79,8 @@ message ListDailyCloseSearchParams {
 }
 
 message Average {
-    string stockID = 1;
-    google.protobuf.Struct ma = 2;
-    google.protobuf.Struct mv = 3;
+    google.protobuf.Struct ma = 1;
+    google.protobuf.Struct mv = 2;
 }
 
 message DailyClose {
@@ -100,6 +98,7 @@ message DailyClose {
     float high = 12;
     float low = 13;
     float diff = 14;
+    Average average = 15;
 }
 
 message ListStockRequest {

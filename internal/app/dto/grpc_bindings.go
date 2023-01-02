@@ -108,17 +108,11 @@ func ListDailyCloseResponseToPB(in *ListDailyCloseResponse) *pb.ListDailyCloseRe
 		entries = append(entries, DailyCloseToPB(obj))
 	}
 
-	var averages []*pb.Average
-	for _, obj := range in.Averages {
-		averages = append(averages, AverageToPB(obj))
-	}
-
 	return &pb.ListDailyCloseResponse{
 		Offset:     in.Offset,
 		Limit:      in.Limit,
 		TotalCount: in.TotalCount,
 		Entries:    entries,
-		Averages:   averages,
 	}
 }
 
@@ -154,9 +148,8 @@ func AverageToPB(in *businessmodel.Average) *pb.Average {
 	}
 
 	return &pb.Average{
-		StockID: in.StockID,
-		Ma:      MapToProtobufStructFloat32(in.MA),
-		Mv:      MapToProtobufStructUint64(in.MV),
+		Ma: MapToProtobufStructFloat32(in.MA),
+		Mv: MapToProtobufStructUint64(in.MV),
 	}
 }
 
@@ -176,6 +169,7 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbHigh := in.High
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
+	pbAverage := in.Average
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -207,6 +201,7 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 		CreatedAt:    pbCreatedAt,
 		UpdatedAt:    pbUpdatedAt,
 		DeletedAt:    pbDeletedAt,
+		Average:      AverageToPB(pbAverage),
 	}
 }
 
