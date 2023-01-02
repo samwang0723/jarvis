@@ -11,35 +11,43 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package handlers
+package services
 
 import (
 	"context"
 
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
-	"github.com/samwang0723/jarvis/internal/app/dto"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
-func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error) {
-	entries, totalCount, err := h.dataService.ListDailyClose(ctx, req)
+func (s *serviceImpl) GetAverages(ctx context.Context, stockID string) (*businessmodel.Average, error) {
+	objs, err := s.dal.GetHistoricalDailyCloses(ctx, stockID)
 	if err != nil {
 		return nil, err
 	}
 
-	avgs := []*businessmodel.Average{}
-	for _, stockID := range *req.SearchParams.StockIDs {
-		avg, err := h.dataService.GetAverages(ctx, stockID)
-		if err != nil {
-			return nil, err
-		}
-		avgs = append(avgs, avg)
+	res := &businessmodel.Average{
+		StockID: stockID,
+		MA:      make(map[int]float32),
+		MV:      make(map[int]uint64),
 	}
 
-	return &dto.ListDailyCloseResponse{
-		Offset:     req.Offset,
-		Limit:      req.Limit,
-		Entries:    entries,
-		TotalCount: totalCount,
-		Averages:   avgs,
-	}, nil
+	cursor := 0
+	volumeSum := uint64(0)
+	priceSum := float32(0.0)
+
+	for _, obj := range objs {
+		cursor++
+		priceSum += obj.Close
+		if cursor == 8 || cursor == 21 || cursor == 55 {
+			res.MA[cursor] = helper.RoundUpDecimalTwo(priceSum / float32(cursor))
+		}
+
+		volumeSum += obj.Volume
+		if cursor == 5 || cursor == 13 || cursor == 34 {
+			res.MV[cursor] = volumeSum / uint64(cursor)
+		}
+	}
+
+	return res, nil
 }
