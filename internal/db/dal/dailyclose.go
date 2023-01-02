@@ -43,9 +43,19 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
-func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
-	searchParams *idal.ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error) {
+func (i *dalImpl) GetHistoricalDailyCloses(ctx context.Context, stockID string) (objs []*entity.History, err error) {
+	sql := fmt.Sprintf(`select stock_id, exchange_date, floor(trade_shares/1000) as volume, close 
+				from daily_closes where stock_id = '%s' order by exchange_date desc limit 60`, stockID)
+	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
+		return nil, err
+	}
 
+	return objs, nil
+}
+
+func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
+	searchParams *idal.ListDailyCloseSearchParams,
+) (objs []*entity.DailyClose, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from daily_closes where %s", buildQueryFromListDailyCloseSearchParams(searchParams))
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err

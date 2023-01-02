@@ -4,6 +4,7 @@ package jarvis.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
 
@@ -69,12 +70,19 @@ message ListDailyCloseResponse {
     int32 limit = 2;
     int64 totalCount = 3;
     repeated DailyClose entries = 4;
+    repeated Average averages = 5;
 }
 
 message ListDailyCloseSearchParams {
     repeated string stockIDs = 1;
     string start = 2;
     string end = 3;
+}
+
+message Average {
+    string stockID = 1;
+    google.protobuf.Struct ma = 2;
+    google.protobuf.Struct mv = 3;
 }
 
 message DailyClose {

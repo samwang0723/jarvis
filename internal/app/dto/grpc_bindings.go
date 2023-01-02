@@ -14,10 +14,15 @@
 package dto
 
 import (
+	"encoding/json"
+
+	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -103,11 +108,55 @@ func ListDailyCloseResponseToPB(in *ListDailyCloseResponse) *pb.ListDailyCloseRe
 		entries = append(entries, DailyCloseToPB(obj))
 	}
 
+	var averages []*pb.Average
+	for _, obj := range in.Averages {
+		averages = append(averages, AverageToPB(obj))
+	}
+
 	return &pb.ListDailyCloseResponse{
 		Offset:     in.Offset,
 		Limit:      in.Limit,
 		TotalCount: in.TotalCount,
 		Entries:    entries,
+		Averages:   averages,
+	}
+}
+
+func MapToProtobufStructFloat32(m map[int]float32) *structpb.Struct {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return nil
+	}
+	s := &structpb.Struct{}
+	err = protojson.Unmarshal(b, s)
+	if err != nil {
+		return nil
+	}
+	return s
+}
+
+func MapToProtobufStructUint64(m map[int]uint64) *structpb.Struct {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return nil
+	}
+	s := &structpb.Struct{}
+	err = protojson.Unmarshal(b, s)
+	if err != nil {
+		return nil
+	}
+	return s
+}
+
+func AverageToPB(in *businessmodel.Average) *pb.Average {
+	if in == nil {
+		return nil
+	}
+
+	return &pb.Average{
+		StockID: in.StockID,
+		Ma:      MapToProtobufStructFloat32(in.MA),
+		Mv:      MapToProtobufStructUint64(in.MV),
 	}
 }
 

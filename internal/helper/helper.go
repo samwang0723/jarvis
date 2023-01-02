@@ -14,6 +14,7 @@
 package helper
 
 import (
+	"math"
 	"os"
 	"reflect"
 	"unsafe"
@@ -60,4 +61,8 @@ func CastInterfaceSlice(s interface{}) *[]interface{} {
 		intf[i] = v.Index(i).Interface()
 	}
 	return &intf
+}
+
+func RoundUpDecimalTwo(x float32) float32 {
+	return float32(math.Ceil(float64(x)*100) / 100)
 }
