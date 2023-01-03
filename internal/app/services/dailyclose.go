@@ -58,7 +58,12 @@ func (s *serviceImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 		calculateAverage(obj, objs[idx:])
 	}
 
-	return objs[:len(objs)-MAX_AVERAGE_LIMIT], totalCount - MAX_AVERAGE_LIMIT, nil
+	capacity := int(req.Limit)
+	if capacity > len(objs) {
+		capacity = len(objs)
+	}
+
+	return objs[:capacity], totalCount, nil
 }
 
 func (s *serviceImpl) HasDailyClose(ctx context.Context, date string) bool {

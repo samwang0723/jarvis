@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const MAX_AVERAGE_LIMIT = 55
+const MAX_AVERAGE_LIMIT = 55 * 3
 
 func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error {
 	err := i.db.Create(obj).Error

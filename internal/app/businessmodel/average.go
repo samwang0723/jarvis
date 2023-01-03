@@ -14,7 +14,6 @@
 package businessmodel
 
 type Average struct {
-	MA      map[int]float32 `json:"ma"`
-	MV      map[int]uint64  `json:"mv"`
-	StockID string          `json:"stockId"`
+	MA map[int]float32 `json:"ma"`
+	MV map[int]uint64  `json:"mv"`
 }
