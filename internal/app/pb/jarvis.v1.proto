@@ -73,7 +73,7 @@ message ListDailyCloseResponse {
 }
 
 message ListDailyCloseSearchParams {
-    repeated string stockIDs = 1;
+    string stockID = 1;
     string start = 2;
     string end = 3;
 }

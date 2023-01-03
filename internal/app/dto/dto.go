@@ -18,9 +18,9 @@ import (
 )
 
 type ListDailyCloseSearchParams struct {
-	StockIDs *[]string `json:"stockIDs,omitempty"`
-	End      *string   `json:"end,omitempty"`
-	Start    string    `json:"start"`
+	StockID string  `json:"stockID"`
+	End     *string `json:"end,omitempty"`
+	Start   string  `json:"start"`
 }
 
 type ListDailyCloseRequest struct {

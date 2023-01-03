@@ -20,9 +20,9 @@ import (
 )
 
 type ListDailyCloseSearchParams struct {
-	StockIDs *[]string
-	Start    string
-	End      *string // End = nil means it's querying to up-to-date data
+	StockID string
+	Start   string
+	End     *string // End = nil means it's querying to up-to-date data
 }
 
 type IDailyCloseDAL interface {
@@ -31,5 +31,4 @@ type IDailyCloseDAL interface {
 	ListDailyClose(ctx context.Context, offset int32, limit int32,
 		searchParams *ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error)
 	HasDailyClose(ctx context.Context, date string) bool
-	GetHistoricalDailyCloses(ctx context.Context, stockID string, startDate string) (objs []*entity.History, err error)
 }

@@ -353,11 +353,8 @@
     "v1ListDailyCloseSearchParams": {
       "type": "object",
       "properties": {
-        "stockIDs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "stockID": {
+          "type": "string"
         },
         "start": {
           "type": "string"

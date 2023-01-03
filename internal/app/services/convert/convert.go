@@ -21,14 +21,14 @@ import (
 
 func ListDailyCloseSearchParamsDTOToDAL(obj *dto.ListDailyCloseSearchParams) *idal.ListDailyCloseSearchParams {
 	res := &idal.ListDailyCloseSearchParams{
-		Start: obj.Start,
+		Start:   obj.Start,
+		StockID: obj.StockID,
 	}
-	if obj.StockIDs != nil {
-		res.StockIDs = obj.StockIDs
-	}
+
 	if obj.End != nil {
 		res.End = obj.End
 	}
+
 	return res
 }
 
@@ -37,9 +37,11 @@ func ListThreePrimarySearchParamsDTOToDAL(obj *dto.ListThreePrimarySearchParams)
 		StockID: obj.StockID,
 		Start:   obj.Start,
 	}
+
 	if obj.End != nil {
 		res.End = obj.End
 	}
+
 	return res
 }
 
@@ -47,14 +49,18 @@ func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListSto
 	res := &idal.ListStockSearchParams{
 		Country: obj.Country,
 	}
+
 	if obj.StockIDs != nil {
 		res.StockIDs = obj.StockIDs
 	}
+
 	if obj.Name != nil {
 		res.Name = obj.Name
 	}
+
 	if obj.Category != nil {
 		res.Category = obj.Category
 	}
+
 	return res
 }

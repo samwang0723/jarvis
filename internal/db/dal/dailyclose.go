@@ -23,6 +23,8 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const MAX_AVERAGE_LIMIT = 55
+
 func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error {
 	err := i.db.Create(obj).Error
 	return err
@@ -43,17 +45,6 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
-func (i *dalImpl) GetHistoricalDailyCloses(ctx context.Context, stockID string, startDate string) (objs []*entity.History, err error) {
-	sql := fmt.Sprintf(`select stock_id, exchange_date, floor(trade_shares/1000) as volume, close 
-				from daily_closes where stock_id = '%s' and exchange_date <= '%s'
-				order by exchange_date desc limit 60`, stockID, startDate)
-	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
-		return nil, err
-	}
-
-	return objs, nil
-}
-
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams,
 ) (objs []*entity.DailyClose, totalCount int64, err error) {
@@ -61,9 +52,10 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
-	sql = fmt.Sprintf(`select t.* from
+	sql = fmt.Sprintf(`select t.id, t.stock_id, t.exchange_date, t.transactions, floor(t.trade_shares/1000) as trade_shares,
+		floor(t.turnover/1000) as turnover, t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at from
 		(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q
-		join daily_closes t on t.id = q.id`, buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit)
+		join daily_closes t on t.id = q.id`, buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit+MAX_AVERAGE_LIMIT)
 	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}
@@ -75,21 +67,11 @@ func buildQueryFromListDailyCloseSearchParams(params *idal.ListDailyCloseSearchP
 	if params == nil {
 		return ""
 	}
-	query := fmt.Sprintf("exchange_date >= '%s'", params.Start)
+	query := fmt.Sprintf("exchange_date >= '%s' and stock_id = '%s'", params.Start, params.StockID)
 	if params.End != nil {
 		dateStr := *params.End
 		query = fmt.Sprintf("%s and exchange_date < '%s'", query, dateStr)
 	}
-	if params.StockIDs != nil {
-		idList := ""
-		stockIDs := *params.StockIDs
-		for i := 0; i < len(stockIDs); i++ {
-			if i > 0 {
-				idList += ","
-			}
-			idList += "'" + stockIDs[i] + "'"
-		}
-		query = fmt.Sprintf("%s and stock_id IN (%s)", query, idList)
-	}
+
 	return query
 }

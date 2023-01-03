@@ -45,13 +45,10 @@ func ListDailyCloseSearchParamsFromPB(in *pb.ListDailyCloseSearchParams) *ListDa
 	}
 
 	out := &ListDailyCloseSearchParams{
-		Start: in.Start,
+		Start:   in.Start,
+		StockID: in.StockID,
 	}
 
-	stockIDs := in.StockIDs
-	if stockIDs != nil {
-		out.StockIDs = &stockIDs
-	}
 	end := in.End
 	if len(end) > 0 {
 		out.End = &end

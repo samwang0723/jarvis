@@ -25,14 +25,6 @@ func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyClos
 		return nil, err
 	}
 
-	for _, obj := range entries {
-		avg, err := h.dataService.GetAverages(ctx, obj.StockID, obj.Date)
-		if err != nil {
-			return nil, err
-		}
-		obj.Average = avg
-	}
-
 	return &dto.ListDailyCloseResponse{
 		Offset:     req.Offset,
 		Limit:      req.Limit,
