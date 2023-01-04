@@ -27,6 +27,7 @@ type JarvisV1Client interface {
 	ListCategories(ctx context.Context, in *ListCategoriesRequest, opts ...grpc.CallOption) (*ListCategoriesResponse, error)
 	GetStakeConcentration(ctx context.Context, in *GetStakeConcentrationRequest, opts ...grpc.CallOption) (*GetStakeConcentrationResponse, error)
 	ListThreePrimary(ctx context.Context, in *ListThreePrimaryRequest, opts ...grpc.CallOption) (*ListThreePrimaryResponse, error)
+	ListSelections(ctx context.Context, in *ListSelectionRequest, opts ...grpc.CallOption) (*ListSelectionResponse, error)
 }
 
 type jarvisV1Client struct {
@@ -82,6 +83,15 @@ func (c *jarvisV1Client) ListThreePrimary(ctx context.Context, in *ListThreePrim
 	return out, nil
 }
 
+func (c *jarvisV1Client) ListSelections(ctx context.Context, in *ListSelectionRequest, opts ...grpc.CallOption) (*ListSelectionResponse, error) {
+	out := new(ListSelectionResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/ListSelections", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JarvisV1Server is the server API for JarvisV1 service.
 // All implementations should embed UnimplementedJarvisV1Server
 // for forward compatibility
@@ -91,6 +101,7 @@ type JarvisV1Server interface {
 	ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error)
 	GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error)
 	ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error)
+	ListSelections(context.Context, *ListSelectionRequest) (*ListSelectionResponse, error)
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
@@ -111,6 +122,9 @@ func (UnimplementedJarvisV1Server) GetStakeConcentration(context.Context, *GetSt
 }
 func (UnimplementedJarvisV1Server) ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListThreePrimary not implemented")
+}
+func (UnimplementedJarvisV1Server) ListSelections(context.Context, *ListSelectionRequest) (*ListSelectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSelections not implemented")
 }
 
 // UnsafeJarvisV1Server may be embedded to opt out of forward compatibility for this service.
@@ -214,6 +228,24 @@ func _JarvisV1_ListThreePrimary_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JarvisV1_ListSelections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSelectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisV1Server).ListSelections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.v1.JarvisV1/ListSelections",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisV1Server).ListSelections(ctx, req.(*ListSelectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JarvisV1_ServiceDesc is the grpc.ServiceDesc for JarvisV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +272,10 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListThreePrimary",
 			Handler:    _JarvisV1_ListThreePrimary_Handler,
+		},
+		{
+			MethodName: "ListSelections",
+			Handler:    _JarvisV1_ListSelections_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

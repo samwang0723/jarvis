@@ -61,3 +61,12 @@ func (s *server) ListThreePrimary(ctx context.Context, req *pb.ListThreePrimaryR
 
 	return dto.ListThreePrimaryResponseToPB(res), nil
 }
+
+func (s *server) ListSelections(ctx context.Context, req *pb.ListSelectionRequest) (*pb.ListSelectionResponse, error) {
+	res, err := s.Handler().ListSelections(ctx, dto.ListSelectionRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListSelectionResponseToPB(res), nil
+}

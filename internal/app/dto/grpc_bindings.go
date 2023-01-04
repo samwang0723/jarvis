@@ -424,3 +424,62 @@ func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
 		DeletedAt:          pbDeletedAt,
 	}
 }
+
+func ListSelectionRequestFromPB(in *pb.ListSelectionRequest) *ListSelectionRequest {
+	if in == nil {
+		return nil
+	}
+	out := &ListSelectionRequest{
+		Offset: in.Offset,
+		Limit:  in.Limit,
+		Date:   in.Date,
+	}
+
+	return out
+}
+
+func ListSelectionResponseToPB(in *ListSelectionResponse) *pb.ListSelectionResponse {
+	if in == nil {
+		return nil
+	}
+
+	var entries []*pb.Selection
+	for _, obj := range in.Entries {
+		entries = append(entries, SelectionToPB(obj))
+	}
+
+	return &pb.ListSelectionResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func SelectionToPB(in *entity.Selection) *pb.Selection {
+	if in == nil {
+		return nil
+	}
+
+	pbStockID := in.StockID
+	pbDate := in.Date
+	pbName := in.Name
+	pbCategory := in.Category
+	pbConcentration_1 := in.Concentration_1
+	pbConcentration_5 := in.Concentration_5
+	pbConcentration_10 := in.Concentration_10
+	pbConcentration_20 := in.Concentration_20
+	pbConcentration_60 := in.Concentration_60
+
+	return &pb.Selection{
+		StockID:          pbStockID,
+		Date:             pbDate,
+		Name:             pbName,
+		Category:         pbCategory,
+		Concentration_1:  pbConcentration_1,
+		Concentration_5:  pbConcentration_5,
+		Concentration_10: pbConcentration_10,
+		Concentration_20: pbConcentration_20,
+		Concentration_60: pbConcentration_60,
+	}
+}

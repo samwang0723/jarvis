@@ -11,16 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package idal
+package services
 
-const (
-	MaxRow = 500
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/dto"
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
-	IThreePrimaryDAL
-	ISelectionDAL
+func (s *serviceImpl) ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*entity.Selection, int64, error) {
+	objs, totalCount, err := s.dal.ListSelections(
+		ctx,
+		req.Offset,
+		req.Limit,
+		req.Date,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return objs, totalCount, nil
 }

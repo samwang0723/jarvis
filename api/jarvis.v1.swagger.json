@@ -73,6 +73,38 @@
         ]
       }
     },
+    "/v1/selections": {
+      "post": {
+        "operationId": "JarvisV1_ListSelections",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListSelectionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListSelectionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/stakeconcentration": {
       "post": {
         "operationId": "JarvisV1_GetStakeConcentration",
@@ -364,6 +396,45 @@
         }
       }
     },
+    "v1ListSelectionRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListSelectionResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Selection"
+          }
+        }
+      }
+    },
     "v1ListStockRequest": {
       "type": "object",
       "properties": {
@@ -473,6 +544,43 @@
         },
         "end": {
           "type": "string"
+        }
+      }
+    },
+    "v1Selection": {
+      "type": "object",
+      "properties": {
+        "stockID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "concentration1": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration5": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration10": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration20": {
+          "type": "number",
+          "format": "float"
+        },
+        "concentration60": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

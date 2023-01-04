@@ -57,6 +57,14 @@ service JarvisV1 {
             body: "*"
         };
     }
+
+    rpc ListSelections(ListSelectionRequest) returns (ListSelectionResponse) {
+        option idempotency_level = NO_SIDE_EFFECTS;
+        option (google.api.http) = {
+            post: "/v1/selections"
+            body: "*"
+        };
+    }
 }
 
 message ListDailyCloseRequest {
@@ -194,4 +202,29 @@ message ThreePrimary {
     int64 trustTradeShares = 8;
     int64 dealerTradeShares = 9;
     int64 hedgingTradeShares = 10;
+}
+
+message ListSelectionRequest {
+    int32 offset = 1;
+    int32 limit = 2;
+    string date = 3;
+}
+
+message ListSelectionResponse {
+    int32 offset = 1;
+    int32 limit = 2;
+    int64 totalCount = 3;
+    repeated Selection entries = 4;
+}
+
+message Selection {
+    string stockID = 1;
+    string name = 2;
+    string category = 3;
+    string date = 4;
+    float concentration_1 = 5;
+    float concentration_5 = 6;
+    float concentration_10 = 7;
+    float concentration_20 = 8;
+    float concentration_60 = 9;
 }

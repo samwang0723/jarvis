@@ -11,16 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package idal
+package handlers
 
-const (
-	MaxRow = 500
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
-	IThreePrimaryDAL
-	ISelectionDAL
+func (h *handlerImpl) ListSelections(ctx context.Context, req *dto.ListSelectionRequest) (*dto.ListSelectionResponse, error) {
+	entries, totalCount, err := h.dataService.ListSelections(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ListSelectionResponse{
+		Offset:     req.Offset,
+		Limit:      req.Limit,
+		Entries:    entries,
+		TotalCount: totalCount,
+	}, nil
 }

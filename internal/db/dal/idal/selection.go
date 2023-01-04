@@ -13,14 +13,12 @@
 // limitations under the License.
 package idal
 
-const (
-	MaxRow = 500
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
-	IThreePrimaryDAL
-	ISelectionDAL
+type ISelectionDAL interface {
+	ListSelections(ctx context.Context, offset int32, limit int32, date string) (objs []*entity.Selection, totalCount int64, err error)
 }

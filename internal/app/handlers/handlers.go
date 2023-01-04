@@ -25,6 +25,7 @@ type IHandler interface {
 	ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error)
 	ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error)
 	ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error)
+	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) (*dto.ListSelectionResponse, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 	ListeningKafkaInput(ctx context.Context)
