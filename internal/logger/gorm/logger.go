@@ -25,9 +25,8 @@ import (
 	"gorm.io/gorm/utils"
 )
 
-var (
-	instance ILogger
-)
+//nolint:nolintlint, gochecknoglobals
+var instance ILogger
 
 type ILogger interface {
 	LogMode(gormlogger.LogLevel) gormlogger.Interface
@@ -62,6 +61,7 @@ func Logger() ILogger {
 		}
 		initialize(resp)
 	}
+
 	return instance
 }
 
@@ -85,17 +85,21 @@ func (l *gormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	elapsed := time.Since(begin)
 	sql, _ := fc()
 	fields := logrus.Fields{}
+
 	if l.SourceField != "" {
 		fields[l.SourceField] = utils.FileWithLineNum()
 	}
+
 	if err != nil && !(errors.Is(err, gorm.ErrRecordNotFound) && l.IgnoreRecordNotFoundError) {
 		fields[logrus.ErrorKey] = err
 		l.logger.WithContext(ctx).WithFields(fields).Errorf("%s [%s]", sql, elapsed)
+
 		return
 	}
 
 	if l.SlowThreshold != 0 && elapsed > l.SlowThreshold {
 		l.logger.WithContext(ctx).WithFields(fields).Warnf("%s [%s]", sql, elapsed)
+
 		return
 	}
 

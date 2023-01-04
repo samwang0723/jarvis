@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,8 +54,8 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 }
 
 func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
-	searchParams *idal.ListStockSearchParams) (objs []*entity.Stock, totalCount int64, err error) {
-
+	searchParams *idal.ListStockSearchParams,
+) (objs []*entity.Stock, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from stocks where %s", buildQueryFromListStockSearchParams(searchParams))
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err

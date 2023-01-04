@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,12 +21,14 @@ import (
 )
 
 const (
-	TimeZone = "Asia/Taipei"
+	TimeZone    = "Asia/Taipei"
+	baseDecimal = 100
 )
 
 func GetCurrentEnv() string {
 	env := os.Getenv("ENVIRONMENT")
 	output := "dev"
+
 	switch env {
 	case "development":
 		output = "dev"
@@ -35,17 +37,8 @@ func GetCurrentEnv() string {
 	case "production":
 		output = "prod"
 	}
-	return output
-}
 
-func String2Bytes(s string) []byte {
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	bh := reflect.SliceHeader{
-		Data: sh.Data,
-		Len:  sh.Len,
-		Cap:  sh.Len,
-	}
-	return *(*[]byte)(unsafe.Pointer(&bh))
+	return output
 }
 
 func Bytes2String(b []byte) string {
@@ -60,9 +53,10 @@ func CastInterfaceSlice(s interface{}) *[]interface{} {
 	for i := 0; i < v.Len(); i++ {
 		intf[i] = v.Index(i).Interface()
 	}
+
 	return &intf
 }
 
 func RoundUpDecimalTwo(x float32) float32 {
-	return float32(math.Ceil(float64(x)*100) / 100)
+	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
 }

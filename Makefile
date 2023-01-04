@@ -1,18 +1,44 @@
-.PHONY: test lint
+.PHONY: test lint migrate proto build docker-m1
 
-test:
-	@echo "[go test] running tests and collecting coverage metrics"
-	@go test -v -tags all_tests -race -coverprofile=coverage.txt -covermode=atomic $$(go list ./... | grep -v /third_party/)
+help: ## show this help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-lint: lint-check-deps
-	@echo "[golangci-lint] linting sources"
-	@golangci-lint run \
-		-E misspell \
-		-E golint \
-		-E gofmt \
-		-E unconvert \
-		--exclude-use-default=false \
-		./...
+PROJECT_NAME?=core
+APP_NAME?=jarvis
+VERSION?=v1.2.0
+
+SHELL = /bin/bash
+SOURCE_LIST = $$(go list ./... | grep -v /third_party/)
+
+########
+# test #
+########
+
+test: test-race test-leak ## launch all tests
+
+test-race: ## launch all tests with race detection
+	go test $(SOURCE_LIST)  -cover -race
+
+test-leak: ## launch all tests with leak detection (if possible)
+	go test $(SOURCE_LIST)  -leak
+
+test-coverage-report:
+	go test -v $(SOURCE_LIST) -cover -race -covermode=atomic -coverprofile=./coverage.out
+	go tool cover -html=coverage.out
+
+########
+# lint #
+########
+
+lint: lint-check-deps ## lints the entire codebase
+	@golangci-lint run ./... --config=./.golangci.toml --fix && \
+	if [ $$(gofumpt -e -w -l ./ | wc -l) = "0" ] ; \
+		then exit 0; \
+	else \
+		echo "these files needs to be gofumpt-ed"; \
+		gofumpt -e -w -l ./; \
+		exit 1; \
+	fi
 
 lint-check-deps:
 	@if [ -z `which golangci-lint` ]; then \
@@ -20,15 +46,47 @@ lint-check-deps:
 		GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint;\
 	fi
 
-migrate:
+#############
+# benchmark #
+#############
+
+bench: ## launch benchs
+	go test $(SOURCE_LIST) -bench=. -benchmem | tee ./bench.txt
+
+bench-compare: ## compare benchs results
+	benchstat ./bench.txt
+
+#######
+# sec #
+#######
+
+sec-scan: ## scan for sec issues with trivy (trivy binary needed)
+	trivy fs --exit-code 1 --no-progress --severity CRITICAL $(SOURCE_LIST)
+
+###########
+#  mock   #
+###########
+
+mock-gen: ## generate mocks
+	go generate $(SOURCE_LIST)
+
+##############
+#   migrate  #
+##############
+
+migrate: ## migrate database
 	@echo "[goose up] do mysql schema migration"
 	@goose -dir internal/db/migration mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
+
+##############
+#   build    #
+##############
 
 build:
 	@echo "[go build] build executable binary for development"
 	@go build -o jarvis-api cmd/main.go
 
-proto:
+proto: ## generate proto files
 	@echo "[protoc] generate protobuf related go files, grpc_gateway reversed proxy and swagger"
 	@protoc jarvis.v1.proto -I . \
 		-I $$GOPATH/src/github.com/samwang0723/jarvis/third_party \
@@ -42,7 +100,10 @@ proto:
 		--openapiv2_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
-docker-m1:
+docker-build: lint test bench sec-scan docker-m1 ## build docker image in M1 device
+	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
+
+docker-m1: 
 	@echo "[docker build] build local docker image on Mac M1"
 	@docker build -t samwang0723/jarvis-api:m1 -f build/docker/app/Dockerfile.local .
 
@@ -52,7 +113,7 @@ docker-amd64-deps:
 	@docker buildx use m1-builder
 	@docker buildx inspect --bootstrap
 
-docker-amd64:
+docker-amd64: 
 	@echo "[docker buildx] build amd64 version docker image for Ubuntu AWS EC2 instance"
 	@docker buildx use m1-builder
 	@docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f build/docker/app/Dockerfile .

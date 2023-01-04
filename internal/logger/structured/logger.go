@@ -25,8 +25,12 @@ import (
 	logtest "github.com/sirupsen/logrus/hooks/test"
 )
 
-var (
-	instance ILogger
+//nolint:nolintlint, gochecknoglobals
+var instance ILogger
+
+const (
+	sampleRate   = 0.2
+	flushTimeout = 2 * time.Second
 )
 
 type ILogger interface {
@@ -46,6 +50,7 @@ func initialize(l ILogger) {
 func Logger(cfg *config.Config) ILogger {
 	if instance == nil {
 		var level logrus.Level
+
 		switch cfg.Log.Level {
 		case "FATAL":
 			level = logrus.FatalLevel
@@ -58,6 +63,7 @@ func Logger(cfg *config.Config) ILogger {
 		default:
 			level = logrus.DebugLevel
 		}
+
 		slog := &structuredLogger{
 			logger: logrus.New(),
 		}
@@ -70,14 +76,17 @@ func Logger(cfg *config.Config) ILogger {
 		initialize(slog)
 		initSentry()
 	}
+
 	return instance
 }
 
 func NullLogger() ILogger {
 	l, _ := logtest.NewNullLogger()
+
 	initialize(&structuredLogger{
 		logger: l,
 	})
+
 	return instance
 }
 
@@ -86,7 +95,7 @@ func initSentry() {
 		Dsn:         "https://f3fb4890176c442aafef411fcf812312@o1049557.ingest.sentry.io/6030819",
 		Environment: "development",
 		// Specify a fixed sample rate:
-		TracesSampleRate: 0.2,
+		TracesSampleRate: sampleRate,
 	})
 	if err != nil {
 		log.Fatalf("sentry.Init: %s", err)
@@ -97,7 +106,7 @@ func (l *structuredLogger) RawLogger() *logrus.Logger {
 	return l.logger
 }
 
-func (log *structuredLogger) Flush() {
+func (l *structuredLogger) Flush() {
 	// Flush buffered events before the program terminates.
-	sentry.Flush(2 * time.Second)
+	sentry.Flush(flushTimeout)
 }

@@ -88,7 +88,7 @@ func Serve() {
 		)),
 	)
 
-	//health check
+	// health check
 	health := healthcheck.NewHandler()
 	// Our app is not happy if we've got more than 100 goroutines running.
 	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(10000))
@@ -174,13 +174,16 @@ _______________________________________________
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
 	// start revered proxy http server
 	go s.startGRPCGateway(ctx, addr)
+
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
+
 	log.Info("gRPC server running.")
 
 	pb.RegisterJarvisV1Server(s.GRPCServer(), s)
+
 	go func() {
 		if err = s.GRPCServer().Serve(lis); err != nil {
 			log.Fatalf("gRPC server serve failed: %w", err)
@@ -263,6 +266,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
+
 	err := gatewaypb.RegisterJarvisV1HandlerFromEndpoint(
 		c,
 		mux,
@@ -277,6 +281,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().LiveEndpoint(w, r)
 	})
+
 	mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().ReadyEndpoint(w, r)
 	})
@@ -290,6 +295,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
+
 	err = http.ListenAndServe(host, httpMux)
 	if err != nil {
 		log.Fatalf("cannot listen and server: %w", err)

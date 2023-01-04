@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,25 +27,29 @@ import (
 
 type ID uint64
 
-const ZeroID = ID(0)
-const MY_IP = "MY_IP"
+const (
+	ZeroID = ID(0)
+	MyIP   = "MY_IP"
+)
 
-// use Sonyflake to support distributed unique IDs
-var sf *sonyflake.Sonyflake
+//nolint:nolintlint, gochecknoglobals
+var generator *sonyflake.Sonyflake
 
+//nolint:nolintlint, gochecknoinits
 func init() {
 	var st sonyflake.Settings
 	if helper.GetCurrentEnv() == "prod" {
 		st.MachineID = machineID
 	}
-	sf = sonyflake.NewSonyflake(st)
-	if sf == nil {
+
+	generator = sonyflake.NewSonyflake(st)
+	if generator == nil {
 		panic("failed to init sonyflake for distributed ID generation")
 	}
 }
 
 func GenID() (ID, error) {
-	rawID, err := sf.NextID()
+	rawID, err := generator.NextID()
 	if err != nil {
 		return ZeroID, fmt.Errorf("Cannot get sf.NextID(): %w\n", err)
 	}
@@ -63,14 +67,16 @@ func (id ID) Uint64() uint64 {
 }
 
 func machineID() (uint16, error) {
-	ipStr := os.Getenv(MY_IP)
+	ipStr := os.Getenv(MyIP)
 	if len(ipStr) == 0 {
 		return 0, errors.New("'MY_IP' environment variable not set")
 	}
+
 	ip := net.ParseIP(ipStr)
 	if ip == nil || len(ip) < 16 {
 		return 0, errors.New("invalid IP")
 	}
+
 	return uint16(ip[8])<<7 + uint16(ip[9])<<6 +
 			uint16(ip[10])<<5 + uint16(ip[11])<<4 +
 			uint16(ip[12])<<3 + uint16(ip[13])<<2 +
@@ -89,8 +95,10 @@ func (m *Model) BeforeCreate(tx *gorm.DB) (err error) {
 	if m.ID == ZeroID {
 		m.ID, err = GenID()
 	}
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

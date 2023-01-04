@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,25 +62,28 @@ type Config struct {
 		HealthCheckInterval int    `yaml:"healthCheckInterval"`
 	} `yaml:"elasticsearch"`
 	Kafka struct {
-		GroupId string   `yaml:"groupId"`
+		GroupID string   `yaml:"groupId"`
 		Brokers []string `yaml:"brokers"`
 		Topics  []string `yaml:"topics"`
 	} `yaml:"kafka"`
 }
 
-var (
-	instance Config
-)
+//nolint:nolintlint, gochecknoglobals
+var instance Config
 
 func Load() {
 	yamlFile := fmt.Sprintf("./configs/config.%s.yaml", helper.GetCurrentEnv())
-	f, err := os.Open(yamlFile)
+
+	configFile, err := os.Open(yamlFile)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
-	decoder := yaml.NewDecoder(f)
+
+	defer configFile.Close()
+
+	decoder := yaml.NewDecoder(configFile)
 	err = decoder.Decode(&instance)
+
 	if err != nil {
 		panic(err)
 	}

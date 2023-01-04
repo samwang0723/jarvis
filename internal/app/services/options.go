@@ -15,15 +15,11 @@
 package services
 
 import (
-	"sync"
-
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 
 type Option func(o *serviceImpl)
-
-var once sync.Once
 
 func WithDAL(dal idal.IDAL) Option {
 	return func(i *serviceImpl) {

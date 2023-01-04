@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,18 +28,27 @@ type kafkaImpl struct {
 	instance *kafka.Reader
 }
 
+const (
+	queueCapacity    = 1024
+	sessionTimeout   = 10 * time.Second
+	rebalanceTimeout = 5 * time.Second
+	maxWait          = 1 * time.Second
+	minBytes         = 1    // 1B
+	maxBytes         = 10e6 // 10MB
+)
+
 func New(cfg *config.Config) ikafka.IKafka {
 	return &kafkaImpl{
 		instance: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:          cfg.Kafka.Brokers,
 			GroupTopics:      cfg.Kafka.Topics,
-			GroupID:          cfg.Kafka.GroupId, // having consumer group id to prevent duplication of message consumption
-			QueueCapacity:    1024,
-			SessionTimeout:   10 * time.Second,
-			RebalanceTimeout: 5 * time.Second,
-			MaxWait:          1 * time.Second,
-			MinBytes:         1,    // 1B
-			MaxBytes:         10e6, // 10MB
+			GroupID:          cfg.Kafka.GroupID, // having consumer group id to prevent duplication of message consumption
+			QueueCapacity:    queueCapacity,
+			SessionTimeout:   sessionTimeout,
+			RebalanceTimeout: rebalanceTimeout,
+			MaxWait:          maxWait,
+			MinBytes:         minBytes,
+			MaxBytes:         maxBytes,
 		}),
 	}
 }
@@ -56,9 +65,11 @@ func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, er
 
 func (k *kafkaImpl) Close() error {
 	log.Info("Kafka:Close")
+
 	err := k.instance.Close()
 	if err != nil {
 		log.Errorf("Close failed: %w", err)
 	}
+
 	return err
 }

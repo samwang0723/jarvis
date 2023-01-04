@@ -18,9 +18,8 @@ import (
 	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 )
 
-var (
-	instance structuredlog.ILogger
-)
+//nolint:nolintlint, gochecknoglobals
+var instance structuredlog.ILogger
 
 func Initialize(l structuredlog.ILogger) {
 	if instance == nil {

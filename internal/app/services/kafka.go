@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+//nolint:nolintlint, gochecknoglobals
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type data struct {
@@ -37,12 +38,14 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			msg, err := s.consumer.ReadMessage(ctx)
 			if err != nil {
 				log.Errorf("Kafka:ReadMessage error: %w", err)
+
 				return
 			}
 
 			entity, err := unmarshalMessageToEntity(msg)
 			if err != nil {
 				log.Errorf("Unmarshal (%s) failed: %w", msg.Topic, err)
+
 				return
 			}
 			respChan <- data{
@@ -53,6 +56,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				log.Warn("ListeningKafkaInput: context cancel")
+
 				return
 			default:
 			}
@@ -65,6 +69,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				log.Warn("ListeningKafkaInput(respChan): context cancel")
+
 				return
 			case obj, ok := <-respChan:
 				if ok {
@@ -82,7 +87,6 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			}
 		}
 	}()
-
 }
 
 func (s *serviceImpl) StopKafka() error {
@@ -91,7 +95,9 @@ func (s *serviceImpl) StopKafka() error {
 
 func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (interface{}, error) {
 	var err error
+
 	var output interface{}
+
 	switch msg.Topic {
 	case ikafka.DailyClosesV1:
 		var obj entity.DailyClose
@@ -110,5 +116,6 @@ func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (interface{}, error) {
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	}
+
 	return output, err
 }

@@ -37,7 +37,8 @@ func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.Th
 }
 
 func (i *dalImpl) ListThreePrimary(ctx context.Context, offset int32, limit int32,
-	searchParams *idal.ListThreePrimarySearchParams) (objs []*entity.ThreePrimary, totalCount int64, err error) {
+	searchParams *idal.ListThreePrimarySearchParams,
+) (objs []*entity.ThreePrimary, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from three_primary where %s", buildQueryFromListThreePrimarySearchParams(searchParams))
 	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err
