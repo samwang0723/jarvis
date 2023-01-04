@@ -21,23 +21,26 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (h *handlerImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
+func (h *handlerImpl) GetStakeConcentration(
+	ctx context.Context,
+	req *dto.GetStakeConcentrationRequest,
+) (*entity.StakeConcentration, error) {
 	res, err := h.dataService.GetStakeConcentration(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	stakeConcentration := &entity.StakeConcentration{
-		StockID:          res.StockID,
-		Date:             res.Date,
-		SumBuyShares:     res.SumBuyShares,
-		SumSellShares:    res.SumSellShares,
-		AvgBuyPrice:      res.AvgBuyPrice,
-		AvgSellPrice:     res.AvgSellPrice,
-		Concentration_1:  res.Concentration_1,
-		Concentration_5:  res.Concentration_5,
-		Concentration_10: res.Concentration_10,
-		Concentration_20: res.Concentration_20,
-		Concentration_60: res.Concentration_60,
+		StockID:         res.StockID,
+		Date:            res.Date,
+		SumBuyShares:    res.SumBuyShares,
+		SumSellShares:   res.SumSellShares,
+		AvgBuyPrice:     res.AvgBuyPrice,
+		AvgSellPrice:    res.AvgSellPrice,
+		Concentration1:  res.Concentration1,
+		Concentration5:  res.Concentration5,
+		Concentration10: res.Concentration10,
+		Concentration20: res.Concentration20,
+		Concentration60: res.Concentration60,
 	}
 	stakeConcentration.ID = res.ID
 	stakeConcentration.CreatedAt = res.CreatedAt

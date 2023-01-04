@@ -25,6 +25,7 @@ func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 	if err != nil {
 		return nil, err
 	}
+
 	return &dto.ListStockResponse{
 		Offset:     req.Offset,
 		Limit:      req.Limit,
@@ -38,6 +39,7 @@ func (h *handlerImpl) ListCategories(ctx context.Context) (*dto.ListCategoriesRe
 	if err != nil {
 		return nil, err
 	}
+
 	return &dto.ListCategoriesResponse{
 		Entries: entries,
 	}, nil

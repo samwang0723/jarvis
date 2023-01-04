@@ -102,7 +102,7 @@ func ListDailyCloseResponseToPB(in *ListDailyCloseResponse) *pb.ListDailyCloseRe
 		return nil
 	}
 
-	var entries []*pb.DailyClose
+	entries := make([]*pb.DailyClose, 0, len(in.Entries))
 	for _, obj := range in.Entries {
 		entries = append(entries, DailyCloseToPB(obj))
 	}
@@ -211,7 +211,8 @@ func ListStockResponseToPB(in *ListStockResponse) *pb.ListStockResponse {
 		return nil
 	}
 
-	var entries []*pb.Stock
+	entries := make([]*pb.Stock, 0, len(in.Entries))
+
 	for _, obj := range in.Entries {
 		entries = append(entries, StockToPB(obj))
 	}
@@ -298,11 +299,11 @@ func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetSta
 	pbSumSellShares := in.SumSellShares
 	pbAvgBuyPrice := in.AvgBuyPrice
 	pbAvgSellPrice := in.AvgSellPrice
-	pbConcentration1 := in.Concentration_1
-	pbConcentration5 := in.Concentration_5
-	pbConcentration10 := in.Concentration_10
-	pbConcentration20 := in.Concentration_20
-	pbConcentration60 := in.Concentration_60
+	pbConcentration1 := in.Concentration1
+	pbConcentration5 := in.Concentration5
+	pbConcentration10 := in.Concentration10
+	pbConcentration20 := in.Concentration20
+	pbConcentration60 := in.Concentration60
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -376,7 +377,8 @@ func ListThreePrimaryResponseToPB(in *ListThreePrimaryResponse) *pb.ListThreePri
 		return nil
 	}
 
-	var entries []*pb.ThreePrimary
+	entries := make([]*pb.ThreePrimary, 0, len(in.Entries))
+
 	for _, obj := range in.Entries {
 		entries = append(entries, ThreePrimaryToPB(obj))
 	}
@@ -449,7 +451,8 @@ func ListSelectionResponseToPB(in *ListSelectionResponse) *pb.ListSelectionRespo
 		return nil
 	}
 
-	var entries []*pb.Selection
+	entries := make([]*pb.Selection, 0, len(in.Entries))
+
 	for _, obj := range in.Entries {
 		entries = append(entries, SelectionToPB(obj))
 	}
@@ -471,11 +474,11 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 	pbDate := in.Date
 	pbName := in.Name
 	pbCategory := in.Category
-	pbConcentration_1 := in.Concentration_1
-	pbConcentration_5 := in.Concentration_5
-	pbConcentration_10 := in.Concentration_10
-	pbConcentration_20 := in.Concentration_20
-	pbConcentration_60 := in.Concentration_60
+	pbConcentration1 := in.Concentration1
+	pbConcentration5 := in.Concentration5
+	pbConcentration10 := in.Concentration10
+	pbConcentration20 := in.Concentration20
+	pbConcentration60 := in.Concentration60
 	pbVolume := int32(in.Volume)
 	pbForeign := int32(in.Foreign)
 	pbTrust := int32(in.Trust)
@@ -492,11 +495,11 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		Date:             pbDate,
 		Name:             pbName,
 		Category:         pbCategory,
-		Concentration_1:  pbConcentration_1,
-		Concentration_5:  pbConcentration_5,
-		Concentration_10: pbConcentration_10,
-		Concentration_20: pbConcentration_20,
-		Concentration_60: pbConcentration_60,
+		Concentration_1:  pbConcentration1,
+		Concentration_5:  pbConcentration5,
+		Concentration_10: pbConcentration10,
+		Concentration_20: pbConcentration20,
+		Concentration_60: pbConcentration60,
 		Volume:           pbVolume,
 		Foreign:          pbForeign,
 		Trust:            pbTrust,

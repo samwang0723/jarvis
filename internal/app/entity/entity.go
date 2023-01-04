@@ -32,6 +32,12 @@ const (
 	MyIP   = "MY_IP"
 )
 
+var (
+	errDupZeroID = errors.New("zeroID was generated")
+	errEnvNotSet = errors.New("'MY_IP' environment variable not set")
+	errInvalidIP = errors.New("invalid IP address")
+)
+
 //nolint:nolintlint, gochecknoglobals
 var generator *sonyflake.Sonyflake
 
@@ -56,7 +62,7 @@ func GenID() (ID, error) {
 
 	id := ID(rawID)
 	if id == ZeroID {
-		return ZeroID, fmt.Errorf("zeroID was generated")
+		return ZeroID, errDupZeroID
 	}
 
 	return id, nil
@@ -69,12 +75,12 @@ func (id ID) Uint64() uint64 {
 func machineID() (uint16, error) {
 	ipStr := os.Getenv(MyIP)
 	if ipStr == "" {
-		return 0, errors.New("'MY_IP' environment variable not set")
+		return 0, errEnvNotSet
 	}
 
 	ip := net.ParseIP(ipStr)
 	if ip == nil || len(ip) < 16 {
-		return 0, errors.New("invalid IP")
+		return 0, errInvalidIP
 	}
 
 	return uint16(ip[8])<<7 + uint16(ip[9])<<6 +

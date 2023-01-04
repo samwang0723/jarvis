@@ -19,11 +19,15 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-func (h *handlerImpl) ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error) {
+func (h *handlerImpl) ListThreePrimary(
+	ctx context.Context,
+	req *dto.ListThreePrimaryRequest,
+) (*dto.ListThreePrimaryResponse, error) {
 	entries, totalCount, err := h.dataService.ListThreePrimary(ctx, req)
 	if err != nil {
 		return nil, err
 	}
+
 	return &dto.ListThreePrimaryResponse{
 		Offset:     req.Offset,
 		Limit:      req.Limit,

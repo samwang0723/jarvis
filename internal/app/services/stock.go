@@ -16,13 +16,14 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"reflect"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
+
+var errCannotCastStock = errors.New("cannot cast interface to *dto.Stock")
 
 func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.DailyClose
@@ -31,7 +32,7 @@ func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}
 		if val, ok := v.(*entity.Stock); ok {
 			stocks = append(stocks, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.Stock: %v", reflect.TypeOf(v).Elem())
+			return errCannotCastStock
 		}
 	}
 

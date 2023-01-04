@@ -16,9 +16,8 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math"
-	"reflect"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
@@ -35,6 +34,8 @@ const (
 	index60      = 59
 )
 
+var errCannotCastStakeConcentration = errors.New("cannot cast interface to *dto.StakeConcentration")
+
 func (s *serviceImpl) GetStakeConcentration(
 	ctx context.Context,
 	req *dto.GetStakeConcentrationRequest,
@@ -50,7 +51,7 @@ func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[
 			s.calculateConcentration(ctx, val)
 			stakeConcentrations = append(stakeConcentrations, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.StakeConcentration: %v", reflect.TypeOf(v).Elem())
+			return errCannotCastStakeConcentration
 		}
 	}
 
@@ -80,15 +81,15 @@ func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *entity.St
 
 			switch idx {
 			case index1:
-				ref.Concentration_1 = op
+				ref.Concentration1 = op
 			case index5:
-				ref.Concentration_5 = op
+				ref.Concentration5 = op
 			case index10:
-				ref.Concentration_10 = op
+				ref.Concentration10 = op
 			case index20:
-				ref.Concentration_20 = op
+				ref.Concentration20 = op
 			case index60:
-				ref.Concentration_60 = op
+				ref.Concentration60 = op
 			}
 			cursor++
 		}

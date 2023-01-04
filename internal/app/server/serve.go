@@ -47,6 +47,9 @@ import (
 
 const (
 	gracefulShutdownPeriod = 5 * time.Second
+	maxGoRoutines          = 10000
+	dnsResolveTimeout      = 200 * time.Millisecond
+	databasePingTimeout    = 1 * time.Second
 )
 
 type IServer interface {
@@ -70,8 +73,8 @@ func Serve() {
 	logger := structuredlog.Logger(cfg)
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> database
 	// initialize DAL layer
-	db := db.GormFactory(cfg)
-	dalService := dal.New(dal.WithDB(db))
+	database := db.GormFactory(cfg)
+	dalService := dal.New(dal.WithDB(database))
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
@@ -91,18 +94,24 @@ func Serve() {
 	// health check
 	health := healthcheck.NewHandler()
 	// Our app is not happy if we've got more than 100 goroutines running.
-	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(10000))
+	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(maxGoRoutines))
 	// Our app is not ready if we can't resolve our upstream dependency in DNS.
 	health.AddReadinessCheck(
 		"upstream-database-read-dns",
-		healthcheck.DNSResolveCheck(cfg.Replica.Host, 200*time.Millisecond))
+		healthcheck.DNSResolveCheck(cfg.Replica.Host, dnsResolveTimeout),
+	)
 	health.AddReadinessCheck(
 		"upstream-database-write-dns",
-		healthcheck.DNSResolveCheck(cfg.Database.Host, 200*time.Millisecond))
+		healthcheck.DNSResolveCheck(cfg.Database.Host, dnsResolveTimeout),
+	)
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
-	genericDB, _ := db.DB()
-	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(genericDB, 1*time.Second))
+	genericDB, dbErr := database.DB()
+	if dbErr != nil {
+		log.Fatal("failed to get db", dbErr)
+	}
+
+	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(genericDB, databasePingTimeout))
 
 	s := newServer(
 		Name(cfg.Server.Name),
@@ -119,7 +128,7 @@ func Serve() {
 			if err != nil {
 				log.Errorf("StopKafka error: %w", err)
 			}
-			sqlDB, err := db.DB()
+			sqlDB, err := database.DB()
 			if err != nil {
 				return err
 			}
@@ -130,6 +139,7 @@ func Serve() {
 	)
 
 	log.Initialize(s.Logger())
+
 	err := s.Run(context.Background())
 	if err != nil && s.Logger() != nil {
 		log.Errorf("error returned by service.Run(): %s\n", err.Error())
@@ -168,6 +178,7 @@ Environment (%s)
 _______________________________________________
 `
 	signatureOut := fmt.Sprintf(signature, "v1.2.0", helper.GetCurrentEnv())
+	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
 	// start gRPC server
@@ -235,6 +246,7 @@ func (s *server) Run(ctx context.Context) error {
 	case <-childCtx.Done():
 		log.Warn("main context being cancelled")
 	}
+
 	return s.Stop()
 }
 
@@ -281,13 +293,23 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	}
 
 	// add healthcheck into gRPC gateway mux
-	mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	err = mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().LiveEndpoint(w, r)
 	})
+	if err != nil {
+		log.Errorf("cannot handle /live path: %w", err)
 
-	mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+		return
+	}
+
+	err = mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		s.HealthCheck().ReadyEndpoint(w, r)
 	})
+	if err != nil {
+		log.Errorf("cannot handle /ready path: %w", err)
+
+		return
+	}
 
 	// support swagger-ui API document
 	httpMux := http.NewServeMux()

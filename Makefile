@@ -32,11 +32,11 @@ test-coverage-report:
 
 lint: lint-check-deps ## lints the entire codebase
 	@golangci-lint run ./... --config=./.golangci.toml --fix && \
-	if [ $$(gofumpt -e -w -l ./ | wc -l) = "0" ] ; \
+	if [ $$(gofumpt -e -w -l $(SOURCE_LIST) | wc -l) = "0" ] ; \
 		then exit 0; \
 	else \
 		echo "these files needs to be gofumpt-ed"; \
-		gofumpt -e -w -l ./; \
+		gofumpt -e -w -l $(SOURCE_LIST); \
 		exit 1; \
 	fi
 

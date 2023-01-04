@@ -16,8 +16,7 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"reflect"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -26,7 +25,16 @@ import (
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
-const MAX_AVERAGE_LIMIT = 55
+const (
+	priceMA8   = 8
+	priceMA21  = 21
+	priceMA55  = 55
+	volumeMV5  = 5
+	volumeMV13 = 13
+	volumeMV34 = 34
+)
+
+var errCannotCastDailyClose = errors.New("cannot cast interface to *dto.DailyClose")
 
 func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.DailyClose
@@ -35,14 +43,17 @@ func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interfa
 		if val, ok := v.(*entity.DailyClose); ok {
 			dailyCloses = append(dailyCloses, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.DailyClose: %v\n", reflect.TypeOf(v).Elem())
+			return errCannotCastDailyClose
 		}
 	}
 
 	return s.dal.BatchUpsertDailyClose(ctx, dailyCloses)
 }
 
-func (s *serviceImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) ([]*entity.DailyClose, int64, error) {
+func (s *serviceImpl) ListDailyClose(
+	ctx context.Context,
+	req *dto.ListDailyCloseRequest,
+) ([]*entity.DailyClose, int64, error) {
 	objs, totalCount, err := s.dal.ListDailyClose(
 		ctx,
 		req.Offset,
@@ -82,12 +93,12 @@ func calculateAverage(target *entity.DailyClose, objs []*entity.DailyClose) {
 	for _, obj := range objs {
 		cursor++
 		priceSum += obj.Close
-		if cursor == 8 || cursor == 21 || cursor == 55 {
+		if cursor == priceMA8 || cursor == priceMA21 || cursor == priceMA55 {
 			cache.MA[cursor] = helper.RoundUpDecimalTwo(priceSum / float32(cursor))
 		}
 
 		volumeSum += obj.TradedShares
-		if cursor == 5 || cursor == 13 || cursor == 34 {
+		if cursor == volumeMV5 || cursor == volumeMV13 || cursor == volumeMV34 {
 			cache.MV[cursor] = volumeSum / uint64(cursor)
 		}
 	}

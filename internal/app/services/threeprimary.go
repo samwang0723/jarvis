@@ -16,13 +16,14 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"reflect"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
+
+var errCannotCastThreePrimary = errors.New("cannot cast interface to *dto.ThreePrimary")
 
 func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.ThreePrimary
@@ -31,7 +32,7 @@ func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]inter
 		if val, ok := v.(*entity.ThreePrimary); ok {
 			threePrimary = append(threePrimary, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.ThreePrimary: %v", reflect.TypeOf(v).Elem())
+			return errCannotCastThreePrimary
 		}
 	}
 
