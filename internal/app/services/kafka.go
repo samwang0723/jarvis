@@ -31,6 +31,7 @@ type data struct {
 	topic  string
 }
 
+//nolint:nolintlint, cyclop
 func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
 	go func() {
@@ -42,7 +43,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 				return
 			}
 
-			entity, err := unmarshalMessageToEntity(msg)
+			ent, err := unmarshalMessageToEntity(msg)
 			if err != nil {
 				log.Errorf("Unmarshal (%s) failed: %w", msg.Topic, err)
 
@@ -50,7 +51,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			}
 			respChan <- data{
 				topic:  msg.Topic,
-				values: &[]interface{}{entity},
+				values: &[]interface{}{ent},
 			}
 
 			select {
@@ -72,16 +73,21 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 
 				return
 			case obj, ok := <-respChan:
+				var err error
 				if ok {
 					switch obj.topic {
 					case ikafka.DailyClosesV1:
-						s.BatchUpsertDailyClose(ctx, obj.values)
+						err = s.BatchUpsertDailyClose(ctx, obj.values)
 					case ikafka.StakeConcentrationV1:
-						s.BatchUpsertStakeConcentration(ctx, obj.values)
+						err = s.BatchUpsertStakeConcentration(ctx, obj.values)
 					case ikafka.StocksV1:
-						s.BatchUpsertStocks(ctx, obj.values)
+						err = s.BatchUpsertStocks(ctx, obj.values)
 					case ikafka.ThreePrimaryV1:
-						s.BatchUpsertThreePrimary(ctx, obj.values)
+						err = s.BatchUpsertThreePrimary(ctx, obj.values)
+					}
+
+					if err != nil {
+						log.Errorf("BatchUpsert (%s) failed: %w", obj.topic, err)
 					}
 				}
 			}

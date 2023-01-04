@@ -141,6 +141,7 @@ func newServer(opts ...Option) IServer {
 	for _, opt := range opts {
 		opt(&o)
 	}
+
 	return &server{
 		opts: o,
 	}
@@ -274,7 +275,9 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	)
 	if err != nil {
-		log.Fatalf("cannot start grpc gateway: %w", err)
+		log.Errorf("cannot start grpc gateway: %w", err)
+
+		return
 	}
 
 	// add healthcheck into gRPC gateway mux
@@ -298,6 +301,8 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 
 	err = http.ListenAndServe(host, httpMux)
 	if err != nil {
-		log.Fatalf("cannot listen and server: %w", err)
+		log.Errorf("cannot listen and server: %w", err)
+
+		return
 	}
 }

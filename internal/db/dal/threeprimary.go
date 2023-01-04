@@ -26,6 +26,7 @@ import (
 
 func (i *dalImpl) CreateThreePrimary(ctx context.Context, obj *entity.ThreePrimary) error {
 	err := i.db.Create(obj).Error
+
 	return err
 }
 
@@ -33,21 +34,26 @@ func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.Th
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
+
 	return err
 }
 
 func (i *dalImpl) ListThreePrimary(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListThreePrimarySearchParams,
 ) (objs []*entity.ThreePrimary, totalCount int64, err error) {
-	sql := fmt.Sprintf("select count(*) from three_primary where %s", buildQueryFromListThreePrimarySearchParams(searchParams))
-	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
+	sql := fmt.Sprintf("select count(*) from three_primary where %s",
+		buildQueryFromListThreePrimarySearchParams(searchParams))
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
 		return nil, 0, err
 	}
+
 	sql = fmt.Sprintf(`select t.* from
 		(select id from three_primary where %s order by exchange_date desc limit %d, %d) q
 		join three_primary t on t.id = q.id`, buildQueryFromListThreePrimarySearchParams(searchParams), offset, limit)
 
-	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
+	err = i.db.Raw(sql).Scan(&objs).Error
+	if err != nil {
 		return nil, 0, err
 	}
 

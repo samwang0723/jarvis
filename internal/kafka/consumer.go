@@ -68,7 +68,7 @@ func (k *kafkaImpl) Close() error {
 
 	err := k.instance.Close()
 	if err != nil {
-		log.Errorf("Close failed: %w", err)
+		log.Errorf("Close failed: %s", err)
 	}
 
 	return err

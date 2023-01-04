@@ -24,7 +24,21 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (s *serviceImpl) GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error) {
+const (
+	volumeCount  = 1000
+	twoDigits    = 100
+	roundDecimal = 10
+	index1       = 0
+	index5       = 4
+	index10      = 9
+	index20      = 19
+	index60      = 59
+)
+
+func (s *serviceImpl) GetStakeConcentration(
+	ctx context.Context,
+	req *dto.GetStakeConcentrationRequest,
+) (*entity.StakeConcentration, error) {
 	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID, req.Date)
 }
 
@@ -36,13 +50,14 @@ func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[
 			s.calculateConcentration(ctx, val)
 			stakeConcentrations = append(stakeConcentrations, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.StakeConcentration: %v\n", reflect.TypeOf(v).Elem())
+			return fmt.Errorf("cannot cast interface to *dto.StakeConcentration: %v", reflect.TypeOf(v).Elem())
 		}
 	}
 
 	return s.dal.BatchUpsertStakeConcentration(ctx, stakeConcentrations)
 }
 
+//nolint:nolintlint, cyclop
 func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *entity.StakeConcentration) {
 	// pull the sum of traded volumes in order to calculate the concentration percentage
 	bases, err := s.dal.GetStakeConcentrationsWithVolumes(ctx, ref.StockID, ref.Date)
@@ -57,22 +72,22 @@ func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *entity.St
 		sumTradeShares += c.TradeShares
 
 		if idx == 0 || idx == 4 || idx == 9 || idx == 19 || idx == 59 {
-			p, op := 0.0, float32(0.0)
+			op := float32(0.0)
 			if ref.Diff[cursor] != 0 && sumTradeShares > 0 {
-				p = (float64(ref.Diff[cursor]) / float64(sumTradeShares/1000)) * 100
-				op = float32(math.Round(p*10) / 10)
+				p := (float64(ref.Diff[cursor]) / float64(sumTradeShares/volumeCount)) * twoDigits
+				op = float32(math.Round(p*roundDecimal) / roundDecimal)
 			}
 
 			switch idx {
-			case 0:
+			case index1:
 				ref.Concentration_1 = op
-			case 4:
+			case index5:
 				ref.Concentration_5 = op
-			case 9:
+			case index10:
 				ref.Concentration_10 = op
-			case 19:
+			case index20:
 				ref.Concentration_20 = op
-			case 59:
+			case index60:
 				ref.Concentration_60 = op
 			}
 			cursor++

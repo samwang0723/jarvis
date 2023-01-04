@@ -19,7 +19,10 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-func (h *handlerImpl) ListSelections(ctx context.Context, req *dto.ListSelectionRequest) (*dto.ListSelectionResponse, error) {
+func (h *handlerImpl) ListSelections(
+	ctx context.Context,
+	req *dto.ListSelectionRequest,
+) (*dto.ListSelectionResponse, error) {
 	entries, totalCount, err := h.dataService.ListSelections(ctx, req)
 	if err != nil {
 		return nil, err

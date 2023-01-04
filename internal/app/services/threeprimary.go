@@ -31,14 +31,17 @@ func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]inter
 		if val, ok := v.(*entity.ThreePrimary); ok {
 			threePrimary = append(threePrimary, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.ThreePrimary: %v\n", reflect.TypeOf(v).Elem())
+			return fmt.Errorf("cannot cast interface to *dto.ThreePrimary: %v", reflect.TypeOf(v).Elem())
 		}
 	}
 
 	return s.dal.BatchUpsertThreePrimary(ctx, threePrimary)
 }
 
-func (s *serviceImpl) ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error) {
+func (s *serviceImpl) ListThreePrimary(
+	ctx context.Context,
+	req *dto.ListThreePrimaryRequest,
+) ([]*entity.ThreePrimary, int64, error) {
 	objs, totalCount, err := s.dal.ListThreePrimary(
 		ctx,
 		req.Offset,
@@ -48,5 +51,6 @@ func (s *serviceImpl) ListThreePrimary(ctx context.Context, req *dto.ListThreePr
 	if err != nil {
 		return nil, 0, err
 	}
+
 	return objs, totalCount, nil
 }

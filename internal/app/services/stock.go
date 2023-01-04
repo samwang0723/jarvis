@@ -31,7 +31,7 @@ func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}
 		if val, ok := v.(*entity.Stock); ok {
 			stocks = append(stocks, val)
 		} else {
-			return fmt.Errorf("cannot cast interface to *dto.Stock: %v\n", reflect.TypeOf(v).Elem())
+			return fmt.Errorf("cannot cast interface to *dto.Stock: %v", reflect.TypeOf(v).Elem())
 		}
 	}
 
@@ -48,6 +48,7 @@ func (s *serviceImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 	if err != nil {
 		return nil, 0, err
 	}
+
 	return objs, totalCount, nil
 }
 

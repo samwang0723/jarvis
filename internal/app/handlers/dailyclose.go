@@ -19,7 +19,10 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-func (h *handlerImpl) ListDailyClose(ctx context.Context, req *dto.ListDailyCloseRequest) (*dto.ListDailyCloseResponse, error) {
+func (h *handlerImpl) ListDailyClose(
+	ctx context.Context,
+	req *dto.ListDailyCloseRequest,
+) (*dto.ListDailyCloseResponse, error) {
 	entries, totalCount, err := h.dataService.ListDailyClose(ctx, req)
 	if err != nil {
 		return nil, err

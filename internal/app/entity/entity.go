@@ -51,12 +51,12 @@ func init() {
 func GenID() (ID, error) {
 	rawID, err := generator.NextID()
 	if err != nil {
-		return ZeroID, fmt.Errorf("Cannot get sf.NextID(): %w\n", err)
+		return ZeroID, fmt.Errorf("cannot get sf.NextID(): %w", err)
 	}
 
 	id := ID(rawID)
 	if id == ZeroID {
-		return ZeroID, fmt.Errorf("ZeroID was generated")
+		return ZeroID, fmt.Errorf("zeroID was generated")
 	}
 
 	return id, nil
@@ -68,7 +68,7 @@ func (id ID) Uint64() uint64 {
 
 func machineID() (uint16, error) {
 	ipStr := os.Getenv(MyIP)
-	if len(ipStr) == 0 {
+	if ipStr == "" {
 		return 0, errors.New("'MY_IP' environment variable not set")
 	}
 

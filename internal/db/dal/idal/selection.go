@@ -20,5 +20,6 @@ import (
 )
 
 type ISelectionDAL interface {
-	ListSelections(ctx context.Context, offset int32, limit int32, date string) (objs []*entity.Selection, totalCount int64, err error)
+	ListSelections(ctx context.Context, offset int32,
+		limit int32, date string) (objs []*entity.Selection, totalCount int64, err error)
 }

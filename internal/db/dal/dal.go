@@ -29,5 +29,6 @@ func New(opts ...Option) idal.IDAL {
 	for _, opt := range opts {
 		opt(impl)
 	}
+
 	return impl
 }

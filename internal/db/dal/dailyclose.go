@@ -23,10 +23,11 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const MAX_AVERAGE_LIMIT = 55 * 3
+const maxAverageLimit = 55 * 3
 
 func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error {
 	err := i.db.Create(obj).Error
+
 	return err
 }
 
@@ -34,29 +35,40 @@ func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.Dail
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
+
 	return err
 }
 
 func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	res := []string{}
-	if err := i.db.Raw(`select stock_id from daily_closes where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
+	if err := i.db.Raw(`select stock_id from daily_closes 
+				where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
 		return false
 	}
+
 	return len(res) > 0
 }
 
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams,
 ) (objs []*entity.DailyClose, totalCount int64, err error) {
-	sql := fmt.Sprintf("select count(*) from daily_closes where %s", buildQueryFromListDailyCloseSearchParams(searchParams))
-	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
+	sql := fmt.Sprintf("select count(*) from daily_closes where %s",
+		buildQueryFromListDailyCloseSearchParams(searchParams))
+
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
 		return nil, 0, err
 	}
-	sql = fmt.Sprintf(`select t.id, t.stock_id, t.exchange_date, t.transactions, floor(t.trade_shares/1000) as trade_shares,
-		floor(t.turnover/1000) as turnover, t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at from
-		(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q
-		join daily_closes t on t.id = q.id`, buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit+MAX_AVERAGE_LIMIT)
-	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
+
+	sql = fmt.Sprintf(`select t.id, t.stock_id, t.exchange_date, t.transactions, 
+			floor(t.trade_shares/1000) as trade_shares, floor(t.turnover/1000) as turnover, 
+			t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at from
+			(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q
+			join daily_closes t on t.id = q.id`,
+		buildQueryFromListDailyCloseSearchParams(searchParams), offset, limit+maxAverageLimit)
+
+	err = i.db.Raw(sql).Scan(&objs).Error
+	if err != nil {
 		return nil, 0, err
 	}
 

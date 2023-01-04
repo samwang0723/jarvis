@@ -45,7 +45,7 @@ enable = [
     "gocritic",
     "gocyclo",
     # "godot", the dot is not always easy to add (multiline for ex)
-    "godox",
+    # "godox", we want to use TODO
     "goerr113",
     "gofmt",
     # "gofumpt", does not run properly: https://github.com/golangci/golangci-lint/issues/2711
@@ -58,7 +58,7 @@ enable = [
     "goprintffuncname",
     "gosec",
     "grouper",
-    "ifshort",
+    # "ifshort", depreated
     "importas",
     # "interfacer", deprecated
     # "ireturn",
@@ -74,7 +74,7 @@ enable = [
     "nlreturn",
     "noctx",
     "nolintlint",
-    "nonamedreturns",
+    # "nonamedreturns",
     "nosprintfhostport",
     "paralleltest",
     "prealloc",
@@ -92,11 +92,11 @@ enable = [
     "tparallel",
     "unconvert",
     "unparam",
-    "varnamelen",
+    # "varnamelen",
     "wastedassign",
     "whitespace",
-    "wrapcheck",
-    "wsl",
+    # "wrapcheck",
+    # "wsl",
 ]
 
 [linters-settings.errcheck]
@@ -144,6 +144,10 @@ linters = ["funlen", "goconst", "interfacer", "dupl", "lll", "goerr113", "varnam
 path = 'sqlc\.go'
 linters = ["wrapcheck"]
 
+[[issues.exclude-rules]]
+source = "^//go:generate "
+linters = ["lll"]
+
 [run]
 # which dirs to skip: issues from them won't be reported;
 # can use regexp here: generated.*, regexp is applied on full path;
@@ -155,4 +159,5 @@ skip-dirs = [
     "third_party.*", 
     "api.*", 
     "tools.*",
+    "pb.*",
 ]

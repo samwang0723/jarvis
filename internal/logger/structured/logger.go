@@ -15,7 +15,6 @@
 package structuredlog
 
 import (
-	"log"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -29,7 +28,7 @@ import (
 var instance ILogger
 
 const (
-	sampleRate   = 0.2
+	// sampleRate   = 0.2
 	flushTimeout = 2 * time.Second
 )
 
@@ -74,7 +73,7 @@ func Logger(cfg *config.Config) ILogger {
 		})
 
 		initialize(slog)
-		initSentry()
+		// initSentry()
 	}
 
 	return instance
@@ -90,17 +89,17 @@ func NullLogger() ILogger {
 	return instance
 }
 
-func initSentry() {
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         "https://f3fb4890176c442aafef411fcf812312@o1049557.ingest.sentry.io/6030819",
-		Environment: "development",
-		// Specify a fixed sample rate:
-		TracesSampleRate: sampleRate,
-	})
-	if err != nil {
-		log.Fatalf("sentry.Init: %s", err)
-	}
-}
+// func initSentry() {
+//	err := sentry.Init(sentry.ClientOptions{
+//		Dsn:         "https://f3fb4890176c442aafef411fcf812312@o1049557.ingest.sentry.io/6030819",
+//		Environment: "development",
+//		// Specify a fixed sample rate:
+//		TracesSampleRate: sampleRate,
+//	})
+//	if err != nil {
+//		log.Fatalf("sentry.Init: %s", err)
+//	}
+//}
 
 func (l *structuredLogger) RawLogger() *logrus.Logger {
 	return l.logger

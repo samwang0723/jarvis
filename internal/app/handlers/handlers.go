@@ -39,5 +39,6 @@ func New(dataService services.IService) IHandler {
 	res := &handlerImpl{
 		dataService: dataService,
 	}
+
 	return res
 }

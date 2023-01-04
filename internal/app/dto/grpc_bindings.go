@@ -53,6 +53,7 @@ func ListDailyCloseSearchParamsFromPB(in *pb.ListDailyCloseSearchParams) *ListDa
 	if len(end) > 0 {
 		out.End = &end
 	}
+
 	return out
 }
 
@@ -92,6 +93,7 @@ func ListStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchP
 	if len(category) > 0 {
 		out.Category = &category
 	}
+
 	return out
 }
 
@@ -123,6 +125,7 @@ func MapToProtobufStructFloat32(m map[int]float32) *structpb.Struct {
 	if err != nil {
 		return nil
 	}
+
 	return s
 }
 
@@ -136,6 +139,7 @@ func MapToProtobufStructUint64(m map[int]uint64) *structpb.Struct {
 	if err != nil {
 		return nil
 	}
+
 	return s
 }
 
@@ -275,6 +279,7 @@ func GetStakeConcentrationRequestFromPB(in *pb.GetStakeConcentrationRequest) *Ge
 	if in == nil {
 		return nil
 	}
+
 	return &GetStakeConcentrationRequest{
 		StockID: in.StockID,
 		Date:    in.Date,
@@ -362,6 +367,7 @@ func ListThreePrimarySearchParamsFromPB(in *pb.ListThreePrimarySearchParams) *Li
 	if len(end) > 0 {
 		out.End = &end
 	}
+
 	return out
 }
 

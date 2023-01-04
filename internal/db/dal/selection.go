@@ -19,12 +19,12 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-const MIN_DAILY_VOLUME = 3000000
+const minDailyVolume = 3000000
 
 func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 	date string,
 ) (objs []*entity.Selection, totalCount int64, err error) {
-	if err = i.db.Raw(`select count(*) from stake_concentration s
+	err = i.db.Raw(`select count(*) from stake_concentration s
 			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
 			where (
 				IF(concentration_1 > 0, 1, 0) + 
@@ -36,11 +36,12 @@ func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 			and s.exchange_date = ? 
 			and d.close / d.high <= 1.0 
 			and d.close / d.open >= 1.04
-			and d.trade_shares >= ?`, date, date, MIN_DAILY_VOLUME).Scan(&totalCount).Error; err != nil {
+			and d.trade_shares >= ?`, date, date, minDailyVolume).Scan(&totalCount).Error
+	if err != nil {
 		return nil, 0, err
 	}
 
-	if err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
+	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
 			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
 			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc, 
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging, 
@@ -60,7 +61,9 @@ func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 			and d.close / d.high <= 1.0 
 			and d.close / d.open >= 1.04
 			and d.trade_shares >= ?
-			order by s.concentration_1 desc limit ?, ?`, date, date, date, MIN_DAILY_VOLUME, offset, limit).Scan(&objs).Error; err != nil {
+			order by s.concentration_1 desc limit ?, ?`, date, date, date, minDailyVolume,
+		offset, limit).Scan(&objs).Error
+	if err != nil {
 		return nil, 0, err
 	}
 

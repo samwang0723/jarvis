@@ -27,21 +27,25 @@ func (i *dalImpl) BatchUpsertStocks(ctx context.Context, objs []*entity.Stock) e
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
+
 	return err
 }
 
 func (i *dalImpl) CreateStock(ctx context.Context, obj *entity.Stock) error {
 	err := i.db.Create(obj).Error
+
 	return err
 }
 
 func (i *dalImpl) UpdateStock(ctx context.Context, obj *entity.Stock) error {
 	err := i.db.Unscoped().Model(&entity.Stock{}).Save(obj).Error
+
 	return err
 }
 
 func (i *dalImpl) DeleteStockByID(ctx context.Context, id entity.ID) error {
 	err := i.db.Delete(&entity.Stock{}, id).Error
+
 	return err
 }
 
@@ -50,6 +54,7 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 	if err := i.db.First(res, "stock_id = ?", stockID).Error; err != nil {
 		return nil, err
 	}
+
 	return res, nil
 }
 
@@ -57,13 +62,18 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListStockSearchParams,
 ) (objs []*entity.Stock, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from stocks where %s", buildQueryFromListStockSearchParams(searchParams))
-	if err = i.db.Raw(sql).Scan(&totalCount).Error; err != nil {
+
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
 		return nil, 0, err
 	}
+
 	sql = fmt.Sprintf(`select t.* from
 		(select id from stocks where %s order by stock_id limit %d, %d) q
 		join stocks t on t.id = q.id`, buildQueryFromListStockSearchParams(searchParams), offset, limit)
-	if err = i.db.Raw(sql).Scan(&objs).Error; err != nil {
+
+	err = i.db.Raw(sql).Scan(&objs).Error
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -71,9 +81,11 @@ func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
 }
 
 func (i *dalImpl) ListCategories(ctx context.Context) (objs []string, err error) {
-	if err = i.db.Raw("SELECT category FROM stocks group by category").Scan(&objs).Error; err != nil {
+	err = i.db.Raw("SELECT category FROM stocks group by category").Scan(&objs).Error
+	if err != nil {
 		return []string{}, err
 	}
+
 	return objs, nil
 }
 
@@ -82,9 +94,11 @@ func buildQueryFromListStockSearchParams(params *idal.ListStockSearchParams) str
 	if params == nil {
 		return query
 	}
+
 	if len(params.Country) > 0 {
 		query = fmt.Sprintf("country = '%s'", params.Country)
 	}
+
 	if params.StockIDs != nil {
 		idList := ""
 		stockIDs := *params.StockIDs
@@ -96,9 +110,11 @@ func buildQueryFromListStockSearchParams(params *idal.ListStockSearchParams) str
 		}
 		query = fmt.Sprintf("%s and stock_id IN (%s)", query, idList)
 	}
+
 	if params.Name != nil {
 		query = query + " and name like '%" + *params.Name + "%'"
 	}
+
 	if params.Category != nil {
 		query = fmt.Sprintf("%s and category = '%s'", query, *params.Category)
 	}

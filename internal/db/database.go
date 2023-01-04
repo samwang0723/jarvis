@@ -25,6 +25,8 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
+const dsnCount = 2
+
 func GormFactory(cfg *config.Config) *gorm.DB {
 	dsns := generateDSN(cfg)
 	session, err := gorm.Open(mysql.Open(dsns["master"]), &gorm.Config{
@@ -57,7 +59,7 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 }
 
 func generateDSN(cfg *config.Config) map[string]string {
-	resp := make(map[string]string, 2)
+	resp := make(map[string]string, dsnCount)
 	database := cfg.Database
 	masterDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 		database.User,
