@@ -8,7 +8,7 @@ APP_NAME?=jarvis
 VERSION?=v1.2.0
 
 SHELL = /bin/bash
-SOURCE_LIST = $$(go list ./... | grep -v /third_party/)
+SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v /internal/app/pb)
 
 ########
 # test #
@@ -32,11 +32,11 @@ test-coverage-report:
 
 lint: lint-check-deps ## lints the entire codebase
 	@golangci-lint run ./... --config=./.golangci.toml --fix && \
-	if [ $$(gofumpt -e -w -l $(SOURCE_LIST) | wc -l) = "0" ] ; \
+	if [ $$(gofumpt -e -w -l ./ | wc -l) = "0" ] ; \
 		then exit 0; \
 	else \
 		echo "these files needs to be gofumpt-ed"; \
-		gofumpt -e -w -l $(SOURCE_LIST); \
+		gofumpt -e -w -l ./; \
 		exit 1; \
 	fi
 
@@ -45,6 +45,11 @@ lint-check-deps:
 		echo "[go get] installing golangci-lint";\
 		GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint;\
 	fi
+
+lint-skip-fix: ## skip linting the system generate files
+	@git checkout head internal/app/pb
+	@git checkout head api/
+	@git checkout head third_party/
 
 #############
 # benchmark #
@@ -100,7 +105,7 @@ proto: ## generate proto files
 		--openapiv2_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
-docker-build: lint test bench sec-scan docker-m1 ## build docker image in M1 device
+docker-build: lint lint-skip-fix test bench sec-scan docker-m1 ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
 
 docker-m1: 
