@@ -581,6 +581,46 @@
         "concentration60": {
           "type": "number",
           "format": "float"
+        },
+        "volume": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "foreign": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "trust": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dealer": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hedging": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "open": {
+          "type": "number",
+          "format": "float"
+        },
+        "close": {
+          "type": "number",
+          "format": "float"
+        },
+        "high": {
+          "type": "number",
+          "format": "float"
+        },
+        "low": {
+          "type": "number",
+          "format": "float"
+        },
+        "diff": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

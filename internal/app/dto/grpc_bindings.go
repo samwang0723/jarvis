@@ -470,6 +470,16 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 	pbConcentration_10 := in.Concentration_10
 	pbConcentration_20 := in.Concentration_20
 	pbConcentration_60 := in.Concentration_60
+	pbVolume := int32(in.Volume)
+	pbForeign := int32(in.Foreign)
+	pbTrust := int32(in.Trust)
+	pbDealer := int32(in.Dealer)
+	pbHedging := int32(in.Hedging)
+	pbOpen := in.Open
+	pbClose := in.Close
+	pbHigh := in.High
+	pbLow := in.Low
+	pbDiff := in.PriceDiff
 
 	return &pb.Selection{
 		StockID:          pbStockID,
@@ -481,5 +491,15 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		Concentration_10: pbConcentration_10,
 		Concentration_20: pbConcentration_20,
 		Concentration_60: pbConcentration_60,
+		Volume:           pbVolume,
+		Foreign:          pbForeign,
+		Trust:            pbTrust,
+		Dealer:           pbDealer,
+		Hedging:          pbHedging,
+		Open:             pbOpen,
+		Close:            pbClose,
+		High:             pbHigh,
+		Low:              pbLow,
+		Diff:             pbDiff,
 	}
 }

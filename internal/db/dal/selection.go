@@ -34,15 +34,21 @@ func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 				IF(concentration_60 > 0, 1, 0)
 			) >= 4
 			and s.exchange_date = ? 
+			and d.close / d.high <= 1.0 
+			and d.close / d.open >= 1.04
 			and d.trade_shares >= ?`, date, date, MIN_DAILY_VOLUME).Scan(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
 
-	if err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, 
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60 
+	if err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
+			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
+			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc, 
+			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging, 
+			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
 			left join stocks c on c.stock_id = s.stock_id 
 			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
+			left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = ?)
 			where (
 				IF(s.concentration_1 > 0, 1, 0) + 
 				IF(s.concentration_5 > 0, 1, 0) + 
@@ -51,8 +57,10 @@ func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 				IF(s.concentration_60 > 0, 1, 0)
 			) >= 4
 			and s.exchange_date = ?
+			and d.close / d.high <= 1.0 
+			and d.close / d.open >= 1.04
 			and d.trade_shares >= ?
-			order by s.concentration_1 desc limit ?, ?`, date, date, MIN_DAILY_VOLUME, offset, limit).Scan(&objs).Error; err != nil {
+			order by s.concentration_1 desc limit ?, ?`, date, date, date, MIN_DAILY_VOLUME, offset, limit).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}
 

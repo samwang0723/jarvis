@@ -227,4 +227,14 @@ message Selection {
     float concentration_10 = 7;
     float concentration_20 = 8;
     float concentration_60 = 9;
+    int32 volume = 10;
+    int32 foreign = 11;
+    int32 trust = 12;
+    int32 dealer = 13;
+    int32 hedging = 14;
+    float open = 15;
+    float close = 16;
+    float high = 17;
+    float low = 18;
+    float diff = 19;
 }
