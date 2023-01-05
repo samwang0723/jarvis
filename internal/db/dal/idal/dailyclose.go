@@ -31,4 +31,5 @@ type IDailyCloseDAL interface {
 	ListDailyClose(ctx context.Context, offset int32, limit int32,
 		searchParams *ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error)
 	HasDailyClose(ctx context.Context, date string) bool
+	UpdateDailyCloseAnalysis(ctx context.Context, obj *entity.DailyClose) error
 }

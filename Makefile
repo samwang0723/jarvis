@@ -31,12 +31,16 @@ test-coverage-report:
 ########
 
 lint: lint-check-deps ## lints the entire codebase
-	@golangci-lint run ./... --config=./.golangci.toml --fix && \
-	if [ $$(gofumpt -e -w -l ./ | wc -l) = "0" ] ; \
+	@golangci-lint run ./... --config=./.golangci.toml && \
+	if [ $$(gofumpt -e -l cmd/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l internal/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l configs/ | wc -l) = "0" ] ; \
 		then exit 0; \
 	else \
 		echo "these files needs to be gofumpt-ed"; \
-		gofumpt -e -w -l ./; \
+		gofumpt -e -l cmd/; \
+		gofumpt -e -l internal/; \
+		gofumpt -e -l configs/; \
 	fi
 
 lint-check-deps:
@@ -94,7 +98,7 @@ upgrade: ## upgrade all dependencies
 
 migrate: ## migrate database
 	@echo "[goose up] do mysql schema migration"
-	@goose -dir internal/db/migration mysql "jarvis:password@tcp(localhost:3306)/jarvis?charset=utf8" up
+	@goose -dir internal/db/migration mysql "jarvis:abcd1234@tcp(0.0.0.0:3307)/jarvis?charset=utf8" up
 
 ##############
 #   build    #
@@ -118,7 +122,7 @@ proto: ## generate proto files
 		--openapiv2_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
 		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
 
-docker-build: lint lint-skip-fix docker-m1 ## build docker image in M1 device
+docker-build: lint test docker-m1 ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
 
 docker-m1:

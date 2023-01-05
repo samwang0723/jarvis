@@ -49,6 +49,14 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
+func (i *dalImpl) UpdateDailyCloseAnalysis(ctx context.Context, obj *entity.DailyClose) error {
+	err := i.db.Exec(`update daily_closes set 
+			half_year_high = ?, average_fivedays_volume = ?, above_all_ma = ?`,
+		obj.HalfYearHigh, obj.AverageFivedaysVolume, obj.AboveAllMA).Error
+
+	return err
+}
+
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams,
 ) (objs []*entity.DailyClose, totalCount int64, err error) {

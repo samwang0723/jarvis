@@ -25,13 +25,16 @@ type DailyClose struct {
 	// Total numbers of transaction.
 	Transactions uint64 `gorm:"column:transactions" json:"transactions"`
 	// Total traded dollar volume
-	Turnover  uint64                 `gorm:"column:turnover" json:"turnover"`
-	Open      float32                `gorm:"column:open" json:"open"`
-	Close     float32                `gorm:"column:close" json:"close"`
-	High      float32                `gorm:"column:high" json:"high"`
-	Low       float32                `gorm:"column:low" json:"low"`
-	PriceDiff float32                `gorm:"column:price_diff" json:"priceDiff"`
-	Average   *businessmodel.Average `gorm:"-" json:"average"`
+	Turnover              uint64                 `gorm:"column:turnover" json:"turnover"`
+	Open                  float32                `gorm:"column:open" json:"open"`
+	Close                 float32                `gorm:"column:close" json:"close"`
+	High                  float32                `gorm:"column:high" json:"high"`
+	Low                   float32                `gorm:"column:low" json:"low"`
+	PriceDiff             float32                `gorm:"column:price_diff" json:"priceDiff"`
+	Average               *businessmodel.Average `gorm:"-" json:"average"`
+	HalfYearHigh          float32                `gorm:"column:half_year_high" json:"halfYearHigh"`
+	AverageFivedaysVolume uint64                 `gorm:"column:average_fivedays_volume" json:"averageFivedaysVolume"`
+	AboveAllMA            bool                   `gorm:"column:above_all_ma" json:"aboveAllMa"`
 }
 
 func (DailyClose) TableName() string {

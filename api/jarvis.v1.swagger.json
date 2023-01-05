@@ -310,6 +310,17 @@
         },
         "average": {
           "$ref": "#/definitions/v1Average"
+        },
+        "halfYearHigh": {
+          "type": "number",
+          "format": "float"
+        },
+        "averageFivedaysVolume": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "aboveAllMA": {
+          "type": "boolean"
         }
       }
     },
