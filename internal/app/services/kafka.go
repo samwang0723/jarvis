@@ -38,14 +38,14 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 		for {
 			msg, err := s.consumer.ReadMessage(ctx)
 			if err != nil {
-				log.Errorf("Kafka:ReadMessage error: %w", err)
+				log.Errorf("Kafka:ReadMessage error: %s", err.Error())
 
 				return
 			}
 
 			ent, err := unmarshalMessageToEntity(msg)
 			if err != nil {
-				log.Errorf("Unmarshal (%s) failed: %w", msg.Topic, err)
+				log.Errorf("Unmarshal (%s) failed: %s", msg.Topic, err.Error())
 
 				return
 			}
@@ -87,7 +87,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					}
 
 					if err != nil {
-						log.Errorf("BatchUpsert (%s) failed: %w", obj.topic, err)
+						log.Errorf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
 					}
 				}
 			}

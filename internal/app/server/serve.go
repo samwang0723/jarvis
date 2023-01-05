@@ -126,7 +126,7 @@ func Serve() {
 		BeforeStop(func() error {
 			err := dataService.StopKafka()
 			if err != nil {
-				log.Errorf("StopKafka error: %w", err)
+				log.Errorf("StopKafka error: %s", err.Error())
 			}
 			sqlDB, err := database.DB()
 			if err != nil {
@@ -142,7 +142,7 @@ func Serve() {
 
 	err := s.Run(context.Background())
 	if err != nil && s.Logger() != nil {
-		log.Errorf("error returned by service.Run(): %s\n", err.Error())
+		log.Errorf("error returned by service.Run(): %s", err.Error())
 	}
 }
 
@@ -198,7 +198,7 @@ _______________________________________________
 
 	go func() {
 		if err = s.GRPCServer().Serve(lis); err != nil {
-			log.Fatalf("gRPC server serve failed: %w", err)
+			log.Fatalf("gRPC server serve failed: %s", err.Error())
 		}
 	}()
 
@@ -287,7 +287,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	)
 	if err != nil {
-		log.Errorf("cannot start grpc gateway: %w", err)
+		log.Errorf("cannot start grpc gateway: %s", err.Error())
 
 		return
 	}
@@ -297,7 +297,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		s.HealthCheck().LiveEndpoint(w, r)
 	})
 	if err != nil {
-		log.Errorf("cannot handle /live path: %w", err)
+		log.Errorf("cannot handle /live path: %s", err.Error())
 
 		return
 	}
@@ -306,7 +306,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		s.HealthCheck().ReadyEndpoint(w, r)
 	})
 	if err != nil {
-		log.Errorf("cannot handle /ready path: %w", err)
+		log.Errorf("cannot handle /ready path: %s", err.Error())
 
 		return
 	}
@@ -323,7 +323,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 
 	err = http.ListenAndServe(host, httpMux)
 	if err != nil {
-		log.Errorf("cannot listen and server: %w", err)
+		log.Errorf("cannot listen and server: %s", err.Error())
 
 		return
 	}
