@@ -15,11 +15,17 @@ package dal
 
 import (
 	"context"
+	"math"
+	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-const minDailyVolume = 3000000
+const (
+	minDailyVolume      = 3000000
+	highestRangePercent = 0.04
+	maxRewind           = -180
+)
 
 func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 	date string,
@@ -67,5 +73,50 @@ func (i *dalImpl) ListSelections(ctx context.Context, offset int32, limit int32,
 		return nil, 0, err
 	}
 
+	// doing analysis
+	err = i.expectantHighest(objs)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	return objs, totalCount, nil
+}
+
+func (i *dalImpl) expectantHighest(objs []*entity.Selection) error {
+	selectionMap := make(map[string]*entity.Selection)
+	stockIDs := make([]string, 0, len(objs))
+	currentDate := ""
+	for _, obj := range objs {
+		stockIDs = append(stockIDs, obj.StockID)
+		selectionMap[obj.StockID] = obj
+		if currentDate == "" {
+			currentDate = obj.Date
+		}
+	}
+
+	t := time.Now().AddDate(0, 0, maxRewind)
+	startDate := t.Format("20060102")
+
+	type max180days struct {
+		StockID    string  `gorm:"column:stock_id"`
+		Max180days float32 `gorm:"column:max_180"`
+	}
+
+	var max180daysList []*max180days
+
+	err := i.db.Raw(`select stock_id, MAX(close) as max_180
+			from daily_closes 
+			WHERE stock_id IN (?)
+			and exchange_date >= ? and exchange_date < ?
+			GROUP BY stock_id`, stockIDs, startDate, currentDate).Scan(&max180daysList).Error
+	if err != nil {
+		return err
+	}
+
+	for _, max := range max180daysList {
+		ref := selectionMap[max.StockID]
+		ref.ExpectantHighest = math.Abs(1.0-float64(ref.Close/max.Max180days)) <= highestRangePercent
+	}
+
+	return nil
 }

@@ -237,4 +237,5 @@ message Selection {
     float high = 17;
     float low = 18;
     float diff = 19;
+    bool expectantHighest = 20;
 }

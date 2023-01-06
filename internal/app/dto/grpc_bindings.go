@@ -489,6 +489,7 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 	pbHigh := in.High
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
+	pbExpectantHighest := in.ExpectantHighest
 
 	return &pb.Selection{
 		StockID:          pbStockID,
@@ -510,5 +511,6 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		High:             pbHigh,
 		Low:              pbLow,
 		Diff:             pbDiff,
+		ExpectantHighest: pbExpectantHighest,
 	}
 }
