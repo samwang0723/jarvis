@@ -171,9 +171,6 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
 	pbAverage := in.Average
-	pbHalfYearHigh := in.HalfYearHigh
-	pbAverageFivedaysVolume := in.AverageFivedaysVolume
-	pbAboveAllMA := in.AboveAllMA
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -191,24 +188,21 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	}
 
 	return &pb.DailyClose{
-		Id:                    pbID.Uint64(),
-		StockID:               pbStockID,
-		Date:                  pbDate,
-		TradeShares:           pbTradeShares,
-		Transactions:          pbTransactions,
-		Turnover:              pbTurnover,
-		Open:                  pbOpen,
-		Close:                 pbClose,
-		High:                  pbHigh,
-		Low:                   pbLow,
-		Diff:                  pbDiff,
-		CreatedAt:             pbCreatedAt,
-		UpdatedAt:             pbUpdatedAt,
-		DeletedAt:             pbDeletedAt,
-		Average:               AverageToPB(pbAverage),
-		HalfYearHigh:          pbHalfYearHigh,
-		AverageFivedaysVolume: pbAverageFivedaysVolume,
-		AboveAllMA:            pbAboveAllMA,
+		Id:           pbID.Uint64(),
+		StockID:      pbStockID,
+		Date:         pbDate,
+		TradeShares:  pbTradeShares,
+		Transactions: pbTransactions,
+		Turnover:     pbTurnover,
+		Open:         pbOpen,
+		Close:        pbClose,
+		High:         pbHigh,
+		Low:          pbLow,
+		Diff:         pbDiff,
+		CreatedAt:    pbCreatedAt,
+		UpdatedAt:    pbUpdatedAt,
+		DeletedAt:    pbDeletedAt,
+		Average:      AverageToPB(pbAverage),
 	}
 }
 

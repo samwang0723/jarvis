@@ -22,7 +22,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -33,7 +32,6 @@ const (
 	volumeMV5  = 5
 	volumeMV13 = 13
 	volumeMV34 = 34
-	halfYear   = 180
 )
 
 var errCannotCastDailyClose = errors.New("cannot cast interface to *dto.DailyClose")
@@ -54,16 +52,7 @@ func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interfa
 		return err
 	}
 
-	go func() {
-		copyObjs := *objs
-		for _, v := range copyObjs {
-			if val, ok := v.(*entity.DailyClose); ok {
-				s.AnalysisDailyClose(ctx, val.StockID)
-			}
-		}
-	}()
-
-	return err
+	return nil
 }
 
 func (s *serviceImpl) ListDailyClose(
@@ -95,44 +84,6 @@ func (s *serviceImpl) ListDailyClose(
 
 func (s *serviceImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return s.dal.HasDailyClose(ctx, date)
-}
-
-func (s *serviceImpl) AnalysisDailyClose(ctx context.Context, stockID string) error {
-	// TODO: Update the average and highest price in 180 days
-	objs, _, err := s.dal.ListDailyClose(ctx, 0, halfYear, &idal.ListDailyCloseSearchParams{
-		StockID: stockID,
-		Start:   "20220101",
-	})
-	if err != nil {
-		return err
-	}
-
-	latest := objs[0]
-	calculateAverage(latest, objs)
-
-	if latest.Close > latest.Average.MA[priceMA8] &&
-		latest.Close > latest.Average.MA[priceMA21] &&
-		latest.Close > latest.Average.MA[priceMA55] {
-		latest.AboveAllMA = true
-	}
-
-	latest.AverageFivedaysVolume = latest.Average.MV[volumeMV5]
-
-	maxClose := float32(0.0)
-	for _, obj := range objs {
-		if obj.Close > maxClose {
-			maxClose = obj.Close
-		}
-	}
-
-	latest.HalfYearHigh = maxClose
-
-	err = s.dal.UpdateDailyCloseAnalysis(ctx, latest)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func calculateAverage(target *entity.DailyClose, objs []*entity.DailyClose) {

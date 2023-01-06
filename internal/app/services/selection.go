@@ -33,5 +33,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 		return nil, 0, err
 	}
 
+	// TODO: adding more filters here, don't store the calculate value into database
+
 	return objs, totalCount, nil
 }

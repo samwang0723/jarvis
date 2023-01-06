@@ -41,20 +41,12 @@ func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.Dail
 
 func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	res := []string{}
-	if err := i.db.Raw(`select stock_id from daily_closes 
+	if err := i.db.Raw(`select stock_id from daily_closes
 				where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
 		return false
 	}
 
 	return len(res) > 0
-}
-
-func (i *dalImpl) UpdateDailyCloseAnalysis(ctx context.Context, obj *entity.DailyClose) error {
-	err := i.db.Exec(`update daily_closes set 
-			half_year_high = ?, average_fivedays_volume = ?, above_all_ma = ?`,
-		obj.HalfYearHigh, obj.AverageFivedaysVolume, obj.AboveAllMA).Error
-
-	return err
 }
 
 func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
@@ -68,8 +60,8 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
 		return nil, 0, err
 	}
 
-	sql = fmt.Sprintf(`select t.id, t.stock_id, t.exchange_date, t.transactions, 
-			floor(t.trade_shares/1000) as trade_shares, floor(t.turnover/1000) as turnover, 
+	sql = fmt.Sprintf(`select t.id, t.stock_id, t.exchange_date, t.transactions,
+			floor(t.trade_shares/1000) as trade_shares, floor(t.turnover/1000) as turnover,
 			t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at from
 			(select id from daily_closes where %s order by exchange_date desc limit %d, %d) q
 			join daily_closes t on t.id = q.id`,

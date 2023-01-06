@@ -156,8 +156,8 @@ linters = ["lll"]
 # "/" will be replaced by current OS file path separator to properly work
 # on Windows.
 skip-dirs = [
-    "third_party.*", 
-    "api.*", 
+    "third_party.*",
+    "api.*",
     "tools.*",
     "pb.*",
 ]

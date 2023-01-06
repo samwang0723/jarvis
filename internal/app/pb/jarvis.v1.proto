@@ -107,9 +107,6 @@ message DailyClose {
     float low = 13;
     float diff = 14;
     Average average = 15;
-    float halfYearHigh = 16;
-    uint64 averageFivedaysVolume = 17;
-    bool aboveAllMA = 18;
 }
 
 message ListStockRequest {

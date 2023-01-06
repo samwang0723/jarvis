@@ -1,4 +1,5 @@
 # jarvis
+
 Machine Learning Stock Analysis and Buy Selection
 
 ## Setup Docker MySQL
@@ -10,13 +11,14 @@ $ docker-compose -p mysql -f build/docker/mysql/docker-compose.yml up
 ```
 
 ### Configure Database(master)
+
 ```
 $ docker exec -it mysql-master mysql -u root -p
 
 CREATE USER 'jarvis'@'%' IDENTIFIED BY 'password';
 SELECT host, user FROM mysql.user;
 
-CREATE DATABASE jarvis CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE jarvis CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 GRANT ALL PRIVILEGES ON jarvis.* TO 'jarvis'@'%';
 FLUSH PRIVILEGES;
 
@@ -24,6 +26,7 @@ GRANT REPLICATION SLAVE ON *.* TO ‘jarvis’@‘%’;
 ```
 
 ### Configure Database(slave)
+
 ```
 $ docker exec -it mysql-slave mysql -u root -p
 
@@ -45,12 +48,14 @@ $ make migrate
 ```
 
 #### mysqldump
+
 ```
 $ docker exec mysql-master /usr/bin/mysqldump -u root --all-databases --triggers --routines --events --set-gtid-purged=OFF > backup.sql
 $ docker exec -i mysql-master mysql -u root < backup.sql
 ```
 
 ### Start Application Container
+
 ```
 $ docker-compose -p jarvis -f build/docker/app/docker-compose.yml up
 ```
@@ -60,6 +65,7 @@ $ docker-compose -p jarvis -f build/docker/app/docker-compose.yml up
 https://github.com/grpc-ecosystem/grpc-gateway
 
 Cloning google/api annotation files
+
 ```
 $ mkdir third_party/google/api
 $ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/annotations.proto > pb/google/api/annotations.proto
@@ -69,6 +75,7 @@ $ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api
 ```
 
 Preparation of generate proto
+
 ```
 $ go mod tidy
 $ go install \
@@ -83,13 +90,15 @@ $ make proto
 
 Clone swagger-ui static files into `third_party/swagger-ui/`
 https://github.com/swagger-api/swagger-ui/tree/master/dist
-``` 
+
+```
 $ go get -u github.com/jteeuwen/go-bindata/...
 $ go get -u github.com/elazarl/go-bindata-assetfs/...
 $ go-bindata --nocompress -pkg swagger -o api/swagger/datafile.go third_party/swagger-ui/...
 ```
 
 Import "protoc-gen-swagger/options/openapiv2.proto" was not found or had errors.
+
 ```
 $ cp -R $GOPATH/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@v1.16.0/protoc-gen-swagger ./third_party
 ```

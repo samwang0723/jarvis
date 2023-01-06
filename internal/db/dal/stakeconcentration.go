@@ -49,11 +49,11 @@ func (i *dalImpl) GetStakeConcentrationsWithVolumes(
 	stockID,
 	date string,
 ) (objs []*entity.CalculationBase, err error) {
-	err = i.db.Raw(`SELECT a.trade_shares, 
-				CAST(b.sum_buy_shares AS SIGNED) - CAST(b.sum_sell_shares as SIGNED) as diff, 
+	err = i.db.Raw(`SELECT a.trade_shares,
+				CAST(b.sum_buy_shares AS SIGNED) - CAST(b.sum_sell_shares as SIGNED) as diff,
 				a.exchange_date FROM daily_closes a
 			left join stake_concentration b on (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date)
-			where a.stock_id=? and a.exchange_date <= ? 
+			where a.stock_id=? and a.exchange_date <= ?
 			order by a.exchange_date desc limit 60`, stockID, date).Scan(&objs).Error
 	if err != nil {
 		return nil, err
