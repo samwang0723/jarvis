@@ -399,14 +399,6 @@
     "v1ListSelectionRequest": {
       "type": "object",
       "properties": {
-        "offset": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "limit": {
-          "type": "integer",
-          "format": "int32"
-        },
         "date": {
           "type": "string"
         }
@@ -415,18 +407,6 @@
     "v1ListSelectionResponse": {
       "type": "object",
       "properties": {
-        "offset": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "limit": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "totalCount": {
-          "type": "string",
-          "format": "int64"
-        },
         "entries": {
           "type": "array",
           "items": {
@@ -621,9 +601,6 @@
         "diff": {
           "type": "number",
           "format": "float"
-        },
-        "expectantHighest": {
-          "type": "boolean"
         }
       }
     },

@@ -23,15 +23,12 @@ func (h *handlerImpl) ListSelections(
 	ctx context.Context,
 	req *dto.ListSelectionRequest,
 ) (*dto.ListSelectionResponse, error) {
-	entries, totalCount, err := h.dataService.ListSelections(ctx, req)
+	entries, err := h.dataService.ListSelections(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	return &dto.ListSelectionResponse{
-		Offset:     req.Offset,
-		Limit:      req.Limit,
-		Entries:    entries,
-		TotalCount: totalCount,
+		Entries: entries,
 	}, nil
 }

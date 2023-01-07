@@ -22,18 +22,11 @@ import (
 
 func (s *serviceImpl) ListSelections(ctx context.Context,
 	req *dto.ListSelectionRequest,
-) ([]*entity.Selection, int64, error) {
-	objs, totalCount, err := s.dal.ListSelections(
-		ctx,
-		req.Offset,
-		req.Limit,
-		req.Date,
-	)
+) ([]*entity.Selection, error) {
+	objs, err := s.dal.ListSelections(ctx, req.Date)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	// TODO: adding more filters here, don't store the calculate value into database
-
-	return objs, totalCount, nil
+	return objs, nil
 }

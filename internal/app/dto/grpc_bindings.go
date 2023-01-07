@@ -438,9 +438,7 @@ func ListSelectionRequestFromPB(in *pb.ListSelectionRequest) *ListSelectionReque
 		return nil
 	}
 	out := &ListSelectionRequest{
-		Offset: in.Offset,
-		Limit:  in.Limit,
-		Date:   in.Date,
+		Date: in.Date,
 	}
 
 	return out
@@ -458,10 +456,7 @@ func ListSelectionResponseToPB(in *ListSelectionResponse) *pb.ListSelectionRespo
 	}
 
 	return &pb.ListSelectionResponse{
-		Offset:     in.Offset,
-		Limit:      in.Limit,
-		TotalCount: in.TotalCount,
-		Entries:    entries,
+		Entries: entries,
 	}
 }
 
@@ -489,7 +484,6 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 	pbHigh := in.High
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
-	pbExpectantHighest := in.ExpectantHighest
 
 	return &pb.Selection{
 		StockID:          pbStockID,
@@ -511,6 +505,5 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		High:             pbHigh,
 		Low:              pbLow,
 		Diff:             pbDiff,
-		ExpectantHighest: pbExpectantHighest,
 	}
 }

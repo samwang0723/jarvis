@@ -205,16 +205,11 @@ message ThreePrimary {
 }
 
 message ListSelectionRequest {
-    int32 offset = 1;
-    int32 limit = 2;
-    string date = 3;
+    string date = 1;
 }
 
 message ListSelectionResponse {
-    int32 offset = 1;
-    int32 limit = 2;
-    int64 totalCount = 3;
-    repeated Selection entries = 4;
+    repeated Selection entries = 1;
 }
 
 message Selection {
@@ -237,5 +232,4 @@ message Selection {
     float high = 17;
     float low = 18;
     float diff = 19;
-    bool expectantHighest = 20;
 }

@@ -30,7 +30,7 @@ type IService interface {
 	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	ListCategories(ctx context.Context) (objs []string, err error)
-	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*entity.Selection, int64, error)
+	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*entity.Selection, error)
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) ([]*entity.ThreePrimary, int64, error)
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)

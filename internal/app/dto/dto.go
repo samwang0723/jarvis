@@ -85,14 +85,9 @@ type GetStakeConcentrationRequest struct {
 }
 
 type ListSelectionRequest struct {
-	Date   string `json:"date"`
-	Offset int32  `json:"offset"`
-	Limit  int32  `json:"limit"`
+	Date string `json:"date"`
 }
 
 type ListSelectionResponse struct {
-	Entries    []*entity.Selection `json:"entries"`
-	Offset     int32               `json:"offset"`
-	Limit      int32               `json:"limit"`
-	TotalCount int64               `json:"totalCount"`
+	Entries []*entity.Selection `json:"entries"`
 }
