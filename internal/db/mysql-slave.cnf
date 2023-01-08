@@ -13,3 +13,6 @@ enforce-gtid-consistency=true
 read_only=ON
 relay_log_info_repository=TABLE
 sync_relay_log_info=1
+query_cache_type=1
+query_cache_size=10M
+query_cache_limit=256k

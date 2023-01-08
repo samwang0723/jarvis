@@ -20,14 +20,14 @@ import (
 	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
-	log "github.com/samwang0723/jarvis/internal/logger"
 )
 
 const (
 	minDailyVolume      = 3000000
 	minWeeklyVolume     = 1000000
 	highestRangePercent = 0.04
-	maxRewind           = -180
+	maxRewind           = -6
+	averageRewind       = -3
 	priceMA8            = 8
 	priceMA21           = 21
 	priceMA55           = 55
@@ -38,16 +38,14 @@ type price struct {
 	StockID string  `gorm:"column:stock_id"`
 	Date    string  `gorm:"column:exchange_date"`
 	Close   float32 `gorm:"column:close"`
-	High    float32 `gorm:"column:high"`
 	Volume  uint64  `gorm:"column:trade_shares"`
 }
 
 type analysis struct {
-	MA8    float32
-	MA21   float32
-	MA55   float32
-	Max180 float32
-	MV5    uint64
+	MA8  float32
+	MA21 float32
+	MA55 float32
+	MV5  uint64
 }
 
 func (i *dalImpl) ListSelections(
@@ -91,9 +89,9 @@ func (i *dalImpl) ListSelections(
 //nolint:nolintlint, cyclop
 func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selection, error) {
 	selectionMap := make(map[string]*entity.Selection)
-	stockIDs := make([]string, 0, len(objs))
-	for _, obj := range objs {
-		stockIDs = append(stockIDs, obj.StockID)
+	stockIDs := make([]string, len(objs))
+	for idx, obj := range objs {
+		stockIDs[idx] = obj.StockID
 		selectionMap[obj.StockID] = obj
 	}
 
@@ -102,7 +100,13 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 		return nil, err
 	}
 
-	analysisMap := make(map[string]*analysis)
+	highestPriceMap, err := i.getHighestPrice(stockIDs, objs[0].Date)
+	if err != nil {
+		return nil, err
+	}
+
+	// giving initial capacity to map to increase performance
+	analysisMap := make(map[string]*analysis, len(stockIDs))
 	currentIdx := 0
 	currentStockID := ""
 	currentPriceSum := float32(0)
@@ -123,17 +127,13 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 
 		switch currentIdx {
 		case volumeMV5:
-			analysisMap[currentStockID].MV5 = currentVolumeSum / uint64(volumeMV5)
+			analysisMap[currentStockID].MV5 = currentVolumeSum / volumeMV5
 		case priceMA8:
-			analysisMap[currentStockID].MA8 = currentPriceSum / float32(priceMA8)
+			analysisMap[currentStockID].MA8 = currentPriceSum / priceMA8
 		case priceMA21:
-			analysisMap[currentStockID].MA21 = currentPriceSum / float32(priceMA21)
+			analysisMap[currentStockID].MA21 = currentPriceSum / priceMA21
 		case priceMA55:
-			analysisMap[currentStockID].MA55 = currentPriceSum / float32(priceMA55)
-		}
-
-		if currentIdx > 1 && analysisMap[currentStockID].Max180 < p.High {
-			analysisMap[currentStockID].Max180 = p.High
+			analysisMap[currentStockID].MA55 = currentPriceSum / priceMA55
 		}
 	}
 
@@ -141,9 +141,7 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 	for k, v := range analysisMap {
 		ref := selectionMap[k]
 
-		log.Infof("stock_id: %s, close: %f, ma8: %f, ma21: %f, ma55: %f, max180: %f, mv5: %d",
-			k, ref.Close, v.MA8, v.MA21, v.MA55, v.Max180, v.MV5)
-		if math.Abs(1.0-float64(ref.Close/v.Max180)) <= highestRangePercent &&
+		if math.Abs(1.0-float64(ref.Close/highestPriceMap[ref.StockID])) <= highestRangePercent &&
 			v.MV5 >= minWeeklyVolume &&
 			ref.Close > v.MA8 &&
 			ref.Close > v.MA21 &&
@@ -160,13 +158,37 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 	return output, nil
 }
 
+func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]float32, error) {
+	highestPriceMap := make(map[string]float32, len(stockIDs))
+	type HighPrice struct {
+		StockID string  `gorm:"column:stock_id"`
+		High    float32 `gorm:"column:high"`
+	}
+	highest := []*HighPrice{}
+
+	t := time.Now().AddDate(0, maxRewind, 0)
+	startDate := t.Format("20060102")
+
+	err := i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ? 
+			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, date, stockIDs).Scan(&highest).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, h := range highest {
+		highestPriceMap[h.StockID] = h.High
+	}
+
+	return highestPriceMap, nil
+}
+
 func (i *dalImpl) retrieveHistory(stockIDs []string) ([]*price, error) {
 	// calculate the max start date
-	t := time.Now().AddDate(0, 0, maxRewind)
+	t := time.Now().AddDate(0, averageRewind, 0)
 	startDate := t.Format("20060102")
 
 	var pList []*price
-	err := i.db.Raw(`select stock_id, exchange_date, close, high, trade_shares from daily_closes
+	err := i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
 			where exchange_date >= ? and stock_id IN (?) order by 
 			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	if err != nil {
