@@ -235,6 +235,7 @@ func StockToPB(in *entity.Stock) *pb.Stock {
 	pbName := in.Name
 	pbCategory := in.Category
 	pbCountry := in.Country
+	pbMarket := in.Market
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -257,6 +258,7 @@ func StockToPB(in *entity.Stock) *pb.Stock {
 		Name:      pbName,
 		Category:  pbCategory,
 		Country:   pbCountry,
+		Market:    pbMarket,
 		CreatedAt: pbCreatedAt,
 		UpdatedAt: pbUpdatedAt,
 		DeletedAt: pbDeletedAt,

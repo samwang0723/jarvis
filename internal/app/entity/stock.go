@@ -20,6 +20,7 @@ type Stock struct {
 	Name     string `gorm:"column:name" json:"name"`
 	Country  string `gorm:"column:country" json:"country"`
 	Category string `gorm:"column:category" json:"category"`
+	Market   string `gorm:"column:market" json:"market"`
 }
 
 func (Stock) TableName() string {

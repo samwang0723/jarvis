@@ -697,6 +697,9 @@
         },
         "category": {
           "type": "string"
+        },
+        "market": {
+          "type": "string"
         }
       }
     },

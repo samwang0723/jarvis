@@ -138,6 +138,7 @@ message Stock {
     string name = 6;
     string country = 7;
     string category = 8;
+    string market = 9;
 }
 
 message ListCategoriesRequest {}
