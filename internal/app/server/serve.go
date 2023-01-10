@@ -53,6 +53,8 @@ const (
 	dnsResolveTimeout      = 200 * time.Millisecond
 	databasePingTimeout    = 1 * time.Second
 	appName                = "jarvis"
+	readTimeout            = 5 * time.Second
+	writeTimeout           = 10 * time.Second
 )
 
 type IServer interface {
@@ -358,7 +360,15 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
 
-	err = http.ListenAndServe(host, httpMux)
+	srv := &http.Server{
+		ReadHeaderTimeout: readTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		Addr:              host,
+		Handler:           httpMux,
+	}
+
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Errorf("cannot listen and server: %s", err.Error())
 
