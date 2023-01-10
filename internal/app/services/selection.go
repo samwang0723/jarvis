@@ -30,7 +30,7 @@ const (
 func (s *serviceImpl) ListSelections(ctx context.Context,
 	req *dto.ListSelectionRequest,
 ) ([]*entity.Selection, error) {
-	objs, err := s.dal.ListSelections(ctx, req.Date)
+	objs, err := s.dal.ListSelections(ctx, req.Date, req.Strict)
 	if err != nil {
 		return nil, err
 	}

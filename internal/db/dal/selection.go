@@ -94,6 +94,7 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 func (i *dalImpl) ListSelections(
 	ctx context.Context,
 	date string,
+	strict bool,
 ) (objs []*entity.Selection, err error) {
 	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
 			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
@@ -121,7 +122,7 @@ func (i *dalImpl) ListSelections(
 	}
 
 	// doing analysis
-	output, err := i.advancedFiltering(objs)
+	output, err := i.advancedFiltering(objs, strict)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +130,8 @@ func (i *dalImpl) ListSelections(
 	return output, nil
 }
 
-//nolint:nolintlint, cyclop
-func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selection, error) {
+//nolint:nolintlint,cyclop,gocognit
+func (i *dalImpl) advancedFiltering(objs []*entity.Selection, strict bool) ([]*entity.Selection, error) {
 	selectionMap := make(map[string]*entity.Selection)
 	stockIDs := make([]string, len(objs))
 	for idx, obj := range objs {
@@ -188,15 +189,25 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 	for k, v := range analysisMap {
 		ref := selectionMap[k]
 
+		selected := false
 		if math.Abs(1.0-float64(ref.Close/highestPriceMap[ref.StockID])) <= highestRangePercent &&
 			v.MV5 >= minWeeklyVolume &&
 			ref.Close > v.MA8 &&
 			ref.Close > v.MA21 &&
-			ref.Close > v.MA55 &&
+			ref.Close > v.MA55 {
+			selected = true
+		}
+
+		selectedStrict := false
+		if strict &&
 			v.MV5 > v.MV13 &&
 			v.MV13 > v.MV34 &&
 			v.MA8 > v.MA21 &&
 			v.MA21 > v.MA55 {
+			selectedStrict = true
+		}
+
+		if (selected && !strict) || (selected && selectedStrict) {
 			output = append(output, ref)
 		}
 	}

@@ -207,6 +207,7 @@ message ThreePrimary {
 
 message ListSelectionRequest {
     string date = 1;
+    bool strict = 2;
 }
 
 message ListSelectionResponse {
