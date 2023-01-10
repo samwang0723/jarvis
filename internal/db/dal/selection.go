@@ -26,7 +26,7 @@ import (
 const (
 	minDailyVolume      = 3000000
 	minWeeklyVolume     = 1000000
-	highestRangePercent = 0.06
+	highestRangePercent = 0.04
 	maxRewind           = -6
 	averageRewind       = -3
 	priceMA8            = 8
@@ -113,7 +113,7 @@ func (i *dalImpl) ListSelections(
 				IF(s.concentration_60 > 0, 1, 0)
 			) >= 4
 			and s.exchange_date = ?
-			and d.close / d.high <= 1.0
+			and d.close / d.high >= 0.97
 			and d.close / d.open >= 1.0
 			and d.trade_shares >= ?
 			order by s.stock_id`, date, date, date, minDailyVolume).Scan(&objs).Error
