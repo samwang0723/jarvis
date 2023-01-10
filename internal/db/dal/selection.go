@@ -231,7 +231,7 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	t := time.Now().AddDate(0, maxRewind, 0)
 	startDate := t.Format("20060102")
 
-	err := i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ? 
+	err := i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ?
 			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, date, stockIDs).Scan(&highest).Error
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func (i *dalImpl) retrieveHistory(stockIDs []string) ([]*price, error) {
 
 	var pList []*price
 	err := i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
-			where exchange_date >= ? and stock_id IN (?) order by 
+			where exchange_date >= ? and stock_id IN (?) order by
 			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	if err != nil {
 		return nil, err
