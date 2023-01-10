@@ -21,4 +21,5 @@ import (
 
 type ISelectionDAL interface {
 	ListSelections(ctx context.Context, date string) (objs []*entity.Selection, err error)
+	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
 }

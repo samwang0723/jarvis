@@ -15,9 +15,16 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
+)
+
+const (
+	realTimeMonitoringKey = "real_time_monitoring_keys"
+	defaultCacheExpire    = 7 * 24 * time.Hour
 )
 
 func (s *serviceImpl) ListSelections(ctx context.Context,
@@ -29,4 +36,27 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	}
 
 	return objs, nil
+}
+
+func (s *serviceImpl) PresetRealTimeKeys(ctx context.Context) error {
+	keys, err := s.dal.GetRealTimeMonitoringKeys(ctx)
+	if err != nil {
+		return err
+	}
+
+	t := time.Now().AddDate(0, 0, 0)
+	date := t.Format("20060102")
+	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, date)
+
+	err = s.cache.SAdd(ctx, redisKey, keys)
+	if err != nil {
+		return err
+	}
+
+	err = s.cache.SetExpire(ctx, redisKey, time.Now().Add(defaultCacheExpire))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

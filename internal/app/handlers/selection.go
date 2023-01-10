@@ -32,3 +32,17 @@ func (h *handlerImpl) ListSelections(
 		Entries: entries,
 	}, nil
 }
+
+func (h *handlerImpl) PresetRealTimeKeys(ctx context.Context, schedule string) error {
+	err := h.dataService.AddJob(ctx, schedule, func() {
+		err := h.dataService.PresetRealTimeKeys(ctx)
+		if err != nil {
+			h.logger.Error().Msgf("failed to preset real time keys: %s", err)
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

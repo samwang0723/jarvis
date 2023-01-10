@@ -15,6 +15,7 @@ package dal
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sort"
 	"time"
@@ -25,13 +26,15 @@ import (
 const (
 	minDailyVolume      = 3000000
 	minWeeklyVolume     = 1000000
-	highestRangePercent = 0.04
+	highestRangePercent = 0.06
 	maxRewind           = -6
 	averageRewind       = -3
 	priceMA8            = 8
 	priceMA21           = 21
 	priceMA55           = 55
 	volumeMV5           = 5
+	volumeMV13          = 13
+	volumeMV34          = 34
 )
 
 type price struct {
@@ -46,6 +49,46 @@ type analysis struct {
 	MA21 float32
 	MA55 float32
 	MV5  uint64
+	MV13 uint64
+	MV34 uint64
+}
+
+type realTimeList struct {
+	StockID string `gorm:"column:stock_id"`
+	Market  string `gorm:"column:market"`
+}
+
+func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
+	var date string
+	err := i.db.Raw(`select exchange_date from daily_closes order by exchange_date desc limit 1;`).Scan(&date).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var objs []*realTimeList
+	err = i.db.Raw(`select s.stock_id, c.market
+			from stake_concentration s
+			left join stocks c on c.stock_id = s.stock_id
+			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
+			where (
+				IF(s.concentration_1 > 0, 1, 0) +
+				IF(s.concentration_5 > 0, 1, 0) +
+				IF(s.concentration_10 > 0, 1, 0) +
+				IF(s.concentration_20 > 0, 1, 0) +
+				IF(s.concentration_60 > 0, 1, 0)
+			) >= 4
+			and s.exchange_date = ?
+			and d.trade_shares >= ?`, date, date, minDailyVolume).Scan(&objs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	stockSymbols := make([]string, len(objs))
+	for idx, obj := range objs {
+		stockSymbols[idx] = fmt.Sprintf("%s_%s.tw", obj.Market, obj.StockID)
+	}
+
+	return stockSymbols, nil
 }
 
 func (i *dalImpl) ListSelections(
@@ -128,6 +171,10 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 		switch currentIdx {
 		case volumeMV5:
 			analysisMap[currentStockID].MV5 = currentVolumeSum / volumeMV5
+		case volumeMV13:
+			analysisMap[currentStockID].MV13 = currentVolumeSum / volumeMV13
+		case volumeMV34:
+			analysisMap[currentStockID].MV34 = currentVolumeSum / volumeMV34
 		case priceMA8:
 			analysisMap[currentStockID].MA8 = currentPriceSum / priceMA8
 		case priceMA21:
@@ -145,7 +192,11 @@ func (i *dalImpl) advancedFiltering(objs []*entity.Selection) ([]*entity.Selecti
 			v.MV5 >= minWeeklyVolume &&
 			ref.Close > v.MA8 &&
 			ref.Close > v.MA21 &&
-			ref.Close > v.MA55 {
+			ref.Close > v.MA55 &&
+			v.MV5 > v.MV13 &&
+			v.MV13 > v.MV34 &&
+			v.MA8 > v.MA21 &&
+			v.MA21 > v.MA55 {
 			output = append(output, ref)
 		}
 	}
