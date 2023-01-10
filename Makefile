@@ -14,7 +14,7 @@ SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v
 # test #
 ########
 
-test: test-race test-leak ## launch all tests
+test: test-race test-leak test-coverage-report ## launch all tests
 
 test-race: ## launch all tests with race detection
 	go test $(SOURCE_LIST)  -cover -race
