@@ -31,25 +31,27 @@ type Redis interface {
 	SetExpire(ctx context.Context, key string, expired time.Time) error
 	SAdd(ctx context.Context, key string, values []string) error
 	SMembers(ctx context.Context, key string) ([]string, error)
+	Set(ctx context.Context, key, val string, expired time.Duration) error
+	Get(ctx context.Context, key string) (string, error)
 	Close() error
 }
 
 // Config encapsulates the settings for configuring the redis service.
 type Config struct {
+	// The logger to use. If not defined an output-discarding logger will
+	// be used instead.
+	Logger *zerolog.Logger
+
 	// Redis master node DNS hostname
 	Master string
 
 	// Redis sentinel addresses
 	SentinelAddrs []string
-
-	// The logger to use. If not defined an output-discarding logger will
-	// be used instead.
-	Logger *zerolog.Logger
 }
 
 type redisImpl struct {
-	cfg      Config
 	instance *redis.Client
+	cfg      Config
 }
 
 func New(cfg Config) Redis {
@@ -93,6 +95,28 @@ func (r *redisImpl) SMembers(ctx context.Context, key string) ([]string, error) 
 	}
 
 	r.cfg.Logger.Info().Msgf("cache.SMembers: success, res=%+v;", res)
+
+	return res, nil
+}
+
+func (r *redisImpl) Set(ctx context.Context, key, val string, expired time.Duration) error {
+	res, err := r.instance.Set(ctx, key, val, expired).Result()
+	if err != nil {
+		return xerrors.Errorf("cache.Set: failed, key=%s; err=%w;", key, err)
+	}
+
+	r.cfg.Logger.Info().Msgf("cache.Set: success, res=%+v;", res)
+
+	return nil
+}
+
+func (r *redisImpl) Get(ctx context.Context, key string) (string, error) {
+	res, err := r.instance.Get(ctx, key).Result()
+	if err != nil {
+		return res, xerrors.Errorf("cache.Get: failed, key=%s; err=%w;", key, err)
+	}
+
+	r.cfg.Logger.Info().Msgf("cache.Get: success, res=%+v;", res)
 
 	return res, nil
 }

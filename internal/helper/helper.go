@@ -17,12 +17,16 @@ import (
 	"math"
 	"os"
 	"reflect"
+	"strconv"
 	"unsafe"
 )
 
 const (
 	TimeZone    = "Asia/Taipei"
 	baseDecimal = 100
+	floatFormat = 32
+	uintFormat  = 64
+	uintBase    = 10
 )
 
 func GetCurrentEnv() string {
@@ -59,4 +63,22 @@ func CastInterfaceSlice(s interface{}) *[]interface{} {
 
 func RoundUpDecimalTwo(x float32) float32 {
 	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
+}
+
+func StringToFloat32(s string) (float32, error) {
+	f, err := strconv.ParseFloat(s, floatFormat)
+	if err != nil {
+		return 0, err
+	}
+
+	return float32(f), nil
+}
+
+func StringToUint64(s string) (uint64, error) {
+	f, err := strconv.ParseUint(s, uintBase, uintFormat)
+	if err != nil {
+		return 0, err
+	}
+
+	return f, nil
 }

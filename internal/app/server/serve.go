@@ -93,6 +93,7 @@ func Serve() {
 		services.WithCronJob(services.CronjobConfig{
 			Logger: &newLogger,
 		}),
+		services.WithLogger(&newLogger),
 	)
 	// associate service with handler
 	handler := handlers.New(dataService, &newLogger)
@@ -268,9 +269,15 @@ func (s *server) Run(ctx context.Context) error {
 
 	go func(ctx context.Context, svc *server) {
 		defer waitGroup.Done()
+
 		err := svc.Handler().PresetRealTimeKeys(childCtx, "00 6 * * 1-5")
 		if err != nil {
 			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
+		}
+
+		err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/3 9-14 * * 1-5")
+		if err != nil {
+			log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
 		}
 
 		<-ctx.Done()

@@ -122,7 +122,7 @@ func (i *dalImpl) ListSelections(
 	}
 
 	// doing analysis
-	output, err := i.advancedFiltering(objs, strict)
+	output, err := i.AdvancedFiltering(objs, strict)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (i *dalImpl) ListSelections(
 }
 
 //nolint:nolintlint,cyclop,gocognit
-func (i *dalImpl) advancedFiltering(objs []*entity.Selection, strict bool) ([]*entity.Selection, error) {
+func (i *dalImpl) AdvancedFiltering(objs []*entity.Selection, strict bool) ([]*entity.Selection, error) {
 	selectionMap := make(map[string]*entity.Selection)
 	stockIDs := make([]string, len(objs))
 	for idx, obj := range objs {

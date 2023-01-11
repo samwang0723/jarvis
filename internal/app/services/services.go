@@ -17,6 +17,7 @@ package services
 import (
 	"context"
 
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
@@ -44,6 +45,7 @@ type IService interface {
 	StopCron()
 	AddJob(ctx context.Context, spec string, job func()) error
 	PresetRealTimeKeys(ctx context.Context) error
+	RetrieveRealTimePrice(ctx context.Context) error
 }
 
 type serviceImpl struct {
@@ -51,6 +53,7 @@ type serviceImpl struct {
 	consumer ikafka.IKafka
 	cache    cache.Redis
 	cronjob  cronjob.Cronjob
+	logger   *zerolog.Logger
 }
 
 func New(opts ...Option) IService {

@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
@@ -54,5 +55,11 @@ func WithCronJob(cfg CronjobConfig) Option {
 		i.cronjob = cronjob.New(cronjob.Config{
 			Logger: cfg.Logger,
 		})
+	}
+}
+
+func WithLogger(logger *zerolog.Logger) Option {
+	return func(i *serviceImpl) {
+		i.logger = logger
 	}
 }

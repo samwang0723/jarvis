@@ -46,3 +46,17 @@ func (h *handlerImpl) PresetRealTimeKeys(ctx context.Context, schedule string) e
 
 	return nil
 }
+
+func (h *handlerImpl) RetrieveRealTimePrice(ctx context.Context, schedule string) error {
+	err := h.dataService.AddJob(ctx, schedule, func() {
+		err := h.dataService.RetrieveRealTimePrice(ctx)
+		if err != nil {
+			h.logger.Error().Msgf("failed to retrieve real time price: %s", err)
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

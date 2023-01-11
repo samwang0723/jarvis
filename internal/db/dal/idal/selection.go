@@ -22,4 +22,5 @@ import (
 type ISelectionDAL interface {
 	ListSelections(ctx context.Context, date string, strict bool) (objs []*entity.Selection, err error)
 	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
+	AdvancedFiltering(objs []*entity.Selection, strict bool) ([]*entity.Selection, error)
 }

@@ -31,6 +31,7 @@ type IHandler interface {
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 	ListeningKafkaInput(ctx context.Context)
 	PresetRealTimeKeys(ctx context.Context, schedule string) error
+	RetrieveRealTimePrice(ctx context.Context, schedule string) error
 }
 
 type handlerImpl struct {
