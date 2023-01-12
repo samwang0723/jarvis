@@ -24,6 +24,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 // https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_2330.tw
 type Realtime struct {
 	StockID   string  `json:"stockID"`
+	Name      string  `json:"name"`
 	Date      string  `json:"date"`
 	ParseTime string  `json:"parseTime"`
 	Open      float32 `json:"open"`
@@ -48,6 +49,7 @@ type rawBody struct {
 	Close   string `json:"z"`
 	Volume  string `json:"v"`
 	Time    string `json:"t"`
+	Name    string `json:"n"`
 }
 
 func (r *Realtime) UnmarshalJSON(data []byte) error {

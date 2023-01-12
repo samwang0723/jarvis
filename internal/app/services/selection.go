@@ -23,9 +23,11 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 const (
@@ -33,9 +35,8 @@ const (
 	realTimePriceURI           = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s"
 	realTimeMonitoringKey      = "real_time_monitoring_keys"
 	defaultCacheExpire         = 7 * 24 * time.Hour
-	defaultRealtimeCacheExpire = 5 * time.Minute
+	defaultRealtimeCacheExpire = 24 * time.Hour
 	defaultHTTPTimeout         = 10 * time.Second
-	fixedTimeLength            = 2
 	rateLimit                  = 2 * time.Second
 )
 
@@ -49,15 +50,92 @@ var (
 	}
 )
 
+//nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListSelections(ctx context.Context,
 	req *dto.ListSelectionRequest,
 ) (objs []*entity.Selection, err error) {
-	// if date is today and time <= 21:00, doing realtime parsing
-	// otherwise if date is today and time >= 21:00, doing database calculation
-	today := getToday()
-	if req.Date != today[0] || (req.Date == today[0] && today[1] >= "2100") {
+	today := today()
+	latestDate, err := s.dal.DataCompletionDate(ctx, today)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Date != today || latestDate != "" {
 		objs, err = s.dal.ListSelections(ctx, req.Date, req.Strict)
 		if err != nil {
+			s.logger.Error().Err(err).Msg("list selections")
+
+			return nil, err
+		}
+	} else {
+		redisRes, err := s.getRealtimeParsedData(ctx, req.Date)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("get redis cache failed")
+
+			return nil, err
+		}
+
+		var realtimeList []businessmodel.Realtime
+		for _, raw := range redisRes {
+			if raw == "" {
+				continue
+			}
+
+			realtime := &businessmodel.Realtime{}
+			e := realtime.UnmarshalJSON([]byte(raw))
+			if e != nil || realtime.Close == 0.0 {
+				s.logger.Error().Err(e).Msg("unmarshal realtime error")
+
+				continue
+			}
+
+			realtimeList = append(realtimeList, *realtime)
+		}
+
+		chips, err := s.getLatestChip(ctx)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("get latest chip failed")
+
+			return nil, err
+		}
+
+		var res []*entity.Selection
+		for _, realtime := range realtimeList {
+			// override realtime data with history record.
+			history := chips[realtime.StockID]
+			if history == nil {
+				continue
+			}
+
+			obj := &entity.Selection{
+				StockID:         realtime.StockID,
+				Name:            history.Name,
+				Date:            realtime.Date,
+				Category:        history.Category,
+				Open:            realtime.Open,
+				High:            realtime.High,
+				Low:             realtime.Low,
+				Close:           realtime.Close,
+				Volume:          int(realtime.Volume),
+				PriceDiff:       helper.RoundUpDecimalTwo(realtime.Close - history.Close),
+				Concentration1:  history.Concentration1,
+				Concentration5:  history.Concentration5,
+				Concentration10: history.Concentration10,
+				Concentration20: history.Concentration20,
+				Concentration60: history.Concentration60,
+				Trust:           history.Trust,
+				Dealer:          history.Dealer,
+				Foreign:         history.Foreign,
+				Hedging:         history.Hedging,
+			}
+
+			res = append(res, obj)
+		}
+
+		objs, err = s.dal.AdvancedFiltering(res, req.Strict, req.Date)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("advanced filtering failed")
+
 			return nil, err
 		}
 	}
@@ -65,13 +143,13 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	return objs, nil
 }
 
-func (s *serviceImpl) PresetRealTimeKeys(ctx context.Context) error {
+func (s *serviceImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context) error {
 	keys, err := s.dal.GetRealTimeMonitoringKeys(ctx)
 	if err != nil {
 		return err
 	}
 
-	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, getToday()[0])
+	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, today())
 	err = s.cache.SAdd(ctx, redisKey, keys)
 	if err != nil {
 		return err
@@ -86,7 +164,7 @@ func (s *serviceImpl) PresetRealTimeKeys(ctx context.Context) error {
 }
 
 func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
-	keys, err := s.cache.SMembers(ctx, getRedisKey())
+	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
 	if err != nil {
 		return err
 	}
@@ -131,11 +209,15 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 				return
 			}
 
-			rawStr := strings.Trim(string(data), "\n")
-			logger.Info().Msg(rawStr)
+			raw := string(data)
+			rawStr := strings.ReplaceAll(raw, "\n", "")
+			rawStr = strings.ReplaceAll(rawStr, "\\\"", "\"")
+			if strings.Contains(rawStr, `"z":"-"`) {
+				return
+			}
 
 			// insert temp cache into redis
-			redisKey := fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, getToday()[0], key)
+			redisKey := fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, today(), key)
 			err = ca.Set(ctx, redisKey, rawStr, defaultRealtimeCacheExpire)
 			if err != nil {
 				return
@@ -148,19 +230,44 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 	return nil
 }
 
-func getRedisKey() string {
-	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, getToday()[0])
+func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {
+	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
+	if err != nil {
+		return nil, err
+	}
+
+	mgetKeys := make([]string, len(keys))
+	for idx, key := range keys {
+		mgetKeys[idx] = fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, date, key)
+	}
+
+	res, err := s.cache.MGet(ctx, mgetKeys...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
-func getToday() []string {
-	result := make([]string, fixedTimeLength)
+func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Selection, error) {
+	m := make(map[string]*entity.Selection)
+	// get latest chip from yesterday
+	chip, err := s.dal.GetLatestChip(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	now := time.Now()
-	date := now.AddDate(0, 0, 0)
-	result[0] = date.Format("20060102")
+	for _, c := range chip {
+		m[c.StockID] = c
+	}
 
-	hours, minutes, _ := time.Now().Clock()
-	result[1] = fmt.Sprintf("%d%02d", hours, minutes)
+	return m, nil
+}
 
-	return result
+func getRealtimeMonitoringKeys() string {
+	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, today())
+}
+
+func today() string {
+	return time.Now().Format("20060102")
 }

@@ -15,6 +15,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	redis "github.com/go-redis/redis/v8"
@@ -33,6 +34,7 @@ type Redis interface {
 	SMembers(ctx context.Context, key string) ([]string, error)
 	Set(ctx context.Context, key, val string, expired time.Duration) error
 	Get(ctx context.Context, key string) (string, error)
+	MGet(ctx context.Context, keys ...string) ([]string, error)
 	Close() error
 }
 
@@ -91,10 +93,10 @@ func (r *redisImpl) SAdd(ctx context.Context, key string, value []string) error 
 func (r *redisImpl) SMembers(ctx context.Context, key string) ([]string, error) {
 	res, err := r.instance.SMembers(ctx, key).Result()
 	if err != nil {
-		return res, xerrors.Errorf("cache.SMembers: failed, key=%s; err=%w;", key, err)
+		return nil, xerrors.Errorf("cache.SMembers: failed, key=%s; err=%w;", key, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.SMembers: success, res=%+v;", res)
+	r.cfg.Logger.Info().Msgf("cache.SMembers: success, count=%d;", len(res))
 
 	return res, nil
 }
@@ -105,15 +107,33 @@ func (r *redisImpl) Set(ctx context.Context, key, val string, expired time.Durat
 		return xerrors.Errorf("cache.Set: failed, key=%s; err=%w;", key, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.Set: success, res=%+v;", res)
+	r.cfg.Logger.Info().Msgf("cache.Set: success, res=%+v; key=%s", res, key)
 
 	return nil
+}
+
+func (r *redisImpl) MGet(ctx context.Context, keys ...string) ([]string, error) {
+	res, err := r.instance.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, xerrors.Errorf("cache.MGet: failed, key=%v; err=%w;", keys, err)
+	}
+
+	output := make([]string, len(res))
+	for i, v := range res {
+		if v != nil {
+			output[i] = fmt.Sprint(v)
+		}
+	}
+
+	r.cfg.Logger.Info().Msgf("cache.MGet: success, count=%d;", len(output))
+
+	return output, nil
 }
 
 func (r *redisImpl) Get(ctx context.Context, key string) (string, error) {
 	res, err := r.instance.Get(ctx, key).Result()
 	if err != nil {
-		return res, xerrors.Errorf("cache.Get: failed, key=%s; err=%w;", key, err)
+		return "", xerrors.Errorf("cache.Get: failed, key=%s; err=%w;", key, err)
 	}
 
 	r.cfg.Logger.Info().Msgf("cache.Get: success, res=%+v;", res)

@@ -200,7 +200,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.2.1", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.3.0", helper.GetCurrentEnv())
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
@@ -270,7 +270,7 @@ func (s *server) Run(ctx context.Context) error {
 	go func(ctx context.Context, svc *server) {
 		defer waitGroup.Done()
 
-		err := svc.Handler().PresetRealTimeKeys(childCtx, "00 6 * * 1-5")
+		err := svc.Handler().CronjobPresetRealtimMonitoringKeys(childCtx, "00 6 * * 1-5")
 		if err != nil {
 			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
 		}

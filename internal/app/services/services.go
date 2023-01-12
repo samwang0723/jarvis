@@ -44,7 +44,7 @@ type IService interface {
 	StartCron()
 	StopCron()
 	AddJob(ctx context.Context, spec string, job func()) error
-	PresetRealTimeKeys(ctx context.Context) error
+	CronjobPresetRealtimMonitoringKeys(ctx context.Context) error
 	RetrieveRealTimePrice(ctx context.Context) error
 }
 

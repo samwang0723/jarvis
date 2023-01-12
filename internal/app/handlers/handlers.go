@@ -30,7 +30,7 @@ type IHandler interface {
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 	ListeningKafkaInput(ctx context.Context)
-	PresetRealTimeKeys(ctx context.Context, schedule string) error
+	CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error
 	RetrieveRealTimePrice(ctx context.Context, schedule string) error
 }
 
