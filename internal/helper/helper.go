@@ -65,6 +65,10 @@ func RoundUpDecimalTwo(x float32) float32 {
 	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
 }
 
+func RoundDecimalTwo(x float32) float32 {
+	return float32(math.Round(float64(x)*baseDecimal) / baseDecimal)
+}
+
 func StringToFloat32(s string) (float32, error) {
 	f, err := strconv.ParseFloat(s, floatFormat)
 	if err != nil {
