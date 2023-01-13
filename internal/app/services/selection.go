@@ -29,6 +29,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/helper"
+	"golang.org/x/xerrors"
 
 	// this is to autoload the .env file
 	_ "github.com/joho/godotenv/autoload"
@@ -43,6 +44,7 @@ const (
 	defaultHTTPTimeout         = 10 * time.Second
 	rateLimit                  = 2 * time.Second
 	webScraping                = "WEB_SCRAPING"
+	skipHeader                 = "skip_dates"
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
@@ -168,8 +170,14 @@ func (s *serviceImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context) er
 	return nil
 }
 
+//nolint:nolintlint,cyclop
 func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
+	if err != nil {
+		return err
+	}
+
+	err = s.checkHoliday(ctx)
 	if err != nil {
 		return err
 	}
@@ -268,6 +276,21 @@ func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Sel
 	}
 
 	return m, nil
+}
+
+func (s *serviceImpl) checkHoliday(ctx context.Context) error {
+	skipDates, err := s.cache.SMembers(ctx, skipHeader)
+	if err != nil {
+		return err
+	}
+
+	for _, date := range skipDates {
+		if date == today() {
+			return xerrors.New("skip holiday")
+		}
+	}
+
+	return nil
 }
 
 func getRealtimeMonitoringKeys() string {
