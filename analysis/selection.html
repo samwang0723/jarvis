@@ -1,0 +1,143 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
+    <style type="text/css">
+        body {
+            background: #f8f9fa;
+        }
+
+        td {
+            color: white;
+        }
+
+        td.positive {
+            color: red;
+        }
+
+        td.negative {
+            color: green;
+        }
+
+        .table-hover tbody tr:hover td {
+            background: #22313F !important;
+            color: #fff !important;
+        }
+    </style>
+</head>
+
+<body>
+    <table id="myTable" class="table table-dark table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>代號</th>
+                <th>股名</th>
+                <th>產業別</th>
+                <th>開</th>
+                <th>高</th>
+                <th>低</th>
+                <th>收</th>
+                <th>漲跌</th>
+                <th>成交量</th>
+                <th>近1日</th>
+                <th>近5日</th>
+                <th>近10日</th>
+                <th>近20日</th>
+                <th>近60日</th>
+                <th>投信</th>
+                <th>外資</th>
+                <th>自營商</th>
+                <th>避險</th>
+            </tr>
+        </thead>
+        <tbody id="myTBody">
+        </tbody>
+    </table>
+</body>
+
+</html>
+
+<script>
+    $(document).ready(function () {
+        var requestURL = "http://localhost:8080/v1/selections";
+        var dataJSON = {};
+        dataJSON["date"] = getUrlParameter("date");
+        dataJSON["strict"] = getUrlParameter("strict") === true;
+
+        $('#myTable').DataTable({
+            pageLength: 50,
+            dom: 'ipf',
+            destroy: true,
+            fixedColumns: true,
+            columnDefs: [
+                {
+                    targets: [0, 1, 2],
+                    searchable: true,
+                    responsivePriority: 1
+                },
+                {
+                    targets: [3, 4, 5, 6, 7, 8],
+                    searchable: false,
+                    responsivePriority: 2
+                },
+                {
+                    targets: [9, 10, 11, 12, 13, 14, 15, 16, 17],
+                    searchable: false,
+                    responsivePriority: 3
+                },
+            ],
+            responsive: true,
+            ajax: {
+                url: requestURL,
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                dataSrc: "entries",
+                data: function (d) {
+                    return JSON.stringify(dataJSON);
+                }
+            },
+            columns: [
+                {"data": "stockID"},
+                {"data": "name"},
+                {"data": "category"},
+                {"data": "open"},
+                {"data": "high"},
+                {"data": "low"},
+                {"data": "close"},
+                {"data": "diff"},
+                {"data": "volume"},
+                {"data": "concentration1"},
+                {"data": "concentration5"},
+                {"data": "concentration10"},
+                {"data": "concentration20"},
+                {"data": "concentration60"},
+                {"data": "trust"},
+                {"data": "foreign"},
+                {"data": "dealer"},
+                {"data": "hedging"}
+            ]
+        });
+    });
+
+    function getUrlParameter(sParam) {
+        var sPageURL = window.location.search.substring(1),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+            }
+        }
+        return false;
+    };
+</script>

@@ -34,6 +34,7 @@ WORKDIR /
 
 COPY --from=build_base /app/api/jarvis.v1.swagger.json /api/jarvis.v1.swagger.json
 COPY --from=build_base /app/configs/config.dev.yaml /configs/config.dev.yaml
+COPY --from=build_base /app/analysis/selection.html /analysis/selection.html
 COPY --from=build_base /jarvis-api /jarvis-api
 
 # This container exposes ports to the outside world

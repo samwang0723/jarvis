@@ -362,6 +362,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	// merge grpc gateway endpoint handling
 	httpMux.Handle("/", mux)
 	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
+	httpMux.HandleFunc("/analysis/", swagger.ServeAnalysisFile)
 	swagger.ServeSwaggerUI(httpMux)
 
 	cfg := config.GetCurrentConfig()
