@@ -23,6 +23,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/johnbellone/grpc-middleware-sentry v0.2.0
+	github.com/joho/godotenv v1.4.0
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/compress v1.15.14 // indirect
 	github.com/onsi/gomega v1.21.1 // indirect

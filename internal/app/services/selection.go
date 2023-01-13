@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -28,16 +29,20 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/helper"
+
+	// this is to autoload the .env file
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
-	proxyURI                   = "https://api.webscrapingapi.com/v1?api_key=mIuUQw7mBA9hngYdkxYOkKrLtvVjH7Hd&url=%s"
+	proxyURI                   = "https://api.webscrapingapi.com/v1?api_key=%s&url=%s"
 	realTimePriceURI           = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=%s"
 	realTimeMonitoringKey      = "real_time_monitoring_keys"
 	defaultCacheExpire         = 7 * 24 * time.Hour
 	defaultRealtimeCacheExpire = 24 * time.Hour
 	defaultHTTPTimeout         = 10 * time.Second
 	rateLimit                  = 2 * time.Second
+	webScraping                = "WEB_SCRAPING"
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
@@ -171,8 +176,9 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 
 	for _, key := range keys {
 		go func(ctx context.Context, key string, logger *zerolog.Logger, ca cache.Redis) {
+			token := os.Getenv(webScraping)
 			uri := fmt.Sprintf(realTimePriceURI, key)
-			finalURI := fmt.Sprintf(proxyURI, uri)
+			finalURI := fmt.Sprintf(proxyURI, token, uri)
 
 			req, err := http.NewRequestWithContext(ctx, "GET", finalURI, http.NoBody)
 			if err != nil {
