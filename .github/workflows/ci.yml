@@ -54,11 +54,4 @@ jobs:
         with:
           go-version: "1.18"
       - name: Run tests and generate coverage report
-        run: make build/cover.out
-      - name: Upload coverage report to Coveralls
-        env:
-          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_BRANCH: ${{ github.head_ref }}
-        run: |
-          go install github.com/mattn/goveralls@latest
-          goveralls -service=github -coverprofile=build/cover.out
+        run: make test

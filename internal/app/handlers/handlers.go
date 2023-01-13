@@ -16,6 +16,7 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services"
@@ -29,15 +30,19 @@ type IHandler interface {
 	GetStakeConcentration(ctx context.Context, req *dto.GetStakeConcentrationRequest) (*entity.StakeConcentration, error)
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 	ListeningKafkaInput(ctx context.Context)
+	CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error
+	RetrieveRealTimePrice(ctx context.Context, schedule string) error
 }
 
 type handlerImpl struct {
 	dataService services.IService
+	logger      *zerolog.Logger
 }
 
-func New(dataService services.IService) IHandler {
+func New(dataService services.IService, logger *zerolog.Logger) IHandler {
 	res := &handlerImpl{
 		dataService: dataService,
+		logger:      logger,
 	}
 
 	return res

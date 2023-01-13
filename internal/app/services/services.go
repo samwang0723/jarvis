@@ -17,8 +17,11 @@ package services
 import (
 	"context"
 
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/cache"
+	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
@@ -37,11 +40,20 @@ type IService interface {
 	BatchUpsertStakeConcentration(ctx context.Context, objs *[]interface{}) error
 	ListeningKafkaInput(ctx context.Context)
 	StopKafka() error
+	StopRedis() error
+	StartCron()
+	StopCron()
+	AddJob(ctx context.Context, spec string, job func()) error
+	CronjobPresetRealtimMonitoringKeys(ctx context.Context) error
+	RetrieveRealTimePrice(ctx context.Context) error
 }
 
 type serviceImpl struct {
 	dal      idal.IDAL
 	consumer ikafka.IKafka
+	cache    cache.Redis
+	cronjob  cronjob.Cronjob
+	logger   *zerolog.Logger
 }
 
 func New(opts ...Option) IService {

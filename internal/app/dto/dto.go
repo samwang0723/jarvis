@@ -85,7 +85,8 @@ type GetStakeConcentrationRequest struct {
 }
 
 type ListSelectionRequest struct {
-	Date string `json:"date"`
+	Date   string `json:"date"`
+	Strict bool   `json:"strict"`
 }
 
 type ListSelectionResponse struct {

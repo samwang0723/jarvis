@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -41,6 +42,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
+	zl "github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -50,6 +52,9 @@ const (
 	maxGoRoutines          = 10000
 	dnsResolveTimeout      = 200 * time.Millisecond
 	databasePingTimeout    = 1 * time.Second
+	appName                = "jarvis"
+	readTimeout            = 5 * time.Second
+	writeTimeout           = 10 * time.Second
 )
 
 type IServer interface {
@@ -71,6 +76,7 @@ func Serve() {
 	config.Load()
 	cfg := config.GetCurrentConfig()
 	logger := structuredlog.Logger(cfg)
+	newLogger := zl.With().Str("app", appName).Logger()
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> database
 	// initialize DAL layer
 	database := db.GormFactory(cfg)
@@ -79,9 +85,18 @@ func Serve() {
 	dataService := services.New(
 		services.WithDAL(dalService),
 		services.WithKafka(kafka.New(cfg)),
+		services.WithRedis(services.RedisConfig{
+			Master:        cfg.RedisCache.Master,
+			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
+			Logger:        &newLogger,
+		}),
+		services.WithCronJob(services.CronjobConfig{
+			Logger: &newLogger,
+		}),
+		services.WithLogger(&newLogger),
 	)
 	// associate service with handler
-	handler := handlers.New(dataService)
+	handler := handlers.New(dataService, &newLogger)
 	gRPCServer := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_sentry.StreamServerInterceptor(),
@@ -121,10 +136,18 @@ func Serve() {
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
 		BeforeStart(func() error {
+			dataService.StartCron()
+
 			return nil
 		}),
 		BeforeStop(func() error {
-			err := dataService.StopKafka()
+			dataService.StopCron()
+			err := dataService.StopRedis()
+			if err != nil {
+				return fmt.Errorf("stop_redis: failed, reason: %w", err)
+			}
+
+			err = dataService.StopKafka()
 			if err != nil {
 				log.Errorf("StopKafka error: %s", err.Error())
 			}
@@ -177,7 +200,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.2.0", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.3.0", helper.GetCurrentEnv())
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
@@ -239,6 +262,29 @@ func (s *server) Run(ctx context.Context) error {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+
+	go func(ctx context.Context, svc *server) {
+		defer waitGroup.Done()
+
+		err := svc.Handler().CronjobPresetRealtimMonitoringKeys(childCtx, "00 6 * * 1-5")
+		if err != nil {
+			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
+		}
+
+		err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/3 9-14 * * 1-5")
+		if err != nil {
+			log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
+		}
+
+		<-ctx.Done()
+	}(childCtx, s)
+
+	waitGroup.Wait()
+
 	select {
 	case <-quit:
 		log.Warn("singal interrupt")
@@ -316,12 +362,21 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	// merge grpc gateway endpoint handling
 	httpMux.Handle("/", mux)
 	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
+	httpMux.HandleFunc("/analysis/", swagger.ServeAnalysisFile)
 	swagger.ServeSwaggerUI(httpMux)
 
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)
 
-	err = http.ListenAndServe(host, httpMux)
+	srv := &http.Server{
+		ReadHeaderTimeout: readTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		Addr:              host,
+		Handler:           httpMux,
+	}
+
+	err = srv.ListenAndServe()
 	if err != nil {
 		log.Errorf("cannot listen and server: %s", err.Error())
 

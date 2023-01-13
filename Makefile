@@ -5,7 +5,7 @@ help: ## show this help
 
 PROJECT_NAME?=core
 APP_NAME?=jarvis-api
-VERSION?=v1.2.0
+VERSION?=v1.3.0
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v /internal/app/pb)
@@ -14,7 +14,7 @@ SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v
 # test #
 ########
 
-test: test-race test-leak ## launch all tests
+test: test-race test-leak test-coverage-report ## launch all tests
 
 test-race: ## launch all tests with race detection
 	go test $(SOURCE_LIST)  -cover -race

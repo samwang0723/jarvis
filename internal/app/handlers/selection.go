@@ -32,3 +32,31 @@ func (h *handlerImpl) ListSelections(
 		Entries: entries,
 	}, nil
 }
+
+func (h *handlerImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error {
+	err := h.dataService.AddJob(ctx, schedule, func() {
+		err := h.dataService.CronjobPresetRealtimMonitoringKeys(ctx)
+		if err != nil {
+			h.logger.Error().Msgf("failed to preset real time keys: %s", err)
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *handlerImpl) RetrieveRealTimePrice(ctx context.Context, schedule string) error {
+	err := h.dataService.AddJob(ctx, schedule, func() {
+		err := h.dataService.RetrieveRealTimePrice(ctx)
+		if err != nil {
+			h.logger.Error().Msgf("failed to retrieve real time price: %s", err)
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

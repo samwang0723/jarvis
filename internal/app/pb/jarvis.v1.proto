@@ -13,7 +13,7 @@ option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info: {
 		title: "Javis smart stock analysis API";
-		version: "1.0";	
+		version: "1.0";
   };
   schemes: HTTP;
 };
@@ -207,6 +207,7 @@ message ThreePrimary {
 
 message ListSelectionRequest {
     string date = 1;
+    bool strict = 2;
 }
 
 message ListSelectionResponse {

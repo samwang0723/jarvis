@@ -440,7 +440,8 @@ func ListSelectionRequestFromPB(in *pb.ListSelectionRequest) *ListSelectionReque
 		return nil
 	}
 	out := &ListSelectionRequest{
-		Date: in.Date,
+		Date:   in.Date,
+		Strict: in.Strict,
 	}
 
 	return out

@@ -20,5 +20,9 @@ import (
 )
 
 type ISelectionDAL interface {
-	ListSelections(ctx context.Context, date string) (objs []*entity.Selection, err error)
+	ListSelections(ctx context.Context, date string, strict bool) (objs []*entity.Selection, err error)
+	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
+	AdvancedFiltering(objs []*entity.Selection, strict bool, opts ...string) ([]*entity.Selection, error)
+	GetLatestChip(ctx context.Context) (objs []*entity.Selection, err error)
+	DataCompletionDate(ctx context.Context, opts ...string) (date string, err error)
 }

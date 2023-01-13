@@ -15,6 +15,9 @@
 package services
 
 import (
+	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/cache"
+	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
@@ -30,5 +33,33 @@ func WithDAL(dal idal.IDAL) Option {
 func WithKafka(consumer ikafka.IKafka) Option {
 	return func(i *serviceImpl) {
 		i.consumer = consumer
+	}
+}
+
+func WithRedis(cfg RedisConfig) Option {
+	return func(i *serviceImpl) {
+		if err := cfg.validate(); err != nil {
+			return
+		}
+
+		i.cache = cache.New(cache.Config{
+			Master:        cfg.Master,
+			SentinelAddrs: cfg.SentinelAddrs,
+			Logger:        cfg.Logger,
+		})
+	}
+}
+
+func WithCronJob(cfg CronjobConfig) Option {
+	return func(i *serviceImpl) {
+		i.cronjob = cronjob.New(cronjob.Config{
+			Logger: cfg.Logger,
+		})
+	}
+}
+
+func WithLogger(logger *zerolog.Logger) Option {
+	return func(i *serviceImpl) {
+		i.logger = logger
 	}
 }

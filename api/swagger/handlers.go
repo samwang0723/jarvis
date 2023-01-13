@@ -13,6 +13,7 @@ func ServeSwaggerFile(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, "swagger.json") {
 		log.Errorf("Not Found: %s", r.URL.Path)
 		http.NotFound(w, r)
+
 		return
 	}
 
@@ -32,4 +33,8 @@ func ServeSwaggerUI(mux *http.ServeMux) {
 	})
 	prefix := "/swagger-ui/"
 	mux.Handle(prefix, http.StripPrefix(prefix, fileServer))
+}
+
+func ServeAnalysisFile(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, r.URL.Path)
 }

@@ -66,6 +66,10 @@ type Config struct {
 		Brokers []string `yaml:"brokers"`
 		Topics  []string `yaml:"topics"`
 	} `yaml:"kafka"`
+	RedisCache struct {
+		Master        string   `yaml:"master"`
+		SentinelAddrs []string `yaml:"sentinelAddrs"`
+	} `yaml:"redis"`
 }
 
 //nolint:nolintlint, gochecknoglobals

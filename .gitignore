@@ -7,3 +7,5 @@ tls.crt
 tls.key
 terraform/
 backup.sql
+bench.txt
+coverage.out
