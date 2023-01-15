@@ -1,128 +1,283 @@
 <html>
 
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.datatables.net/v/bs4/dt-1.10.18/datatables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/dataTables.bootstrap.min.js"></script>
+
     <style type="text/css">
-        body {
-            background: #f8f9fa;
-        }
-
-        td {
-            color: white;
-        }
-
-        td.positive {
-            color: red;
-        }
-
-        td.negative {
-            color: green;
+        .tab-content {
+            padding: 10px;
+            border-left: 1px solid #DDD;
+            border-bottom: 1px solid #DDD;
+            border-right: 1px solid #DDD;
         }
 
         .table-hover tbody tr:hover td {
-            background: #22313F !important;
-            color: #fff !important;
+            background: #F0F8FF !important;
+        }
+
+        .dataTables_wrapper .dataTables_scroll {
+            border: 1px solid #ccc;
+            margin: 1rem 0;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        div.dataTables_scrollHead table.dataTable {
+            margin-bottom: 0 !important;
+            margin-top: 0 !important;
+            border: 0 !important;
+        }
+
+        .dataTables_scrollBody {
+            overflow-x: hidden !important;
+            border-top: 1px solid #ccc;
+        }
+
+        .table {
+            border-left: 0px !important;
+            border-right: 0px !important;
+        }
+
+        .table th {
+            border-bottom: none
+        }
+
+        thead {
+            background-color: #236e99;
+            color: #ffffff;
         }
     </style>
 </head>
 
 <body>
-    <table id="myTable" class="table table-dark table-striped table-hover">
-        <thead class="thead-dark">
-            <tr>
-                <th>代號</th>
-                <th>股名</th>
-                <th>產業別</th>
-                <th>開</th>
-                <th>高</th>
-                <th>低</th>
-                <th>收</th>
-                <th>漲跌</th>
-                <th>成交量</th>
-                <th>近1日</th>
-                <th>近5日</th>
-                <th>近10日</th>
-                <th>近20日</th>
-                <th>近60日</th>
-                <th>投信</th>
-                <th>外資</th>
-                <th>自營商</th>
-                <th>避險</th>
-            </tr>
-        </thead>
-        <tbody id="myTBody">
-        </tbody>
-    </table>
+    <div class="container">
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            取得分析資料失敗，請重新嘗試
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <br>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#tab1" aria-controls="tab1" role="tab"
+                    data-toggle="tab"><b>價量</b></a></li>
+            <li role="presentation"><a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab"><b>籌碼集中度</b></a>
+            </li>
+            <li role="presentation"><a href="#tab3" aria-controls="tab3" role="tab" data-toggle="tab"><b>法人買賣超</b></a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="tab1">
+                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>代號</th>
+                            <th>股名</th>
+                            <th>產業別</th>
+                            <th>收盤</th>
+                            <th>漲跌</th>
+                            <th>成交量</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div role="tabpanel" class="tab-pane fade" id="tab2">
+                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>代號</th>
+                            <th>股名</th>
+                            <th>近1日</th>
+                            <th>近5日</th>
+                            <th>近10日</th>
+                            <th>近20日</th>
+                            <th>近60日</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div role="tabpanel" class="tab-pane fade" id="tab3">
+                <table id="myTable3" class="table table-hover table-striped table-bordered table-condensed"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>代號</th>
+                            <th>股名</th>
+                            <th>投信</th>
+                            <th>外資</th>
+                            <th>自營商</th>
+                            <th>避險</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
 
 <script>
     $(document).ready(function () {
-        var requestURL = "http://localhost:8080/v1/selections";
+        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/selections";
         var dataJSON = {};
         dataJSON["date"] = getUrlParameter("date");
         dataJSON["strict"] = getUrlParameter("strict") === true;
 
-        $('#myTable').DataTable({
-            pageLength: 50,
-            dom: 'ipf',
-            destroy: true,
-            fixedColumns: true,
-            columnDefs: [
-                {
-                    targets: [0, 1, 2],
-                    searchable: true,
-                    responsivePriority: 1
-                },
-                {
-                    targets: [3, 4, 5, 6, 7, 8],
-                    searchable: false,
-                    responsivePriority: 2
-                },
-                {
-                    targets: [9, 10, 11, 12, 13, 14, 15, 16, 17],
-                    searchable: false,
-                    responsivePriority: 3
-                },
-            ],
-            responsive: true,
-            ajax: {
-                url: requestURL,
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                dataSrc: "entries",
-                data: function (d) {
-                    return JSON.stringify(dataJSON);
-                }
+        $.ajax({
+            type: "POST",
+            url: requestURL,
+            data: JSON.stringify(dataJSON),
+            dataType: 'json',
+            success: function (data) {
+                $('#myTable').DataTable({
+                    destroy: true,
+                    displayLength: 10,
+                    scrollY: 500,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    paging: true,
+                    footer: false,
+                    columnDefs: [
+                        {
+                            targets: [0, 1, 2, 3],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [4],
+                            searchable: false,
+                            responsivePriority: 2,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                        {
+                            targets: [5],
+                            searchable: false,
+                            responsivePriority: 3
+                        },
+                    ],
+                    responsive: true,
+                    data: data.entries,
+                    columns: [
+                        {"data": "stockID"},
+                        {"data": "name"},
+                        {"data": "category"},
+                        {"data": "close"},
+                        {"data": "diff"},
+                        {"data": "volume"},
+                    ]
+                });
+
+                $('#myTable2').DataTable({
+                    destroy: true,
+                    displayLength: 10,
+                    scrollY: 500,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    paging: true,
+                    footer: false,
+                    columnDefs: [
+                        {
+                            targets: [0, 1],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [2, 3, 4, 5, 6],
+                            searchable: false,
+                            responsivePriority: 2,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                    ],
+                    responsive: true,
+                    data: data.entries,
+                    columns: [
+                        {"data": "stockID"},
+                        {"data": "name"},
+                        {"data": "concentration1"},
+                        {"data": "concentration5"},
+                        {"data": "concentration10"},
+                        {"data": "concentration20"},
+                        {"data": "concentration60"},
+                    ]
+                });
+
+                $('#myTable3').DataTable({
+                    destroy: true,
+                    displayLength: 10,
+                    scrollY: 500,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    paging: true,
+                    footer: false,
+                    columnDefs: [
+                        {
+                            targets: [0, 1],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [2, 3, 4, 5],
+                            searchable: false,
+                            responsivePriority: 2,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                    ],
+                    responsive: true,
+                    data: data.entries,
+                    columns: [
+                        {"data": "stockID"},
+                        {"data": "name"},
+                        {"data": "trust"},
+                        {"data": "foreign"},
+                        {"data": "dealer"},
+                        {"data": "hedging"},
+                    ]
+                });
             },
-            columns: [
-                {"data": "stockID"},
-                {"data": "name"},
-                {"data": "category"},
-                {"data": "open"},
-                {"data": "high"},
-                {"data": "low"},
-                {"data": "close"},
-                {"data": "diff"},
-                {"data": "volume"},
-                {"data": "concentration1"},
-                {"data": "concentration5"},
-                {"data": "concentration10"},
-                {"data": "concentration20"},
-                {"data": "concentration60"},
-                {"data": "trust"},
-                {"data": "foreign"},
-                {"data": "dealer"},
-                {"data": "hedging"}
-            ]
+            error: function () {
+                $('.alert').alert();
+            }
         });
+
+    });
+
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $($.fn.dataTable.tables(true)).DataTable()
+            .columns.adjust();
     });
 
     function getUrlParameter(sParam) {
