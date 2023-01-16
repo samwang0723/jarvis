@@ -59,12 +59,6 @@
 
 <body>
     <div class="container">
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            取得分析資料失敗，請重新嘗試
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
         <br>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs" role="tablist">
@@ -289,7 +283,6 @@
                 });
             },
             error: function () {
-                $('.alert').alert();
             }
         });
 

@@ -28,6 +28,7 @@ const (
 	minWeeklyVolume      = 1000000
 	highestRangePercent  = 0.04
 	yesterday            = 1
+	yesterdayAfterClosed = 2
 	priceMA8             = 8
 	priceMA21            = 21
 	priceMA55            = 55
@@ -239,8 +240,13 @@ func (i *dalImpl) AdvancedFiltering(
 		currentPriceSum += p.Close
 		currentVolumeSum += p.Volume
 
+		lastClose := yesterdayAfterClosed
+		if len(opts) > 0 {
+			lastClose = yesterday
+		}
+
 		switch currentIdx {
-		case yesterday:
+		case lastClose:
 			analysisMap[currentStockID].LastClose = p.Close
 		case volumeMV5:
 			analysisMap[currentStockID].MV5 = currentVolumeSum / volumeMV5
@@ -328,7 +334,7 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 
 	var startDate string
 	err := i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
-		group by exchange_date order by exchange_date desc limit 180) as a;`).Scan(&startDate).Error
+		group by exchange_date order by exchange_date desc limit 150) as a;`).Scan(&startDate).Error
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +358,7 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 	var err error
 
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
-		group by exchange_date order by exchange_date desc limit 180) as a;`).Scan(&startDate).Error
+		group by exchange_date order by exchange_date desc limit 150) as a;`).Scan(&startDate).Error
 	if err != nil {
 		return nil, err
 	}

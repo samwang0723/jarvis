@@ -45,7 +45,7 @@ const (
 	rateLimit                  = 2 * time.Second
 	webScraping                = "WEB_SCRAPING"
 	skipHeader                 = "skip_dates"
-	closeToHighestToday        = 0.98
+	closeToHighestToday        = 0.985
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
