@@ -234,4 +234,7 @@ message Selection {
     float high = 17;
     float low = 18;
     float diff = 19;
+    int32 trust10 = 20;
+    int32 foreign10 = 21;
+    float quoteChange = 22;
 }

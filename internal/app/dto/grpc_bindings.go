@@ -487,6 +487,9 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 	pbHigh := in.High
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
+	pbTrust10 := int32(in.Trust10)
+	pbForeign10 := int32(in.Foreign10)
+	pbQuoteChange := in.QuoteChange
 
 	return &pb.Selection{
 		StockID:          pbStockID,
@@ -508,5 +511,8 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		High:             pbHigh,
 		Low:              pbLow,
 		Diff:             pbDiff,
+		Trust10:          pbTrust10,
+		Foreign10:        pbForeign10,
+		QuoteChange:      pbQuoteChange,
 	}
 }

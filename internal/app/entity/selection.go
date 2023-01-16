@@ -33,4 +33,7 @@ type Selection struct {
 	Foreign         int     `gorm:"column:foreignc" json:"foreign"`
 	Hedging         int     `gorm:"column:hedging" json:"hedging"`
 	Dealer          int     `gorm:"column:dealer" json:"dealer"`
+	Trust10         int     `json:"trust10"`
+	Foreign10       int     `json:"foreign10"`
+	QuoteChange     float32 `json:"quoteChange"`
 }

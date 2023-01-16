@@ -45,6 +45,7 @@ const (
 	rateLimit                  = 2 * time.Second
 	webScraping                = "WEB_SCRAPING"
 	skipHeader                 = "skip_dates"
+	closeToHighestToday        = 0.98
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
@@ -110,7 +111,8 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 		for _, realtime := range realtimeList {
 			// override realtime data with history record.
 			history := chips[realtime.StockID]
-			if history == nil {
+			// if its today, check if reach to highest
+			if history == nil || (realtime.Close/realtime.High) <= closeToHighestToday {
 				continue
 			}
 

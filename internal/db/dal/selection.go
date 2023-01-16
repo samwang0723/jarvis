@@ -18,23 +18,24 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 const (
-	minDailyVolume      = 3000000
-	minWeeklyVolume     = 1000000
-	highestRangePercent = 0.04
-	maxRewind           = -6
-	averageRewind       = -3
-	priceMA8            = 8
-	priceMA21           = 21
-	priceMA55           = 55
-	volumeMV5           = 5
-	volumeMV13          = 13
-	volumeMV34          = 34
+	minDailyVolume       = 3000000
+	minWeeklyVolume      = 1000000
+	highestRangePercent  = 0.04
+	yesterday            = 1
+	priceMA8             = 8
+	priceMA21            = 21
+	priceMA55            = 55
+	volumeMV5            = 5
+	volumeMV13           = 13
+	volumeMV34           = 34
+	threePrimarySumCount = 10
+	percent              = -100
 )
 
 type price struct {
@@ -44,13 +45,27 @@ type price struct {
 	Volume  uint64  `gorm:"column:trade_shares"`
 }
 
+type threePrimary struct {
+	StockID string `gorm:"column:stock_id"`
+	Date    string `gorm:"column:exchange_date"`
+	Foreign int64  `gorm:"column:foreign_trade_shares"`
+	Trust   int64  `gorm:"column:trust_trade_shares"`
+	Hedging int64  `gorm:"column:hedging_trade_shares"`
+	Dealer  int64  `gorm:"column:dealer_trade_shares"`
+}
+
 type analysis struct {
-	MA8  float32
-	MA21 float32
-	MA55 float32
-	MV5  uint64
-	MV13 uint64
-	MV34 uint64
+	MA8       float32
+	MA21      float32
+	MA55      float32
+	MV5       uint64
+	MV13      uint64
+	MV34      uint64
+	Foreign   int64
+	Trust     int64
+	Hedging   int64
+	Dealer    int64
+	LastClose float32
 }
 
 type realTimeList struct {
@@ -160,8 +175,6 @@ func (i *dalImpl) ListSelections(
 				IF(s.concentration_60 > 0, 1, 0)
 			) >= 4
 			and s.exchange_date = ?
-			and d.close / d.high >= 0.97
-			and d.close / d.open >= 1.0
 			and d.trade_shares >= ?
 			order by s.stock_id`, date, date, date, minDailyVolume).Scan(&objs).Error
 	if err != nil {
@@ -177,7 +190,7 @@ func (i *dalImpl) ListSelections(
 	return output, nil
 }
 
-//nolint:nolintlint,cyclop,gocognit
+//nolint:nolintlint,cyclop,gocognit,gocyclo
 func (i *dalImpl) AdvancedFiltering(
 	objs []*entity.Selection,
 	strict bool,
@@ -190,7 +203,13 @@ func (i *dalImpl) AdvancedFiltering(
 		selectionMap[obj.StockID] = obj
 	}
 
-	pList, err := i.retrieveHistory(stockIDs, opts...)
+	// TODO: make channel requests
+	pList, err := i.retrieveDailyCloseHistory(stockIDs, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	tList, err := i.retrieveThreePrimaryHistory(stockIDs, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +240,8 @@ func (i *dalImpl) AdvancedFiltering(
 		currentVolumeSum += p.Volume
 
 		switch currentIdx {
+		case yesterday:
+			analysisMap[currentStockID].LastClose = p.Close
 		case volumeMV5:
 			analysisMap[currentStockID].MV5 = currentVolumeSum / volumeMV5
 		case volumeMV13:
@@ -233,6 +254,29 @@ func (i *dalImpl) AdvancedFiltering(
 			analysisMap[currentStockID].MA21 = currentPriceSum / priceMA21
 		case priceMA55:
 			analysisMap[currentStockID].MA55 = currentPriceSum / priceMA55
+		}
+	}
+
+	currentStockID = ""
+	currentIdx = 0
+	currentTrustSum := int64(0)
+	currentForeignSum := int64(0)
+	for _, t := range tList {
+		if currentStockID != t.StockID {
+			currentStockID = t.StockID
+			currentIdx = 0
+			currentTrustSum = 0
+			currentForeignSum = 0
+		}
+
+		currentIdx++
+
+		currentTrustSum += t.Trust
+		currentForeignSum += t.Foreign
+
+		if currentIdx == threePrimarySumCount {
+			analysisMap[currentStockID].Trust = currentTrustSum
+			analysisMap[currentStockID].Foreign = currentForeignSum
 		}
 	}
 
@@ -259,6 +303,9 @@ func (i *dalImpl) AdvancedFiltering(
 		}
 
 		if (selected && !strict) || (selected && selectedStrict) {
+			ref.Trust10 = int(v.Trust)
+			ref.Foreign10 = int(v.Foreign)
+			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / v.LastClose)) * percent)
 			output = append(output, ref)
 		}
 	}
@@ -279,10 +326,14 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	}
 	highest := []*HighPrice{}
 
-	t := time.Now().AddDate(0, maxRewind, 0)
-	startDate := t.Format("20060102")
+	var startDate string
+	err := i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
+		group by exchange_date order by exchange_date desc limit 180) as a;`).Scan(&startDate).Error
+	if err != nil {
+		return nil, err
+	}
 
-	err := i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ?
+	err = i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ?
 			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, date, stockIDs).Scan(&highest).Error
 	if err != nil {
 		return nil, err
@@ -295,13 +346,16 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	return highestPriceMap, nil
 }
 
-func (i *dalImpl) retrieveHistory(stockIDs []string, opts ...string) ([]*price, error) {
-	// calculate the max start date
-	t := time.Now().AddDate(0, averageRewind, 0)
-	startDate := t.Format("20060102")
-
+func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) ([]*price, error) {
 	var pList []*price
+	var startDate string
 	var err error
+
+	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
+		group by exchange_date order by exchange_date desc limit 180) as a;`).Scan(&startDate).Error
+	if err != nil {
+		return nil, err
+	}
 
 	if len(opts) > 0 {
 		err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
@@ -311,6 +365,40 @@ func (i *dalImpl) retrieveHistory(stockIDs []string, opts ...string) ([]*price, 
 		err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
 			where exchange_date >= ? and stock_id IN (?) order by
 			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return pList, nil
+}
+
+func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string) ([]*threePrimary, error) {
+	var pList []*threePrimary
+	var startDate string
+	var err error
+
+	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
+		group by exchange_date order by exchange_date desc limit 10) as a;`).Scan(&startDate).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(opts) > 0 {
+		err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
+			floor(trust_trade_shares/1000) as trust_trade_shares, 
+			floor(dealer_trade_shares/1000) as dealer_trade_shares, 
+			floor(hedging_trade_shares/1000) as hedging_trade_shares
+			from three_primary where exchange_date >= ?
+			and exchange_date < ? and stock_id IN (?) 
+			order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+	} else {
+		err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
+			floor(trust_trade_shares/1000) as trust_trade_shares, 
+			floor(dealer_trade_shares/1000) as dealer_trade_shares, 
+			floor(hedging_trade_shares/1000) as hedging_trade_shares
+			from three_primary where exchange_date >= ? 
+			and stock_id IN (?) order by stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
 	if err != nil {
 		return nil, err

@@ -88,6 +88,7 @@
                             <th>產業別</th>
                             <th>收盤</th>
                             <th>漲跌</th>
+                            <th>漲跌幅</th>
                             <th>成交量</th>
                         </tr>
                     </thead>
@@ -119,7 +120,9 @@
                             <th>代號</th>
                             <th>股名</th>
                             <th>投信</th>
+                            <th>投信近十日</th>
                             <th>外資</th>
+                            <th>外資近十日</th>
                             <th>自營商</th>
                             <th>避險</th>
                         </tr>
@@ -174,6 +177,20 @@
                         {
                             targets: [5],
                             searchable: false,
+                            responsivePriority: 2,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                                current = $(td).text();
+                                $(td).text(current + "%");
+                            }
+                        },
+                        {
+                            targets: [6],
+                            searchable: false,
                             responsivePriority: 3
                         },
                     ],
@@ -185,6 +202,7 @@
                         {"data": "category"},
                         {"data": "close"},
                         {"data": "diff"},
+                        {"data": "quoteChange"},
                         {"data": "volume"},
                     ]
                 });
@@ -244,7 +262,7 @@
                             responsivePriority: 1
                         },
                         {
-                            targets: [2, 3, 4, 5],
+                            targets: [2, 3, 4, 5, 6, 7],
                             searchable: false,
                             responsivePriority: 2,
                             createdCell: function (td, cellData, rowData, row, col) {
@@ -262,7 +280,9 @@
                         {"data": "stockID"},
                         {"data": "name"},
                         {"data": "trust"},
+                        {"data": "trust10"},
                         {"data": "foreign"},
+                        {"data": "foreign10"},
                         {"data": "dealer"},
                         {"data": "hedging"},
                     ]

@@ -604,6 +604,18 @@
         "diff": {
           "type": "number",
           "format": "float"
+        },
+        "trust10": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "foreign10": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "quoteChange": {
+          "type": "number",
+          "format": "float"
         }
       }
     },
