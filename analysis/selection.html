@@ -58,13 +58,14 @@
         table.dataTable tbody td {
             vertical-align: middle;
         }
+
+        div.container {
+            width: 620px;
+        }
     </style>
 </head>
 
 <body>
-    <canvas id="canvas" width="30" height="80">
-
-    </canvas>
     <div class="container">
         <br>
         <!-- Nav tabs -->
@@ -84,11 +85,10 @@
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>籌碼狀態</th>
+                            <th>籌碼</th>
                             <th>標的</th>
                             <th>產業別</th>
                             <th>成交價</th>
-                            <th>漲跌</th>
                             <th>漲跌幅</th>
                             <th>成交量</th>
                         </tr>
@@ -101,7 +101,7 @@
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>籌碼狀態</th>
+                            <th>籌碼</th>
                             <th>標的</th>
                             <th>近1日</th>
                             <th>近5日</th>
@@ -118,19 +118,20 @@
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
-                            <th>籌碼狀態</th>
+                            <th>籌碼</th>
                             <th>標的</th>
                             <th>投信</th>
                             <th>投信十日</th>
                             <th>外資</th>
                             <th>外資十日</th>
-                            <th>自營商</th>
+                            <th>自營</th>
                             <th>避險</th>
                         </tr>
                     </thead>
                 </table>
             </div>
         </div>
+        <br>
     </div>
 </body>
 
@@ -156,7 +157,7 @@
                         val.close = val.close + "▼";
                     }
 
-                    val.name = val.stockID + " " + val.name;
+                    val.name = val.stockID + "<br>" + val.name;
 
                     var count = 0;
                     count += val.concentration1 > 0 ? 1 : 0;
@@ -166,9 +167,9 @@
                     count += val.concentration60 > 0 ? 1 : 0;
 
                     if (count == 4) {
-                        val.stockID = '<span class="badge progress-bar-success">四星</span>';
+                        val.stockID = '<span class="badge progress-bar-success" style="font-size:1.4rem;">四星</span>';
                     } else if (count == 5) {
-                        val.stockID = '<span class="badge progress-bar-warning">五燈</span>';
+                        val.stockID = '<span class="badge progress-bar-warning" style="font-size:1.4rem;">五燈</span>';
                     }
 
                     count += val.foreign > 0 ? 1 : 0;
@@ -177,18 +178,16 @@
                     count += val.trust10 > 0 ? 1 : 0;
 
                     if (count >= 9) {
-                        val.stockID = '<span class="badge progress-bar-danger">滿貫</span>';
+                        val.stockID = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
                 });
 
                 $('#myTable').DataTable({
                     destroy: true,
-                    displayLength: 10,
-                    scrollY: 500,
-                    scrollCollapse: true,
-                    scrollX: true,
                     paging: false,
                     footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
                     columnDefs: [
                         {
                             targets: [0, 1, 2],
@@ -217,24 +216,12 @@
                                 } else if (cellData < 0) {
                                     $(td).css('color', 'green')
                                 }
-                            }
-                        },
-                        {
-                            targets: [5],
-                            searchable: false,
-                            responsivePriority: 2,
-                            createdCell: function (td, cellData, rowData, row, col) {
-                                if (cellData > 0) {
-                                    $(td).css('color', 'red')
-                                } else if (cellData < 0) {
-                                    $(td).css('color', 'green')
-                                }
                                 current = $(td).text();
                                 $(td).text(current + "%");
                             }
                         },
                         {
-                            targets: [6],
+                            targets: [5],
                             searchable: false,
                             responsivePriority: 3
                         },
@@ -242,24 +229,24 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID"},
-                        {"data": "name"},
+                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "name", "sWidth": "70px"},
                         {"data": "category"},
-                        {"data": "close"},
-                        {"data": "diff"},
-                        {"data": "quoteChange"},
-                        {"data": "volume"},
-                    ]
+                        {"data": "close", "sWidth": "60px", "className": "text-right"},
+                        {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
+                        {"data": "volume", "sWidth": "60px", "className": "text-right"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    }
                 });
 
                 $('#myTable2').DataTable({
                     destroy: true,
-                    displayLength: 10,
-                    scrollY: 500,
-                    scrollCollapse: true,
-                    scrollX: true,
                     paging: false,
                     footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
                     columnDefs: [
                         {
                             targets: [0, 1],
@@ -282,24 +269,26 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID"},
-                        {"data": "name"},
-                        {"data": "concentration1"},
-                        {"data": "concentration5"},
-                        {"data": "concentration10"},
-                        {"data": "concentration20"},
-                        {"data": "concentration60"},
-                    ]
+                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "name", "sWidth": "70px"},
+                        {"data": "concentration1", "sWidth": "50px", "className": "text-center"},
+                        {"data": "concentration5", "sWidth": "50px", "className": "text-center"},
+                        {"data": "concentration10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "concentration20", "sWidth": "60px", "className": "text-center"},
+                        {"data": "concentration60", "sWidth": "60px", "className": "text-center"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    }
+
                 });
 
                 $('#myTable3').DataTable({
                     destroy: true,
-                    displayLength: 10,
-                    scrollY: 500,
-                    scrollCollapse: true,
-                    scrollX: true,
                     paging: false,
                     footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
                     columnDefs: [
                         {
                             targets: [0, 1],
@@ -322,15 +311,19 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID"},
-                        {"data": "name"},
-                        {"data": "trust"},
-                        {"data": "trust10"},
-                        {"data": "foreign"},
-                        {"data": "foreign10"},
-                        {"data": "dealer"},
-                        {"data": "hedging"},
-                    ]
+                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "name", "sWidth": "70px"},
+                        {"data": "trust", "sWidth": "50px", "className": "text-center"},
+                        {"data": "trust10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "foreign", "sWidth": "50px", "className": "text-center"},
+                        {"data": "foreign10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "dealer", "sWidth": "50px", "className": "text-center"},
+                        {"data": "hedging", "sWidth": "50px", "className": "text-center"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    }
+
                 });
             },
             error: function () {
