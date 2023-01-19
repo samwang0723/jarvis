@@ -74,6 +74,12 @@
             float: right;
             vertical-align: middle;
         }
+
+        div.innerContainer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
     </style>
 </head>
 
@@ -170,7 +176,7 @@
                         val.close = val.close + "▼";
                     }
 
-                    val.name = '<div class="target">' + val.stockID + "<br>" + val.name + '</div><div class="candle"><canvas class="canvas' + val.stockID + '" width="20px" height="40px"></canvas></div>';
+                    val.name = '<div class="innerContainer"><div class="target">' + val.stockID + "<br>" + val.name + '</div><div class="candle"><canvas class="canvas' + val.stockID + '" width="20px" height="40px"></canvas></div></div>';
 
                     var count = 0;
                     count += val.concentration1 > 0 ? 1 : 0;
