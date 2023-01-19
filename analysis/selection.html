@@ -57,10 +57,22 @@
 
         table.dataTable tbody td {
             vertical-align: middle;
+            height: 100%;
         }
 
         div.container {
             width: 620px;
+        }
+
+        div.target {
+            width: 50px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        div.candle {
+            float: right;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -151,13 +163,14 @@
             dataType: 'json',
             success: function (data) {
                 $.each(data.entries, function (_, val) {
+                    val["price"] = val.close;
                     if (val.diff > 0) {
                         val.close = val.close + "▲";
                     } else if (val.diff < 0) {
                         val.close = val.close + "▼";
                     }
 
-                    val.name = val.stockID + "<br>" + val.name;
+                    val.name = '<div class="target">' + val.stockID + "<br>" + val.name + '</div><div class="candle"><canvas class="canvas' + val.stockID + '" width="20px" height="40px"></canvas></div>';
 
                     var count = 0;
                     count += val.concentration1 > 0 ? 1 : 0;
@@ -167,9 +180,9 @@
                     count += val.concentration60 > 0 ? 1 : 0;
 
                     if (count == 4) {
-                        val.stockID = '<span class="badge progress-bar-success" style="font-size:1.4rem;">四星</span>';
+                        val["rate"] = '<span class="badge progress-bar-success" style="font-size:1.4rem;">四星</span>';
                     } else if (count == 5) {
-                        val.stockID = '<span class="badge progress-bar-warning" style="font-size:1.4rem;">五燈</span>';
+                        val["rate"] = '<span class="badge progress-bar-warning" style="font-size:1.4rem;">五燈</span>';
                     }
 
                     count += val.foreign > 0 ? 1 : 0;
@@ -178,7 +191,7 @@
                     count += val.trust10 > 0 ? 1 : 0;
 
                     if (count >= 9) {
-                        val.stockID = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
+                        val["rate"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
                 });
 
@@ -229,7 +242,7 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "rate", "sWidth": "50px"},
                         {"data": "name", "sWidth": "70px"},
                         {"data": "category"},
                         {"data": "close", "sWidth": "60px", "className": "text-right"},
@@ -238,6 +251,11 @@
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                        $.each(data.entries, function (_, val) {
+                            drawCandleStick(0, val.stockID, val.high, val.low, val.open, val.price);
+                        });
                     }
                 });
 
@@ -269,7 +287,7 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "rate", "sWidth": "50px"},
                         {"data": "name", "sWidth": "70px"},
                         {"data": "concentration1", "sWidth": "50px", "className": "text-center"},
                         {"data": "concentration5", "sWidth": "50px", "className": "text-center"},
@@ -279,6 +297,11 @@
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                        $.each(data.entries, function (_, val) {
+                            drawCandleStick(1, val.stockID, val.high, val.low, val.open, val.price);
+                        });
                     }
 
                 });
@@ -311,7 +334,7 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "rate", "sWidth": "50px"},
                         {"data": "name", "sWidth": "70px"},
                         {"data": "trust", "sWidth": "50px", "className": "text-center"},
                         {"data": "trust10", "sWidth": "60px", "className": "text-center"},
@@ -322,6 +345,11 @@
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                        $.each(data.entries, function (_, val) {
+                            drawCandleStick(2, val.stockID, val.high, val.low, val.open, val.price);
+                        });
                     }
 
                 });
@@ -351,5 +379,40 @@
             }
         }
         return false;
+    };
+
+    function drawCandleStick(idx, id, high, low, open, close) {
+        // Get the canvas element
+        var canvas = document.getElementsByClassName("canvas" + id)[idx];
+        var ctx = canvas.getContext("2d");
+
+        // Draw the wick
+        var maxValue = high
+        var minValue = low
+        let ratio = canvas.height / (maxValue - minValue);
+        // scale down the values
+        high = (high - minValue + 0.0001) * ratio;
+        low = (low - minValue + 0.0001) * ratio;
+        open = (open - minValue + 0.0001) * ratio;
+        close = (close - minValue + 0.0001) * ratio;
+
+        // set candlestick bar color
+        let barColor = 'green';
+        if (close > open) {
+            barColor = 'red';
+        }
+
+        // draw candlestick bar
+        ctx.fillStyle = barColor;
+        let diff = Math.abs(open - close);
+        diff = (diff > 0) ? diff : 1.5;
+        ctx.fillRect(4, canvas.height - Math.max(open, close), 12, diff);
+
+        // draw wick
+        ctx.strokeStyle = barColor;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 2 + high);
+        ctx.lineTo(canvas.width / 2, low - 2);
+        ctx.stroke();
     };
 </script>
