@@ -334,7 +334,7 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 
 	var startDate string
 	err := i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
-		group by exchange_date order by exchange_date desc limit 150) as a;`).Scan(&startDate).Error
+		group by exchange_date order by exchange_date desc limit 132) as a;`).Scan(&startDate).Error
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 	var err error
 
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
-		group by exchange_date order by exchange_date desc limit 150) as a;`).Scan(&startDate).Error
+		group by exchange_date order by exchange_date desc limit 132) as a;`).Scan(&startDate).Error
 	if err != nil {
 		return nil, err
 	}
