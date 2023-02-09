@@ -275,7 +275,7 @@ func (s *server) Run(ctx context.Context) error {
 			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
 		}
 
-		err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/3 9-13 * * 1-5")
+		err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
 		if err != nil {
 			log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
 		}
