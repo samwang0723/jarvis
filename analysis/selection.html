@@ -395,6 +395,10 @@
         // Draw the wick
         var maxValue = high
         var minValue = low
+        var gap = maxValue - minValue;
+        if (gap === 0) {
+            gap = 1.5;
+        }
         let ratio = canvas.height / (maxValue - minValue);
 
         // scale down the values
@@ -412,8 +416,12 @@
         // draw candlestick bar
         ctx.fillStyle = barColor;
         let diff = Math.abs(open - close);
-        diff = (diff > 0) ? diff : 1.5;
-        ctx.fillRect(4, canvas.height - Math.max(open, close), 12, diff);
+        diff = (diff > 1) ? diff : 2;
+
+        let max = Math.max(open, close)
+        max = (max != Infinity && max > 1) ? max : 20;
+
+        ctx.fillRect(4, canvas.height - max, 12, diff);
 
         // draw wick
         ctx.strokeStyle = barColor;
