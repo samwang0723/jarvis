@@ -24,19 +24,20 @@ import (
 )
 
 const (
-	minDailyVolume       = 3000000
-	minWeeklyVolume      = 1000000
-	highestRangePercent  = 0.04
-	yesterday            = 1
-	yesterdayAfterClosed = 2
-	priceMA8             = 8
-	priceMA21            = 21
-	priceMA55            = 55
-	volumeMV5            = 5
-	volumeMV13           = 13
-	volumeMV34           = 34
-	threePrimarySumCount = 10
-	percent              = -100
+	minDailyVolume           = 3000000
+	minWeeklyVolume          = 1000000
+	highestRangePercent      = 0.04
+	dailyHighestRangePercent = 0.97
+	yesterday                = 1
+	yesterdayAfterClosed     = 2
+	priceMA8                 = 8
+	priceMA21                = 21
+	priceMA55                = 55
+	volumeMV5                = 5
+	volumeMV13               = 13
+	volumeMV34               = 34
+	threePrimarySumCount     = 10
+	percent                  = -100
 )
 
 type price struct {
@@ -293,6 +294,14 @@ func (i *dalImpl) AdvancedFiltering(
 		ref := selectionMap[k]
 		selected := false
 
+		// if today's realtime value and not within max high range, skip
+		if len(opts) > 0 && float64(ref.Close/ref.High) < dailyHighestRangePercent {
+			continue
+		}
+
+		// checking half-year high is closed enough
+		// checking volume is above weekly volume (3000)
+		// checking MA8, MA21, MA55 is below today's close
 		if math.Abs(1.0-float64(ref.Close/highestPriceMap[ref.StockID])) <= highestRangePercent &&
 			v.MV5 >= minWeeklyVolume &&
 			ref.Close > v.MA8 &&
