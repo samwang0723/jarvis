@@ -49,7 +49,7 @@ type IService interface {
 	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
 	CreatePickedStock(ctx context.Context, obj *entity.PickedStock) error
 	DeletePickedStockByID(ctx context.Context, id entity.ID) error
-	ListPickedStock(ctx context.Context, req *dto.ListPickedStockRequest) ([]*entity.Selection, error)
+	ListPickedStock(ctx context.Context, req *dto.ListPickedStocksRequest) ([]*entity.Selection, error)
 }
 
 type serviceImpl struct {

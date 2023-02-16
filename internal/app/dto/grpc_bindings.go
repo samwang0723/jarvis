@@ -463,6 +463,26 @@ func ListSelectionResponseToPB(in *ListSelectionResponse) *pb.ListSelectionRespo
 	}
 }
 
+func ListPickedStocksRequestFromPB(in *pb.ListPickedStocksRequest) *ListPickedStocksRequest {
+	return &ListPickedStocksRequest{}
+}
+
+func ListPickedStocksResponseToPB(in *ListPickedStocksResponse) *pb.ListPickedStocksResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Selection, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, SelectionToPB(obj))
+	}
+
+	return &pb.ListPickedStocksResponse{
+		Entries: entries,
+	}
+}
+
 func SelectionToPB(in *entity.Selection) *pb.Selection {
 	if in == nil {
 		return nil

@@ -93,7 +93,7 @@ type ListSelectionResponse struct {
 	Entries []*entity.Selection `json:"entries"`
 }
 
-type ListPickedStockRequest struct{}
+type ListPickedStocksRequest struct{}
 
 type ListPickedStocksResponse struct {
 	Entries []*entity.Selection `json:"entries"`

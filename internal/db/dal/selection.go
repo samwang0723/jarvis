@@ -155,7 +155,10 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 	return stockSymbols, nil
 }
 
-func (i *dalImpl) ListSelectionsBasedOnPickedStocks(ctx context.Context, pickedStocks []string) (objs []*entity.Selection, err error) {
+func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
+	ctx context.Context,
+	pickedStocks []string,
+) (objs []*entity.Selection, err error) {
 	var date string
 	err = i.db.Raw(`select exchange_date from stake_concentration 
 			order by exchange_date desc limit 1;`).Scan(&date).Error

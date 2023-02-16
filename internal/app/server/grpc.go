@@ -81,3 +81,15 @@ func (s *server) ListSelections(ctx context.Context, req *pb.ListSelectionReques
 
 	return dto.ListSelectionResponseToPB(res), nil
 }
+
+func (s *server) ListPickedStocks(
+	ctx context.Context,
+	req *pb.ListPickedStocksRequest,
+) (*pb.ListPickedStocksResponse, error) {
+	res, err := s.Handler().ListPickedStocks(ctx, dto.ListPickedStocksRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListPickedStocksResponseToPB(res), nil
+}

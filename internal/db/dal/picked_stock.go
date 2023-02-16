@@ -54,7 +54,7 @@ func (i *dalImpl) ListPickedStocks(ctx context.Context) (objs []*entity.Selectio
 		return nil, err
 	}
 
-	var stockIds []string
+	stockIds := []string{}
 	for _, pickedStock := range pickedStocks {
 		stockIds = append(stockIds, pickedStock.StockID)
 	}

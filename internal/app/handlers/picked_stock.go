@@ -13,3 +13,23 @@
 // limitations under the License.
 
 package handlers
+
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/dto"
+)
+
+func (h *handlerImpl) ListPickedStocks(
+	ctx context.Context,
+	req *dto.ListPickedStocksRequest,
+) (*dto.ListPickedStocksResponse, error) {
+	entries, err := h.dataService.ListPickedStock(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ListPickedStocksResponse{
+		Entries: entries,
+	}, nil
+}

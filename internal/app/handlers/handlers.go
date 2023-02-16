@@ -32,6 +32,7 @@ type IHandler interface {
 	ListeningKafkaInput(ctx context.Context)
 	CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error
 	RetrieveRealTimePrice(ctx context.Context, schedule string) error
+	ListPickedStocks(ctx context.Context, req *dto.ListPickedStocksRequest) (*dto.ListPickedStocksResponse, error)
 }
 
 type handlerImpl struct {
