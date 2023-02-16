@@ -13,15 +13,16 @@
 // limitations under the License.
 package idal
 
-const (
-	MaxRow = 500
+import (
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
-	IThreePrimaryDAL
-	ISelectionDAL
-	IPickedStockDAL
+type IPickedStockDAL interface {
+	CreatePickedStock(ctx context.Context, obj *entity.PickedStock) error
+	BatchUpsertPickedStock(ctx context.Context, objs []*entity.PickedStock) error
+	UpdatePickedStock(ctx context.Context, obj *entity.PickedStock) error
+	DeletePickedStockByID(ctx context.Context, id entity.ID) error
+	ListPickedStocks(ctx context.Context) (objs []*entity.Selection, err error)
 }

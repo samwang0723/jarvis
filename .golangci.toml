@@ -21,7 +21,7 @@ enable = [
     "containedctx",
     "contextcheck",
     "cyclop",
-    "decorder",
+    "decoder",
     "depguard",
     "dogsled",
     "dupl",
@@ -58,7 +58,7 @@ enable = [
     "goprintffuncname",
     "gosec",
     "grouper",
-    # "ifshort", depreated
+    # "ifshort", deprecated
     "importas",
     # "interfacer", deprecated
     # "ireturn",

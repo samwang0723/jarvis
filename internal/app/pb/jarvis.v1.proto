@@ -3,238 +3,248 @@ syntax = "proto3";
 package jarvis.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 
-
 option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
-
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info: {
-		title: "Javis smart stock analysis API";
-		version: "1.0";
+    title: "Javis smart stock analysis API";
+    version: "1.3";
   };
   schemes: HTTP;
 };
 
 service JarvisV1 {
-    rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            post: "/v1/dailycloses"
-            body: "*"
-        };
-    }
+  rpc ListDailyClose(ListDailyCloseRequest) returns (ListDailyCloseResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/dailycloses"
+      body: "*"
+    };
+  }
 
-    rpc ListStocks(ListStockRequest) returns (ListStockResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            post: "/v1/stocks"
-            body: "*"
-        };
-    }
+  rpc ListStocks(ListStockRequest) returns (ListStockResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/stocks"
+      body: "*"
+    };
+  }
 
-    rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            get: "/v1/categories"
-        };
-    }
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {get: "/v1/categories"};
+  }
 
-    rpc GetStakeConcentration(GetStakeConcentrationRequest) returns (GetStakeConcentrationResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            post: "/v1/stakeconcentration"
-            body: "*"
-        };
-    }
+  rpc GetStakeConcentration(GetStakeConcentrationRequest) returns (GetStakeConcentrationResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/stakeconcentration"
+      body: "*"
+    };
+  }
 
-    rpc ListThreePrimary(ListThreePrimaryRequest) returns (ListThreePrimaryResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            post: "/v1/threeprimary"
-            body: "*"
-        };
-    }
+  rpc ListThreePrimary(ListThreePrimaryRequest) returns (ListThreePrimaryResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/threeprimary"
+      body: "*"
+    };
+  }
 
-    rpc ListSelections(ListSelectionRequest) returns (ListSelectionResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-        option (google.api.http) = {
-            post: "/v1/selections"
-            body: "*"
-        };
-    }
+  rpc ListSelections(ListSelectionRequest) returns (ListSelectionResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/selections"
+      body: "*"
+    };
+  }
+
+  rpc ListPickedStocks(ListPickedStocksRequest) returns (ListPickedStocksResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/pickedstocks"
+      body: "*"
+    };
+  }
 }
 
 message ListDailyCloseRequest {
-    int32 offset = 1;
-    int32 limit = 2;
-    ListDailyCloseSearchParams searchParams = 3;
+  int32 offset = 1;
+  int32 limit = 2;
+  ListDailyCloseSearchParams searchParams = 3;
 }
 
 message ListDailyCloseResponse {
-    int32 offset = 1;
-    int32 limit = 2;
-    int64 totalCount = 3;
-    repeated DailyClose entries = 4;
+  int32 offset = 1;
+  int32 limit = 2;
+  int64 totalCount = 3;
+  repeated DailyClose entries = 4;
 }
 
 message ListDailyCloseSearchParams {
-    string stockID = 1;
-    string start = 2;
-    string end = 3;
+  string stockID = 1;
+  string start = 2;
+  string end = 3;
 }
 
 message Average {
-    google.protobuf.Struct ma = 1;
-    google.protobuf.Struct mv = 2;
+  google.protobuf.Struct ma = 1;
+  google.protobuf.Struct mv = 2;
 }
 
 message DailyClose {
-    uint64 id = 1;
-    google.protobuf.Timestamp createdAt = 2;
-    google.protobuf.Timestamp updatedAt = 3;
-    google.protobuf.Timestamp deletedAt = 4;
-    string stockID = 5;
-    string date = 6;
-    uint64 tradeShares = 7;
-    uint64 transactions = 8;
-    uint64 turnover = 9;
-    float open = 10;
-    float close = 11;
-    float high = 12;
-    float low = 13;
-    float diff = 14;
-    Average average = 15;
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp deletedAt = 4;
+  string stockID = 5;
+  string date = 6;
+  uint64 tradeShares = 7;
+  uint64 transactions = 8;
+  uint64 turnover = 9;
+  float open = 10;
+  float close = 11;
+  float high = 12;
+  float low = 13;
+  float diff = 14;
+  Average average = 15;
 }
 
 message ListStockRequest {
-    int32 offset = 1;
-    int32 limit = 2;
-    ListStockSearchParams searchParams = 3;
+  int32 offset = 1;
+  int32 limit = 2;
+  ListStockSearchParams searchParams = 3;
 }
 
 message ListStockSearchParams {
-    repeated string stockIDs = 1;
-    string country = 2;
-    string name = 3;
-    string category = 4;
+  repeated string stockIDs = 1;
+  string country = 2;
+  string name = 3;
+  string category = 4;
 }
 
 message ListStockResponse {
-    int32 offset = 1;
-    int32 limit = 2;
-    int64 totalCount = 3;
-    repeated Stock entries = 4;
+  int32 offset = 1;
+  int32 limit = 2;
+  int64 totalCount = 3;
+  repeated Stock entries = 4;
 }
 
 message Stock {
-    uint64 id = 1;
-    google.protobuf.Timestamp createdAt = 2;
-    google.protobuf.Timestamp updatedAt = 3;
-    google.protobuf.Timestamp deletedAt = 4;
-    string stockID = 5;
-    string name = 6;
-    string country = 7;
-    string category = 8;
-    string market = 9;
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp deletedAt = 4;
+  string stockID = 5;
+  string name = 6;
+  string country = 7;
+  string category = 8;
+  string market = 9;
 }
 
 message ListCategoriesRequest {}
 message ListCategoriesResponse {
-    repeated string entries = 1;
+  repeated string entries = 1;
 }
 
 message GetStakeConcentrationRequest {
-    string stockID = 1;
-    string date = 2;
+  string stockID = 1;
+  string date = 2;
 }
 
 message GetStakeConcentrationResponse {
-    StakeConcentration stakeConcentration = 1;
+  StakeConcentration stakeConcentration = 1;
 }
 
 message StakeConcentration {
-    uint64 id = 1;
-    google.protobuf.Timestamp createdAt = 2;
-    google.protobuf.Timestamp updatedAt = 3;
-    google.protobuf.Timestamp deletedAt = 4;
-    string stockID = 5;
-    string date = 6;
-    uint64 sumBuyShares = 7;
-    uint64 sumSellShares = 8;
-	float avgBuyPrice = 9;
-	float avgSellPrice = 10;
-	float concentration_1 = 11;
-	float concentration_5 = 12;
-	float concentration_10 = 13;
-	float concentration_20 = 14;
-	float concentration_60 = 15;
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp deletedAt = 4;
+  string stockID = 5;
+  string date = 6;
+  uint64 sumBuyShares = 7;
+  uint64 sumSellShares = 8;
+  float avgBuyPrice = 9;
+  float avgSellPrice = 10;
+  float concentration_1 = 11;
+  float concentration_5 = 12;
+  float concentration_10 = 13;
+  float concentration_20 = 14;
+  float concentration_60 = 15;
 }
 
 message ListThreePrimaryRequest {
-    int32 offset = 1;
-    int32 limit = 2;
-    ListThreePrimarySearchParams searchParams = 3;
+  int32 offset = 1;
+  int32 limit = 2;
+  ListThreePrimarySearchParams searchParams = 3;
 }
 
 message ListThreePrimarySearchParams {
-    string stockID = 1;
-    string start = 2;
-    string end = 3;
+  string stockID = 1;
+  string start = 2;
+  string end = 3;
 }
 
 message ListThreePrimaryResponse {
-    int32 offset = 1;
-    int32 limit = 2;
-    int64 totalCount = 3;
-    repeated ThreePrimary entries = 4;
+  int32 offset = 1;
+  int32 limit = 2;
+  int64 totalCount = 3;
+  repeated ThreePrimary entries = 4;
 }
 
 message ThreePrimary {
-    uint64 id = 1;
-    google.protobuf.Timestamp createdAt = 2;
-    google.protobuf.Timestamp updatedAt = 3;
-    google.protobuf.Timestamp deletedAt = 4;
-    string stockID = 5;
-    string date = 6;
-    int64 foreignTradeShares = 7;
-    int64 trustTradeShares = 8;
-    int64 dealerTradeShares = 9;
-    int64 hedgingTradeShares = 10;
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp deletedAt = 4;
+  string stockID = 5;
+  string date = 6;
+  int64 foreignTradeShares = 7;
+  int64 trustTradeShares = 8;
+  int64 dealerTradeShares = 9;
+  int64 hedgingTradeShares = 10;
 }
 
 message ListSelectionRequest {
-    string date = 1;
-    bool strict = 2;
+  string date = 1;
+  bool strict = 2;
 }
 
 message ListSelectionResponse {
-    repeated Selection entries = 1;
+  repeated Selection entries = 1;
 }
 
 message Selection {
-    string stockID = 1;
-    string name = 2;
-    string category = 3;
-    string date = 4;
-    float concentration_1 = 5;
-    float concentration_5 = 6;
-    float concentration_10 = 7;
-    float concentration_20 = 8;
-    float concentration_60 = 9;
-    int32 volume = 10;
-    int32 foreign = 11;
-    int32 trust = 12;
-    int32 dealer = 13;
-    int32 hedging = 14;
-    float open = 15;
-    float close = 16;
-    float high = 17;
-    float low = 18;
-    float diff = 19;
-    int32 trust10 = 20;
-    int32 foreign10 = 21;
-    float quoteChange = 22;
+  string stockID = 1;
+  string name = 2;
+  string category = 3;
+  string date = 4;
+  float concentration_1 = 5;
+  float concentration_5 = 6;
+  float concentration_10 = 7;
+  float concentration_20 = 8;
+  float concentration_60 = 9;
+  int32 volume = 10;
+  int32 foreign = 11;
+  int32 trust = 12;
+  int32 dealer = 13;
+  int32 hedging = 14;
+  float open = 15;
+  float close = 16;
+  float high = 17;
+  float low = 18;
+  float diff = 19;
+  int32 trust10 = 20;
+  int32 foreign10 = 21;
+  float quoteChange = 22;
+}
+
+message ListPickedStocksRequest {}
+
+message ListPickedStocksResponse {
+  repeated Selection entries = 1;
 }

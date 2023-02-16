@@ -11,17 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package idal
+package entity
 
-const (
-	MaxRow = 500
-)
+type PickedStock struct {
+	Model
 
-type IDAL interface {
-	IStockDAL
-	IDailyCloseDAL
-	IStakeConcentrationDAL
-	IThreePrimaryDAL
-	ISelectionDAL
-	IPickedStockDAL
+	StockID string `gorm:"column:stock_id" json:"stockId"`
+}
+
+func (PickedStock) TableName() string {
+	return "picked_stocks"
 }

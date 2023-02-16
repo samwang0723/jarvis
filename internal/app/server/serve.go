@@ -207,7 +207,7 @@ _______________________________________________
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
-	// start revered proxy http server
+	// start reversed proxy http server
 	go s.startGRPCGateway(ctx, addr)
 
 	lis, err := net.Listen("tcp", addr)
