@@ -64,6 +64,11 @@ service JarvisV1 {
 
   rpc ListPickedStocks(ListPickedStocksRequest) returns (ListPickedStocksResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {get: "/v1/pickedstocks"};
+  }
+
+  rpc InsertPickedStocks(InsertPickedStocksRequest) returns (InsertPickedStocksResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
     option (google.api.http) = {
       post: "/v1/pickedstocks"
       body: "*"
@@ -247,4 +252,15 @@ message ListPickedStocksRequest {}
 
 message ListPickedStocksResponse {
   repeated Selection entries = 1;
+}
+
+message InsertPickedStocksRequest {
+  repeated string stockIDs = 1;
+}
+
+message InsertPickedStocksResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
 }

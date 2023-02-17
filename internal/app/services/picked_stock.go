@@ -17,7 +17,6 @@ package services
 import (
 	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
@@ -33,10 +32,7 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, id entity.ID) e
 	return s.dal.DeletePickedStockByID(ctx, id)
 }
 
-func (s *serviceImpl) ListPickedStock(
-	ctx context.Context,
-	req *dto.ListPickedStocksRequest,
-) ([]*entity.Selection, error) {
+func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {
 	objs, err := s.dal.ListPickedStocks(ctx)
 	if err != nil {
 		return nil, err

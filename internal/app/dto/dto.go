@@ -17,6 +17,11 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
+const (
+	StatusSuccess = 200
+	StatusError   = 500
+)
+
 type ListDailyCloseSearchParams struct {
 	StockID string  `json:"stockID"`
 	End     *string `json:"end,omitempty"`
@@ -93,8 +98,17 @@ type ListSelectionResponse struct {
 	Entries []*entity.Selection `json:"entries"`
 }
 
-type ListPickedStocksRequest struct{}
-
 type ListPickedStocksResponse struct {
 	Entries []*entity.Selection `json:"entries"`
+}
+
+type InsertPickedStocksRequest struct {
+	StockIDs []string `json:"stockIDs"`
+}
+
+type InsertPickedStocksResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
 }

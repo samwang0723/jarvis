@@ -86,10 +86,22 @@ func (s *server) ListPickedStocks(
 	ctx context.Context,
 	req *pb.ListPickedStocksRequest,
 ) (*pb.ListPickedStocksResponse, error) {
-	res, err := s.Handler().ListPickedStocks(ctx, dto.ListPickedStocksRequestFromPB(req))
+	res, err := s.Handler().ListPickedStocks(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return dto.ListPickedStocksResponseToPB(res), nil
+}
+
+func (s *server) InsertPickedStocks(
+	ctx context.Context,
+	req *pb.InsertPickedStocksRequest,
+) (*pb.InsertPickedStocksResponse, error) {
+	res, err := s.Handler().InsertPickedStocks(ctx, dto.InsertPickedStocksRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.InsertPickedStocksResponseToPB(res), nil
 }

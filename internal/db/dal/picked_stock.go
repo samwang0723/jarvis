@@ -15,12 +15,15 @@ package dal
 
 import (
 	"context"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
 
 	"gorm.io/gorm/clause"
 )
+
+var ErrNoPickedStock = errors.New("no picked stock")
 
 func (i *dalImpl) CreatePickedStock(ctx context.Context, obj *entity.PickedStock) error {
 	err := i.db.Create(obj).Error
@@ -49,15 +52,15 @@ func (i *dalImpl) DeletePickedStockByID(ctx context.Context, id entity.ID) error
 }
 
 func (i *dalImpl) ListPickedStocks(ctx context.Context) (objs []*entity.Selection, err error) {
-	var pickedStocks []*entity.PickedStock
-	if err := i.db.Find(&pickedStocks).Error; err != nil {
+	pickedStocks := []string{}
+	if err := i.db.Raw(`select stock_id from picked_stocks 
+                        where deleted_at is null`).Scan(&pickedStocks).Error; err != nil {
 		return nil, err
 	}
 
-	stockIds := []string{}
-	for _, pickedStock := range pickedStocks {
-		stockIds = append(stockIds, pickedStock.StockID)
+	if len(pickedStocks) == 0 {
+		return nil, ErrNoPickedStock
 	}
 
-	return i.ListSelectionsBasedOnPickedStocks(ctx, stockIds)
+	return i.ListSelectionsBasedOnPickedStocks(ctx, pickedStocks)
 }

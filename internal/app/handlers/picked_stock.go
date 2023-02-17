@@ -18,13 +18,40 @@ import (
 	"context"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (h *handlerImpl) ListPickedStocks(
+func (h *handlerImpl) InsertPickedStocks(
 	ctx context.Context,
-	req *dto.ListPickedStocksRequest,
-) (*dto.ListPickedStocksResponse, error) {
-	entries, err := h.dataService.ListPickedStock(ctx, req)
+	req *dto.InsertPickedStocksRequest,
+) (*dto.InsertPickedStocksResponse, error) {
+	objs := []*entity.PickedStock{}
+	for _, stock := range req.StockIDs {
+		objs = append(objs, &entity.PickedStock{
+			StockID: stock,
+		})
+	}
+
+	err := h.dataService.BatchUpsertPickedStocks(ctx, objs)
+	if err != nil {
+		return &dto.InsertPickedStocksResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: err.Error(),
+			Success:      false,
+		}, err
+	}
+
+	return &dto.InsertPickedStocksResponse{
+		Status:       dto.StatusSuccess,
+		ErrorCode:    "",
+		ErrorMessage: "",
+		Success:      true,
+	}, nil
+}
+
+func (h *handlerImpl) ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error) {
+	entries, err := h.dataService.ListPickedStock(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -74,7 +74,7 @@
       }
     },
     "/v1/pickedstocks": {
-      "post": {
+      "get": {
         "operationId": "JarvisV1_ListPickedStocks",
         "responses": {
           "200": {
@@ -90,13 +90,33 @@
             }
           }
         },
+        "tags": [
+          "JarvisV1"
+        ]
+      },
+      "post": {
+        "operationId": "JarvisV1_InsertPickedStocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1InsertPickedStocksResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1ListPickedStocksRequest"
+              "$ref": "#/definitions/v1InsertPickedStocksRequest"
             }
           }
         ],
@@ -364,6 +384,35 @@
         }
       }
     },
+    "v1InsertPickedStocksRequest": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1InsertPickedStocksResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        }
+      }
+    },
     "v1ListCategoriesResponse": {
       "type": "object",
       "properties": {
@@ -427,9 +476,6 @@
           "type": "string"
         }
       }
-    },
-    "v1ListPickedStocksRequest": {
-      "type": "object"
     },
     "v1ListPickedStocksResponse": {
       "type": "object",

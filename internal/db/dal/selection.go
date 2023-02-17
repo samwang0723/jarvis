@@ -175,10 +175,54 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 			left join stocks c on c.stock_id = s.stock_id
 			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
 			left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = ?)
+                        where s.stock_id in (?)
 			and s.exchange_date = ?
-			order by s.stock_id`, date, date, date).Scan(&objs).Error
+			order by s.stock_id`, date, date, pickedStocks, date).Scan(&objs).Error
 	if err != nil {
 		return nil, err
+	}
+
+	output, err := i.concentrationBackfill(objs, pickedStocks)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+//nolint:nolintlint,cyclop,gocognit,gocyclo
+func (i *dalImpl) concentrationBackfill(objs []*entity.Selection, stockIDs []string) ([]*entity.Selection, error) {
+	tList, err := i.retrieveThreePrimaryHistory(stockIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	currentStockID := ""
+	currentIdx := 0
+	currentTrustSum := int64(0)
+	currentForeignSum := int64(0)
+	for _, t := range tList {
+		if currentStockID != t.StockID {
+			currentStockID = t.StockID
+			currentIdx = 0
+			currentTrustSum = 0
+			currentForeignSum = 0
+		}
+
+		currentIdx++
+
+		currentTrustSum += t.Trust
+		currentForeignSum += t.Foreign
+
+		if currentIdx == threePrimarySumCount {
+			for _, obj := range objs {
+				if obj.StockID == currentStockID {
+					obj.Trust10 = int(currentTrustSum)
+					obj.Foreign10 = int(currentForeignSum)
+					obj.QuoteChange = helper.RoundDecimalTwo((1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent)
+				}
+			}
+		}
 	}
 
 	return objs, nil
@@ -351,7 +395,7 @@ func (i *dalImpl) AdvancedFiltering(
 		if (selected && !strict) || (selected && selectedStrict) {
 			ref.Trust10 = int(v.Trust)
 			ref.Foreign10 = int(v.Foreign)
-			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / v.LastClose)) * percent)
+			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent)
 			output = append(output, ref)
 		}
 	}
