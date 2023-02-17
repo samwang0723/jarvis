@@ -147,8 +147,18 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		return nil, err
 	}
 
-	stockSymbols := make([]string, len(objs))
-	for idx, obj := range objs {
+	var picked []*realTimeList
+	err = i.db.Raw(`select p.stock_id, c.market
+                        from picked_stocks p
+                        left join stocks c on c.stock_id = p.stock_id where p.deleted_at is null`).Scan(&picked).Error
+	if err != nil {
+		return nil, err
+	}
+
+	mergedList := merge(objs, picked)
+
+	stockSymbols := make([]string, len(mergedList))
+	for idx, obj := range mergedList {
 		stockSymbols[idx] = fmt.Sprintf("%s_%s.tw", obj.Market, obj.StockID)
 	}
 
@@ -495,4 +505,28 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 	}
 
 	return pList, nil
+}
+
+func merge(objs, picked []*realTimeList) []*realTimeList {
+	// Create a map to keep track of seen StockIDs
+	seen := make(map[string]bool)
+
+	// Iterate over the objs list and add each object to the merged list if its StockID has not been seen before
+	var merged []*realTimeList
+	for _, obj := range objs {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	// Iterate over the picked list and add each object to the merged list if its StockID has not been seen before
+	for _, obj := range picked {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	return merged
 }
