@@ -109,6 +109,7 @@
                             <th>成交價</th>
                             <th>漲跌幅</th>
                             <th>成交量</th>
+                            <th>自選股</th>
                         </tr>
                     </thead>
                 </table>
@@ -199,6 +200,8 @@
                     if (count >= 9) {
                         val["rate"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
+
+                    val["action"] = '<button id="' + val.stockID + '" type="button" class="btn btn-primary">加入</button>';
                 });
 
                 $('#myTable').DataTable({
@@ -254,6 +257,7 @@
                         {"data": "close", "sWidth": "60px", "className": "text-right"},
                         {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
                         {"data": "volume", "sWidth": "60px", "className": "text-right"},
+                        {"data": "action", "sWidth": "60px", "className": "text-right"},
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
@@ -369,6 +373,16 @@
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();
+    });
+
+    $(document).on('click', '.btn-primary', function () {
+        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks";
+        var dataJSON = {stockIDs: [$(this).attr('id')]};
+
+        $.post(requestURL, dataJSON, function (response) {
+            console.log('Response: ' + response);
+            // handle response data here
+        });
     });
 
     function getUrlParameter(sParam) {

@@ -180,6 +180,8 @@
                     count += val.concentration20 > 0 ? 1 : 0;
                     count += val.concentration60 > 0 ? 1 : 0;
 
+                    val["rate"] = '<span class="badge badge-secondary" style="font-size:1.4rem;"> - </span>';
+
                     if (count == 4) {
                         val["rate"] = '<span class="badge progress-bar-success" style="font-size:1.4rem;">四星</span>';
                     } else if (count == 5) {
