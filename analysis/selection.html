@@ -61,7 +61,7 @@
         }
 
         div.container {
-            width: 620px;
+            width: 700px;
         }
 
         div.target {
@@ -377,9 +377,9 @@
 
     $(document).on('click', '.btn-primary', function () {
         var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks";
-        var dataJSON = {stockIDs: [$(this).attr('id')]};
+        var dataJSON = {"stockIDs": [$(this).attr('id')]};
 
-        $.post(requestURL, dataJSON, function (response) {
+        $.post(requestURL, JSON.stringify(dataJSON), function (response) {
             console.log('Response: ' + response);
             // handle response data here
         });
