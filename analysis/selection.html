@@ -61,7 +61,7 @@
         }
 
         div.container {
-            width: 700px;
+            width: 730px;
         }
 
         div.target {
@@ -80,10 +80,20 @@
             align-items: center;
             justify-content: space-between;
         }
+
+        #alert {
+            position: fixed;
+            z-index: 9999;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
     </style>
 </head>
 
 <body>
+    <div id="alert" class="alert" role="alert"></div>
+
     <div class="container">
         <br>
         <!-- Nav tabs -->
@@ -381,7 +391,20 @@
 
         $.post(requestURL, JSON.stringify(dataJSON), function (response) {
             console.log('Response: ' + response);
-            // handle response data here
+            // check if the response was successful
+            if (response.success == true) {
+                // display success message in the alert
+                $('#alert').addClass('alert-success').text('成功加入自選股');
+            } else {
+                // display failure message in the alert
+                $('#alert').addClass('alert-danger').text('加入自選股失敗');
+            }
+            // show the alert
+            $('#alert').show();
+            // dismiss the alert after 3 seconds
+            setTimeout(function () {
+                $('#alert').hide();
+            }, 3000);
         });
     });
 
