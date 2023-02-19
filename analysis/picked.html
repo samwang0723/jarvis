@@ -84,6 +84,7 @@
 </head>
 
 <body>
+    <div id="alert" class="alert" role="alert"></div>
     <div class="container">
         <br>
         <!-- Nav tabs -->
@@ -99,7 +100,7 @@
         <!-- Tab panes -->
         <div class="tab-content">
             <div role="tabpanel" class="tab-pane fade in active" id="tab1">
-                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
@@ -109,13 +110,14 @@
                             <th>成交價</th>
                             <th>漲跌幅</th>
                             <th>成交量</th>
+                            <th>刪除自選</th>
                         </tr>
                     </thead>
                 </table>
             </div>
 
             <div role="tabpanel" class="tab-pane fade" id="tab2">
-                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
@@ -132,7 +134,7 @@
             </div>
 
             <div role="tabpanel" class="tab-pane fade" id="tab3">
-                <table id="myTable3" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable3" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
@@ -196,6 +198,8 @@
                     if (count >= 9) {
                         val["rate"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
+
+                    val["action"] = '<button id="' + val.stockID + '" type="button" class="btn btn-danger">刪除</button>';
                 });
 
                 $('#myTable').DataTable({
@@ -251,6 +255,7 @@
                         {"data": "close", "sWidth": "60px", "className": "text-right"},
                         {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
                         {"data": "volume", "sWidth": "60px", "className": "text-right"},
+                        {"data": "action", "sWidth": "60px", "className": "text-right"},
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
@@ -366,6 +371,36 @@
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();
+    });
+
+    $(document).on('click', '.btn-danger', function () {
+        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks/" + $(this).attr('id');
+
+        $.ajax({
+            type: "DELETE",
+            url: requestURL,
+            data: null,
+            success: function (response) {
+                console.log('Response: ' + response);
+
+                if (response.success == true) {
+                    // display success message in the alert
+                    $('#alert').addClass('alert-success').text('成功加入自選股');
+                } else {
+                    // display failure message in the alert
+                    $('#alert').addClass('alert-danger').text('加入自選股失敗');
+                }
+                // show the alert
+                $('#alert').show();
+                // dismiss the alert after 3 seconds
+                setTimeout(function () {
+                    $('#alert').hide();
+                }, 3000);
+            },
+            error: function (xhr, status, error) {
+                console.log("Failed to delete item: " + error);
+            }
+        });
     });
 
     function getUrlParameter(sParam) {

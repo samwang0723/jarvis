@@ -50,6 +50,28 @@ func (h *handlerImpl) InsertPickedStocks(
 	}, nil
 }
 
+func (h *handlerImpl) DeletePickedStocks(
+	ctx context.Context,
+	req *dto.DeletePickedStocksRequest,
+) (*dto.DeletePickedStocksResponse, error) {
+	err := h.dataService.DeletePickedStockByID(ctx, req.StockID)
+	if err != nil {
+		return &dto.DeletePickedStocksResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: err.Error(),
+			Success:      false,
+		}, err
+	}
+
+	return &dto.DeletePickedStocksResponse{
+		Status:       dto.StatusSuccess,
+		ErrorCode:    "",
+		ErrorMessage: "",
+		Success:      true,
+	}, nil
+}
+
 func (h *handlerImpl) ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error) {
 	entries, err := h.dataService.ListPickedStock(ctx)
 	if err != nil {

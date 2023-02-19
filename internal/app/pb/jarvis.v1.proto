@@ -74,6 +74,11 @@ service JarvisV1 {
       body: "*"
     };
   }
+
+  rpc DeletePickedStocks(DeletePickedStocksRequest) returns (DeletePickedStocksResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {delete: "/v1/pickedstocks/{stockID}"};
+  }
 }
 
 message ListDailyCloseRequest {
@@ -259,6 +264,17 @@ message InsertPickedStocksRequest {
 }
 
 message InsertPickedStocksResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
+}
+
+message DeletePickedStocksRequest {
+  string stockID = 1;
+}
+
+message DeletePickedStocksResponse {
   bool success = 1;
   int32 status = 2;
   string error_message = 3;

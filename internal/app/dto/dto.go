@@ -112,3 +112,14 @@ type InsertPickedStocksResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type DeletePickedStocksRequest struct {
+	StockID string `json:"stockID"`
+}
+
+type DeletePickedStocksResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}

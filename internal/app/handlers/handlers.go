@@ -34,6 +34,7 @@ type IHandler interface {
 	RetrieveRealTimePrice(ctx context.Context, schedule string) error
 	ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error)
 	InsertPickedStocks(ctx context.Context, req *dto.InsertPickedStocksRequest) (*dto.InsertPickedStocksResponse, error)
+	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
 }
 
 type handlerImpl struct {

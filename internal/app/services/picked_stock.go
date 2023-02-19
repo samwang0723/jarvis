@@ -24,12 +24,8 @@ func (s *serviceImpl) BatchUpsertPickedStocks(ctx context.Context, objs []*entit
 	return s.dal.BatchUpsertPickedStock(ctx, objs)
 }
 
-func (s *serviceImpl) CreatePickedStock(ctx context.Context, obj *entity.PickedStock) error {
-	return s.dal.CreatePickedStock(ctx, obj)
-}
-
-func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, id entity.ID) error {
-	return s.dal.DeletePickedStockByID(ctx, id)
+func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string) error {
+	return s.dal.DeletePickedStockByID(ctx, stockID)
 }
 
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {

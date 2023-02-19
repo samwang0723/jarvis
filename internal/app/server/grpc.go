@@ -105,3 +105,15 @@ func (s *server) InsertPickedStocks(
 
 	return dto.InsertPickedStocksResponseToPB(res), nil
 }
+
+func (s *server) DeletePickedStocks(
+	ctx context.Context,
+	req *pb.DeletePickedStocksRequest,
+) (*pb.DeletePickedStocksResponse, error) {
+	res, err := s.Handler().DeletePickedStocks(ctx, dto.DeletePickedStocksRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.DeletePickedStocksResponseToPB(res), nil
+}

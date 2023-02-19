@@ -47,8 +47,7 @@ type IService interface {
 	CronjobPresetRealtimMonitoringKeys(ctx context.Context) error
 	RetrieveRealTimePrice(ctx context.Context) error
 	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
-	CreatePickedStock(ctx context.Context, obj *entity.PickedStock) error
-	DeletePickedStockByID(ctx context.Context, id entity.ID) error
+	DeletePickedStockByID(ctx context.Context, stockID string) error
 	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)
 }
 

@@ -558,3 +558,29 @@ func InsertPickedStocksResponseToPB(in *InsertPickedStocksResponse) *pb.InsertPi
 		ErrorMessage: pbErrorMessage,
 	}
 }
+
+func DeletePickedStocksRequestFromPB(in *pb.DeletePickedStocksRequest) *DeletePickedStocksRequest {
+	pbStockID := in.StockID
+
+	return &DeletePickedStocksRequest{
+		StockID: pbStockID,
+	}
+}
+
+func DeletePickedStocksResponseToPB(in *DeletePickedStocksResponse) *pb.DeletePickedStocksResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.DeletePickedStocksResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}

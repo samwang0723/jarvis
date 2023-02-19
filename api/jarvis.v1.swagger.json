@@ -125,6 +125,36 @@
         ]
       }
     },
+    "/v1/pickedstocks/{stockID}": {
+      "delete": {
+        "operationId": "JarvisV1_DeletePickedStocks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeletePickedStocksResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "stockID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/selections": {
       "post": {
         "operationId": "JarvisV1_ListSelections",
@@ -362,6 +392,24 @@
         },
         "average": {
           "$ref": "#/definitions/v1Average"
+        }
+      }
+    },
+    "v1DeletePickedStocksResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
         }
       }
     },

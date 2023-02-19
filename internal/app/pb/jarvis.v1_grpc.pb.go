@@ -31,6 +31,7 @@ type JarvisV1Client interface {
 	ListSelections(ctx context.Context, in *ListSelectionRequest, opts ...grpc.CallOption) (*ListSelectionResponse, error)
 	ListPickedStocks(ctx context.Context, in *ListPickedStocksRequest, opts ...grpc.CallOption) (*ListPickedStocksResponse, error)
 	InsertPickedStocks(ctx context.Context, in *InsertPickedStocksRequest, opts ...grpc.CallOption) (*InsertPickedStocksResponse, error)
+	DeletePickedStocks(ctx context.Context, in *DeletePickedStocksRequest, opts ...grpc.CallOption) (*DeletePickedStocksResponse, error)
 }
 
 type jarvisV1Client struct {
@@ -113,6 +114,15 @@ func (c *jarvisV1Client) InsertPickedStocks(ctx context.Context, in *InsertPicke
 	return out, nil
 }
 
+func (c *jarvisV1Client) DeletePickedStocks(ctx context.Context, in *DeletePickedStocksRequest, opts ...grpc.CallOption) (*DeletePickedStocksResponse, error) {
+	out := new(DeletePickedStocksResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/DeletePickedStocks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JarvisV1Server is the server API for JarvisV1 service.
 // All implementations should embed UnimplementedJarvisV1Server
 // for forward compatibility
@@ -125,6 +135,7 @@ type JarvisV1Server interface {
 	ListSelections(context.Context, *ListSelectionRequest) (*ListSelectionResponse, error)
 	ListPickedStocks(context.Context, *ListPickedStocksRequest) (*ListPickedStocksResponse, error)
 	InsertPickedStocks(context.Context, *InsertPickedStocksRequest) (*InsertPickedStocksResponse, error)
+	DeletePickedStocks(context.Context, *DeletePickedStocksRequest) (*DeletePickedStocksResponse, error)
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
@@ -154,6 +165,9 @@ func (UnimplementedJarvisV1Server) ListPickedStocks(context.Context, *ListPicked
 }
 func (UnimplementedJarvisV1Server) InsertPickedStocks(context.Context, *InsertPickedStocksRequest) (*InsertPickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertPickedStocks not implemented")
+}
+func (UnimplementedJarvisV1Server) DeletePickedStocks(context.Context, *DeletePickedStocksRequest) (*DeletePickedStocksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePickedStocks not implemented")
 }
 
 // UnsafeJarvisV1Server may be embedded to opt out of forward compatibility for this service.
@@ -311,6 +325,24 @@ func _JarvisV1_InsertPickedStocks_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JarvisV1_DeletePickedStocks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePickedStocksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisV1Server).DeletePickedStocks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.v1.JarvisV1/DeletePickedStocks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisV1Server).DeletePickedStocks(ctx, req.(*DeletePickedStocksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JarvisV1_ServiceDesc is the grpc.ServiceDesc for JarvisV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -349,6 +381,10 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InsertPickedStocks",
 			Handler:    _JarvisV1_InsertPickedStocks_Handler,
+		},
+		{
+			MethodName: "DeletePickedStocks",
+			Handler:    _JarvisV1_DeletePickedStocks_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
