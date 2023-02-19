@@ -44,7 +44,7 @@ type IService interface {
 	StartCron()
 	StopCron()
 	AddJob(ctx context.Context, spec string, job func()) error
-	CronjobPresetRealtimMonitoringKeys(ctx context.Context) error
+	CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error
 	RetrieveRealTimePrice(ctx context.Context) error
 	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
 	DeletePickedStockByID(ctx context.Context, stockID string) error

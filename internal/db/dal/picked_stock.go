@@ -34,7 +34,7 @@ func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.Pic
 }
 
 func (i *dalImpl) DeletePickedStockByID(ctx context.Context, stockID string) error {
-	err := i.db.Raw(`update picked_stocks set deleted_at = NOW() where stock_id = ?`, stockID).Error
+	err := i.db.Exec(`update picked_stocks set deleted_at = NOW() where stock_id = ?`, stockID).Error
 
 	return err
 }

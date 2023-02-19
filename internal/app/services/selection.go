@@ -152,7 +152,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	return objs, nil
 }
 
-func (s *serviceImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context) error {
+func (s *serviceImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error {
 	keys, err := s.dal.GetRealTimeMonitoringKeys(ctx)
 	if err != nil {
 		return err
