@@ -38,6 +38,7 @@ COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=build_base /app/api/jarvis.v1.swagger.json /api/jarvis.v1.swagger.json
 COPY --from=build_base /app/configs/config.prod.yaml /configs/config.prod.yaml
+COPY --from=build_base /app/analysis /analysis
 COPY --from=build_base /jarvis-api /jarvis-api
 
 # This container exposes ports to the outside world

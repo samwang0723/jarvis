@@ -33,9 +33,9 @@ func (h *handlerImpl) ListSelections(
 	}, nil
 }
 
-func (h *handlerImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error {
+func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context, schedule string) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
-		err := h.dataService.CronjobPresetRealtimMonitoringKeys(ctx)
+		err := h.dataService.CronjobPresetRealtimeMonitoringKeys(ctx)
 		if err != nil {
 			h.logger.Error().Msgf("failed to preset real time keys: %s", err)
 		}

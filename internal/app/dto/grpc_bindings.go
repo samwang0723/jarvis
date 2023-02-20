@@ -463,6 +463,22 @@ func ListSelectionResponseToPB(in *ListSelectionResponse) *pb.ListSelectionRespo
 	}
 }
 
+func ListPickedStocksResponseToPB(in *ListPickedStocksResponse) *pb.ListPickedStocksResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Selection, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, SelectionToPB(obj))
+	}
+
+	return &pb.ListPickedStocksResponse{
+		Entries: entries,
+	}
+}
+
 func SelectionToPB(in *entity.Selection) *pb.Selection {
 	if in == nil {
 		return nil
@@ -514,5 +530,57 @@ func SelectionToPB(in *entity.Selection) *pb.Selection {
 		Trust10:          pbTrust10,
 		Foreign10:        pbForeign10,
 		QuoteChange:      pbQuoteChange,
+	}
+}
+
+func InsertPickedStocksRequestFromPB(in *pb.InsertPickedStocksRequest) *InsertPickedStocksRequest {
+	stockIDs := in.StockIDs
+
+	return &InsertPickedStocksRequest{
+		StockIDs: stockIDs,
+	}
+}
+
+func InsertPickedStocksResponseToPB(in *InsertPickedStocksResponse) *pb.InsertPickedStocksResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.InsertPickedStocksResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func DeletePickedStocksRequestFromPB(in *pb.DeletePickedStocksRequest) *DeletePickedStocksRequest {
+	pbStockID := in.StockID
+
+	return &DeletePickedStocksRequest{
+		StockID: pbStockID,
+	}
+}
+
+func DeletePickedStocksResponseToPB(in *DeletePickedStocksResponse) *pb.DeletePickedStocksResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.DeletePickedStocksResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
 	}
 }

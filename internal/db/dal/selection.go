@@ -97,9 +97,10 @@ func (i *dalImpl) GetLatestChip(ctx context.Context) ([]*entity.Selection, error
 	}
 
 	var objs []*entity.Selection
-	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
-			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc,
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
@@ -147,12 +148,96 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		return nil, err
 	}
 
-	stockSymbols := make([]string, len(objs))
-	for idx, obj := range objs {
+	var picked []*realTimeList
+	err = i.db.Raw(`select p.stock_id, c.market
+                        from picked_stocks p
+                        left join stocks c on c.stock_id = p.stock_id where p.deleted_at is null`).Scan(&picked).Error
+	if err != nil {
+		return nil, err
+	}
+
+	mergedList := merge(objs, picked)
+
+	stockSymbols := make([]string, len(mergedList))
+	for idx, obj := range mergedList {
 		stockSymbols[idx] = fmt.Sprintf("%s_%s.tw", obj.Market, obj.StockID)
 	}
 
 	return stockSymbols, nil
+}
+
+func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
+	ctx context.Context,
+	pickedStocks []string,
+) (objs []*entity.Selection, err error) {
+	var date string
+	err = i.db.Raw(`select exchange_date from stake_concentration 
+			order by exchange_date desc limit 1;`).Scan(&date).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
+			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
+			floor(t.dealer_trade_shares/1000) as dealer
+			from stake_concentration s
+			left join stocks c on c.stock_id = s.stock_id
+			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
+			left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = ?)
+                        where s.stock_id in (?)
+			and s.exchange_date = ?
+			order by s.stock_id`, date, date, pickedStocks, date).Scan(&objs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := i.concentrationBackfill(objs, pickedStocks)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+//nolint:nolintlint,cyclop,gocognit,gocyclo
+func (i *dalImpl) concentrationBackfill(objs []*entity.Selection, stockIDs []string) ([]*entity.Selection, error) {
+	tList, err := i.retrieveThreePrimaryHistory(stockIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	currentStockID := ""
+	currentIdx := 0
+	currentTrustSum := int64(0)
+	currentForeignSum := int64(0)
+	for _, t := range tList {
+		if currentStockID != t.StockID {
+			currentStockID = t.StockID
+			currentIdx = 0
+			currentTrustSum = 0
+			currentForeignSum = 0
+		}
+
+		currentIdx++
+
+		currentTrustSum += t.Trust
+		currentForeignSum += t.Foreign
+
+		if currentIdx == threePrimarySumCount {
+			for _, obj := range objs {
+				if obj.StockID == currentStockID {
+					obj.Trust10 = int(currentTrustSum)
+					obj.Foreign10 = int(currentForeignSum)
+					obj.QuoteChange = helper.RoundDecimalTwo((1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent)
+				}
+			}
+		}
+	}
+
+	return objs, nil
 }
 
 func (i *dalImpl) ListSelections(
@@ -160,9 +245,10 @@ func (i *dalImpl) ListSelections(
 	date string,
 	strict bool,
 ) (objs []*entity.Selection, err error) {
-	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
-			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc,
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
@@ -322,7 +408,7 @@ func (i *dalImpl) AdvancedFiltering(
 		if (selected && !strict) || (selected && selectedStrict) {
 			ref.Trust10 = int(v.Trust)
 			ref.Foreign10 = int(v.Foreign)
-			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / v.LastClose)) * percent)
+			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent)
 			output = append(output, ref)
 		}
 	}
@@ -422,4 +508,28 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 	}
 
 	return pList, nil
+}
+
+func merge(objs, picked []*realTimeList) []*realTimeList {
+	// Create a map to keep track of seen StockIDs
+	seen := make(map[string]bool)
+
+	// Iterate over the objs list and add each object to the merged list if its StockID has not been seen before
+	var merged []*realTimeList
+	for _, obj := range objs {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	// Iterate over the picked list and add each object to the merged list if its StockID has not been seen before
+	for _, obj := range picked {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	return merged
 }

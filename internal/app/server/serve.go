@@ -207,7 +207,7 @@ _______________________________________________
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
-	// start revered proxy http server
+	// start reversed proxy http server
 	go s.startGRPCGateway(ctx, addr)
 
 	lis, err := net.Listen("tcp", addr)
@@ -270,7 +270,7 @@ func (s *server) Run(ctx context.Context) error {
 	go func(ctx context.Context, svc *server) {
 		defer waitGroup.Done()
 
-		err := svc.Handler().CronjobPresetRealtimMonitoringKeys(childCtx, "00 6 * * 1-5")
+		err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "00 6 * * 1-5")
 		if err != nil {
 			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
 		}

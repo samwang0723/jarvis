@@ -30,6 +30,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -46,6 +47,7 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out code
         uses: actions/checkout@v3
