@@ -222,9 +222,23 @@
                     scrollX: true,
                     columnDefs: [
                         {
-                            targets: [0, 1, 2],
+                            targets: [0, 1],
                             searchable: true,
                             responsivePriority: 1
+                        },
+                        {
+                            targets: [2],
+                            searchable: true,
+                            responsivePriority: 1,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                current = $(td).text();
+                                category = current.split(".")[0];
+                                if (current.includes(".tse")) {
+                                    $(td).html(category + ' <span class="badge badge-primary" style="font-size:1.4rem;">上市</span>');
+                                } else if (current.includes(".otc")) {
+                                    $(td).html(category + ' <span class="badge badge-info" style="font-size:1.4rem;">上櫃</span>');
+                                }
+                            }
                         },
                         {
                             targets: [3],

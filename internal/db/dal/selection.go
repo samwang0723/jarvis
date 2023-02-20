@@ -97,9 +97,10 @@ func (i *dalImpl) GetLatestChip(ctx context.Context) ([]*entity.Selection, error
 	}
 
 	var objs []*entity.Selection
-	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
-			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc,
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
@@ -176,9 +177,10 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 		return nil, err
 	}
 
-	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
-			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc,
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
@@ -243,9 +245,10 @@ func (i *dalImpl) ListSelections(
 	date string,
 	strict bool,
 ) (objs []*entity.Selection, err error) {
-	err = i.db.Raw(`select s.stock_id, c.name, c.category, s.exchange_date, d.open, d.close, d.high, d.low, d.price_diff,
-			s.concentration_1, s.concentration_5, s.concentration_10, s.concentration_20, s.concentration_60
-			, floor(d.trade_shares/1000) as volume, floor(t.foreign_trade_shares/1000) as foreignc,
+	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
+                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
+                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
+                        floor(t.foreign_trade_shares/1000) as foreignc,
 			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
