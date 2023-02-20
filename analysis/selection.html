@@ -88,6 +88,10 @@
             left: 50%;
             transform: translateX(-50%);
         }
+
+        p.existed {
+            color: lightgrey;
+        }
     </style>
 </head>
 
@@ -168,6 +172,10 @@
 
 <script>
     $(document).ready(function () {
+        loadSelfPicked();
+    });
+
+    function loadTable(selfPicked) {
         var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/selections";
         var dataJSON = {};
         dataJSON["date"] = getUrlParameter("date");
@@ -211,7 +219,11 @@
                         val["rate"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
 
-                    val["action"] = '<button id="' + val.stockID + '" type="button" class="btn btn-primary">加入</button>';
+                    if (selfPicked.includes(val.stockID)) {
+                        val["action"] = '<p class="existed">已加入</p>';
+                    } else {
+                        val["action"] = '<button id="' + val.stockID + '" type="button" class="btn btn-primary">加入</button>';
+                    }
                 });
 
                 $('#myTable').DataTable({
@@ -263,7 +275,7 @@
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
                         {"data": "name", "sWidth": "70px"},
-                        {"data": "category"},
+                        {"data": "category", "sWidth": "90px"},
                         {"data": "close", "sWidth": "60px", "className": "text-right"},
                         {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
                         {"data": "volume", "sWidth": "60px", "className": "text-right"},
@@ -377,8 +389,26 @@
             error: function () {
             }
         });
+    };
 
-    });
+    function loadSelfPicked() {
+        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks";
+        var result = [];
+
+        $.ajax({
+            type: "GET",
+            url: requestURL,
+            success: function (data) {
+                $.each(data.entries, function (_, val) {
+                    result.push(val.stockID);
+                });
+
+                loadTable(result);
+            },
+            error: function () {
+            }
+        });
+    };
 
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
@@ -395,6 +425,7 @@
             if (response.success == true) {
                 // display success message in the alert
                 $('#alert').addClass('alert-success').text('成功加入自選股');
+                loadSelfPicked();
             } else {
                 // display failure message in the alert
                 $('#alert').addClass('alert-danger').text('加入自選股失敗');

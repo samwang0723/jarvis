@@ -167,6 +167,10 @@
 
 <script>
     $(document).ready(function () {
+        loadTable();
+    });
+
+    function loadTable() {
         var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks";
 
         $.ajax({
@@ -373,8 +377,7 @@
             error: function () {
             }
         });
-
-    });
+    };
 
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
@@ -393,10 +396,11 @@
 
                 if (response.success == true) {
                     // display success message in the alert
-                    $('#alert').addClass('alert-success').text('成功加入自選股');
+                    $('#alert').addClass('alert-success').text('成功刪除自選股');
+                    loadTable();
                 } else {
                     // display failure message in the alert
-                    $('#alert').addClass('alert-danger').text('加入自選股失敗');
+                    $('#alert').addClass('alert-danger').text('刪除自選股失敗');
                 }
                 // show the alert
                 $('#alert').show();
