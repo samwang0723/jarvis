@@ -17,7 +17,13 @@ package services
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/helper"
+)
+
+const (
+	RoundDecimalTwo = 100
 )
 
 func (s *serviceImpl) BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error {
@@ -28,10 +34,63 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string)
 	return s.dal.DeletePickedStockByID(ctx, stockID)
 }
 
+//nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {
 	objs, err := s.dal.ListPickedStocks(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	today := helper.Today()
+	latestDate, err := s.dal.DataCompletionDate(ctx, today)
+	if err != nil {
+		return nil, err
+	}
+
+	redisRes, err := s.getRealtimeParsedData(ctx, today)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("get redis cache failed")
+
+		return nil, err
+	}
+
+	// if already had latest stock data from exchange or cannot find redis
+	// realtime cache, using the latest database record.
+	if latestDate >= today || len(redisRes) == 0 {
+		return objs, nil
+	}
+
+	realtimeList := make(map[string]*businessmodel.Realtime)
+	for _, raw := range redisRes {
+		if raw == "" {
+			continue
+		}
+
+		realtime := &businessmodel.Realtime{}
+		e := realtime.UnmarshalJSON([]byte(raw))
+		if e != nil || realtime.Close == 0.0 {
+			s.logger.Error().Err(e).Msg("unmarshal realtime error")
+
+			continue
+		}
+
+		realtimeList[realtime.StockID] = realtime
+	}
+
+	for _, obj := range objs {
+		// override realtime data with history record.
+		realtime, ok := realtimeList[obj.StockID]
+		if !ok {
+			continue
+		}
+
+		obj.PriceDiff = helper.RoundDecimalTwo(realtime.Close - obj.Close)
+		obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * RoundDecimalTwo)
+		obj.Open = realtime.Open
+		obj.High = realtime.High
+		obj.Low = realtime.Low
+		obj.Close = realtime.Close
+		obj.Volume = int(realtime.Volume)
 	}
 
 	return objs, nil

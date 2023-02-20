@@ -18,6 +18,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 	"unsafe"
 )
 
@@ -85,4 +86,8 @@ func StringToUint64(s string) (uint64, error) {
 	}
 
 	return f, nil
+}
+
+func Today() string {
+	return time.Now().Format("20060102")
 }
