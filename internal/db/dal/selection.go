@@ -203,11 +203,19 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 }
 
 //nolint:nolintlint,cyclop,gocognit,gocyclo
-func (i *dalImpl) concentrationBackfill(objs []*entity.Selection, stockIDs []string) ([]*entity.Selection, error) {
-	tList, err := i.retrieveThreePrimaryHistory(stockIDs)
+func (i *dalImpl) concentrationBackfill(
+	objs []*entity.Selection,
+	stockIDs []string,
+) ([]*entity.Selection, error) {
+	tChan := make(chan []*threePrimary)
+	errChan := make(chan error)
+	go i.retrieveThreePrimaryHistory(stockIDs, tChan, errChan)
+	err := <-errChan
 	if err != nil {
 		return nil, err
 	}
+
+	tList := <-tChan
 
 	currentStockID := ""
 	currentIdx := 0
@@ -291,16 +299,19 @@ func (i *dalImpl) AdvancedFiltering(
 		selectionMap[obj.StockID] = obj
 	}
 
-	// TODO: make channel requests
-	pList, err := i.retrieveDailyCloseHistory(stockIDs, opts...)
+	pChan := make(chan []*price)
+	tChan := make(chan []*threePrimary)
+	errChan := make(chan error)
+	go i.retrieveDailyCloseHistory(stockIDs, pChan, errChan, opts...)
+	go i.retrieveThreePrimaryHistory(stockIDs, tChan, errChan, opts...)
+
+	err := <-errChan
 	if err != nil {
 		return nil, err
 	}
 
-	tList, err := i.retrieveThreePrimaryHistory(stockIDs, opts...)
-	if err != nil {
-		return nil, err
-	}
+	pList := <-pChan
+	tList := <-tChan
 
 	highestPriceMap, err := i.getHighestPrice(stockIDs, objs[0].Date)
 	if err != nil {
@@ -449,7 +460,12 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	return highestPriceMap, nil
 }
 
-func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) ([]*price, error) {
+func (i *dalImpl) retrieveDailyCloseHistory(
+	stockIDs []string,
+	result chan []*price,
+	errChan chan error,
+	opts ...string,
+) {
 	var pList []*price
 	var startDate string
 	var err error
@@ -457,7 +473,10 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 120) as a;`).Scan(&startDate).Error
 	if err != nil {
-		return nil, err
+		result <- nil
+		errChan <- err
+
+		return
 	}
 
 	if len(opts) > 0 {
@@ -470,13 +489,22 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
 	if err != nil {
-		return nil, err
+		result <- nil
+		errChan <- err
+
+		return
 	}
 
-	return pList, nil
+	result <- pList
+	errChan <- nil
 }
 
-func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string) ([]*threePrimary, error) {
+func (i *dalImpl) retrieveThreePrimaryHistory(
+	stockIDs []string,
+	result chan []*threePrimary,
+	errChan chan error,
+	opts ...string,
+) {
 	var pList []*threePrimary
 	var startDate string
 	var err error
@@ -484,7 +512,10 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 10) as a;`).Scan(&startDate).Error
 	if err != nil {
-		return nil, err
+		result <- nil
+		errChan <- err
+
+		return
 	}
 
 	if len(opts) > 0 {
@@ -504,10 +535,14 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 			and stock_id IN (?) order by stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
 	if err != nil {
-		return nil, err
+		result <- nil
+		errChan <- err
+
+		return
 	}
 
-	return pList, nil
+	result <- pList
+	errChan <- nil
 }
 
 func merge(objs, picked []*realTimeList) []*realTimeList {
