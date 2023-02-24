@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"sync"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -203,19 +204,11 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 }
 
 //nolint:nolintlint,cyclop,gocognit,gocyclo
-func (i *dalImpl) concentrationBackfill(
-	objs []*entity.Selection,
-	stockIDs []string,
-) ([]*entity.Selection, error) {
-	tChan := make(chan []*threePrimary)
-	errChan := make(chan error)
-	go i.retrieveThreePrimaryHistory(stockIDs, tChan, errChan)
-	err := <-errChan
+func (i *dalImpl) concentrationBackfill(objs []*entity.Selection, stockIDs []string) ([]*entity.Selection, error) {
+	tList, err := i.retrieveThreePrimaryHistory(stockIDs)
 	if err != nil {
 		return nil, err
 	}
-
-	tList := <-tChan
 
 	currentStockID := ""
 	currentIdx := 0
@@ -286,7 +279,7 @@ func (i *dalImpl) ListSelections(
 	return output, nil
 }
 
-//nolint:nolintlint,cyclop,gocognit,gocyclo
+//nolint:nolintlint,cyclop,gocognit,gocyclo,gomnd
 func (i *dalImpl) AdvancedFiltering(
 	objs []*entity.Selection,
 	strict bool,
@@ -299,21 +292,31 @@ func (i *dalImpl) AdvancedFiltering(
 		selectionMap[obj.StockID] = obj
 	}
 
-	pChan := make(chan []*price)
-	tChan := make(chan []*threePrimary)
-	errChan := make(chan error)
-	go i.retrieveDailyCloseHistory(stockIDs, pChan, errChan, opts...)
-	go i.retrieveThreePrimaryHistory(stockIDs, tChan, errChan, opts...)
+	var wg sync.WaitGroup
+	wg.Add(3)
 
-	err := <-errChan
-	if err != nil {
-		return nil, err
-	}
+	var pList []*price
+	var tList []*threePrimary
+	var highestPriceMap map[string]float32
+	var err error
 
-	pList := <-pChan
-	tList := <-tChan
+	go func() {
+		pList, err = i.retrieveDailyCloseHistory(stockIDs, opts...)
+		wg.Done()
+	}()
 
-	highestPriceMap, err := i.getHighestPrice(stockIDs, objs[0].Date)
+	go func() {
+		tList, err = i.retrieveThreePrimaryHistory(stockIDs, opts...)
+		wg.Done()
+	}()
+
+	go func() {
+		highestPriceMap, err = i.getHighestPrice(stockIDs, objs[0].Date)
+		wg.Done()
+	}()
+
+	wg.Wait()
+
 	if err != nil {
 		return nil, err
 	}
@@ -460,12 +463,7 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	return highestPriceMap, nil
 }
 
-func (i *dalImpl) retrieveDailyCloseHistory(
-	stockIDs []string,
-	result chan []*price,
-	errChan chan error,
-	opts ...string,
-) {
+func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) ([]*price, error) {
 	var pList []*price
 	var startDate string
 	var err error
@@ -473,10 +471,7 @@ func (i *dalImpl) retrieveDailyCloseHistory(
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 120) as a;`).Scan(&startDate).Error
 	if err != nil {
-		result <- nil
-		errChan <- err
-
-		return
+		return nil, err
 	}
 
 	if len(opts) > 0 {
@@ -489,22 +484,13 @@ func (i *dalImpl) retrieveDailyCloseHistory(
 			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
 	if err != nil {
-		result <- nil
-		errChan <- err
-
-		return
+		return nil, err
 	}
 
-	result <- pList
-	errChan <- nil
+	return pList, nil
 }
 
-func (i *dalImpl) retrieveThreePrimaryHistory(
-	stockIDs []string,
-	result chan []*threePrimary,
-	errChan chan error,
-	opts ...string,
-) {
+func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string) ([]*threePrimary, error) {
 	var pList []*threePrimary
 	var startDate string
 	var err error
@@ -512,10 +498,7 @@ func (i *dalImpl) retrieveThreePrimaryHistory(
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 10) as a;`).Scan(&startDate).Error
 	if err != nil {
-		result <- nil
-		errChan <- err
-
-		return
+		return nil, err
 	}
 
 	if len(opts) > 0 {
@@ -535,14 +518,10 @@ func (i *dalImpl) retrieveThreePrimaryHistory(
 			and stock_id IN (?) order by stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
 	if err != nil {
-		result <- nil
-		errChan <- err
-
-		return
+		return nil, err
 	}
 
-	result <- pList
-	errChan <- nil
+	return pList, nil
 }
 
 func merge(objs, picked []*realTimeList) []*realTimeList {
