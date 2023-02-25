@@ -49,9 +49,7 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection,
 
 	redisRes, err := s.getRealtimeParsedData(ctx, today)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("get redis cache failed")
-
-		return nil, err
+		s.logger.Warn().Err(err).Msg("no redis cache record")
 	}
 
 	// if already had latest stock data from exchange or cannot find redis
