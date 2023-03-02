@@ -182,7 +182,7 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
                         d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
                         s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
                         floor(t.foreign_trade_shares/1000) as foreignc,
-			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
+                        floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
 			left join stocks c on c.stock_id = s.stock_id

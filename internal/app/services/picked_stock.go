@@ -55,10 +55,6 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection,
 	// if already had latest stock data from exchange or cannot find redis
 	// realtime cache, using the latest database record.
 	if latestDate >= today || len(redisRes) == 0 {
-		for _, obj := range objs {
-			obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * RoundDecimalTwo)
-		}
-
 		return objs, nil
 	}
 
