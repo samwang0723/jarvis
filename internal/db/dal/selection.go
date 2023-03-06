@@ -311,7 +311,7 @@ func (i *dalImpl) AdvancedFiltering(
 	}()
 
 	go func() {
-		if len(opts) > 0 {
+		if len(objs) > 0 {
 			highestPriceMap, err = i.getHighestPrice(stockIDs, objs[0].Date)
 		}
 		wg.Done()
