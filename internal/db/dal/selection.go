@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"sync"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -181,7 +182,7 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
                         d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
                         s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
                         floor(t.foreign_trade_shares/1000) as foreignc,
-			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
+                        floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 			floor(t.dealer_trade_shares/1000) as dealer
 			from stake_concentration s
 			left join stocks c on c.stock_id = s.stock_id
@@ -278,7 +279,7 @@ func (i *dalImpl) ListSelections(
 	return output, nil
 }
 
-//nolint:nolintlint,cyclop,gocognit,gocyclo
+//nolint:nolintlint,gomnd
 func (i *dalImpl) AdvancedFiltering(
 	objs []*entity.Selection,
 	strict bool,
@@ -291,39 +292,71 @@ func (i *dalImpl) AdvancedFiltering(
 		selectionMap[obj.StockID] = obj
 	}
 
-	// TODO: make channel requests
-	pList, err := i.retrieveDailyCloseHistory(stockIDs, opts...)
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	var pList []*price
+	var tList []*threePrimary
+	var highestPriceMap map[string]float32
+	var err error
+
+	go func() {
+		pList, err = i.retrieveDailyCloseHistory(stockIDs, opts...)
+		wg.Done()
+	}()
+
+	go func() {
+		tList, err = i.retrieveThreePrimaryHistory(stockIDs, opts...)
+		wg.Done()
+	}()
+
+	go func() {
+		if len(objs) > 0 {
+			highestPriceMap, err = i.getHighestPrice(stockIDs, objs[0].Date)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
 	if err != nil {
 		return nil, err
 	}
 
-	tList, err := i.retrieveThreePrimaryHistory(stockIDs, opts...)
-	if err != nil {
-		return nil, err
-	}
+	// fulfill analysis materials
+	analysisMap := i.mappingMovingAverageConcentration(pList, tList, len(stockIDs), opts...)
 
-	highestPriceMap, err := i.getHighestPrice(stockIDs, objs[0].Date)
-	if err != nil {
-		return nil, err
-	}
+	// filtering based on selection conditions
+	output := i.filter(selectionMap, highestPriceMap, analysisMap, strict, opts...)
+	sort.Slice(output, func(i, j int) bool {
+		return output[i].StockID < output[j].StockID
+	})
 
-	// giving initial capacity to map to increase performance
-	analysisMap := make(map[string]*analysis, len(stockIDs))
+	return output, nil
+}
+
+//nolint:nolintlint,gocognit,cyclop
+func (i *dalImpl) mappingMovingAverageConcentration(
+	pList []*price,
+	tList []*threePrimary,
+	size int,
+	opts ...string,
+) map[string]*analysis {
+	analysisMap := make(map[string]*analysis, size)
 	currentIdx := 0
-	currentStockID := ""
 	currentPriceSum := float32(0)
 	currentVolumeSum := uint64(0)
+
 	for _, p := range pList {
-		if currentStockID != p.StockID {
-			currentStockID = p.StockID
+		if _, ok := analysisMap[p.StockID]; !ok {
 			currentIdx = 0
 			currentPriceSum = 0
 			currentVolumeSum = 0
-			analysisMap[currentStockID] = &analysis{}
+
+			analysisMap[p.StockID] = &analysis{}
 		}
 
 		currentIdx++
-
 		currentPriceSum += p.Close
 		currentVolumeSum += p.Volume
 
@@ -334,24 +367,24 @@ func (i *dalImpl) AdvancedFiltering(
 
 		switch currentIdx {
 		case lastClose:
-			analysisMap[currentStockID].LastClose = p.Close
+			analysisMap[p.StockID].LastClose = p.Close
 		case volumeMV5:
-			analysisMap[currentStockID].MV5 = currentVolumeSum / volumeMV5
+			analysisMap[p.StockID].MV5 = currentVolumeSum / volumeMV5
 		case volumeMV13:
-			analysisMap[currentStockID].MV13 = currentVolumeSum / volumeMV13
+			analysisMap[p.StockID].MV13 = currentVolumeSum / volumeMV13
 		case volumeMV34:
-			analysisMap[currentStockID].MV34 = currentVolumeSum / volumeMV34
+			analysisMap[p.StockID].MV34 = currentVolumeSum / volumeMV34
 		case priceMA8:
-			analysisMap[currentStockID].MA8 = currentPriceSum / priceMA8
+			analysisMap[p.StockID].MA8 = currentPriceSum / priceMA8
 		case priceMA21:
-			analysisMap[currentStockID].MA21 = currentPriceSum / priceMA21
+			analysisMap[p.StockID].MA21 = currentPriceSum / priceMA21
 		case priceMA55:
-			analysisMap[currentStockID].MA55 = currentPriceSum / priceMA55
+			analysisMap[p.StockID].MA55 = currentPriceSum / priceMA55
 		}
 	}
 
 	// fulfill concentration data
-	currentStockID = ""
+	currentStockID := ""
 	currentIdx = 0
 	currentTrustSum := int64(0)
 	currentForeignSum := int64(0)
@@ -364,7 +397,6 @@ func (i *dalImpl) AdvancedFiltering(
 		}
 
 		currentIdx++
-
 		currentTrustSum += t.Trust
 		currentForeignSum += t.Foreign
 
@@ -374,10 +406,21 @@ func (i *dalImpl) AdvancedFiltering(
 		}
 	}
 
-	// execute filtering
+	return analysisMap
+}
+
+//nolint:nolintlint,gocognit,cyclop
+func (i *dalImpl) filter(
+	source map[string]*entity.Selection,
+	highestPriceMap map[string]float32,
+	analysisMap map[string]*analysis,
+	strict bool,
+	opts ...string,
+) []*entity.Selection {
 	output := []*entity.Selection{}
+
 	for k, v := range analysisMap {
-		ref := selectionMap[k]
+		ref := source[k]
 		selected := false
 
 		// if today's realtime value and not within max high range, skip
@@ -413,12 +456,7 @@ func (i *dalImpl) AdvancedFiltering(
 		}
 	}
 
-	//nolint:nolintlint, gocritic
-	sort.Slice(output[:], func(i, j int) bool {
-		return output[i].StockID < output[j].StockID
-	})
-
-	return output, nil
+	return output
 }
 
 func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]float32, error) {

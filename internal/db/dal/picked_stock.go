@@ -19,8 +19,13 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/helper"
 
 	"gorm.io/gorm/clause"
+)
+
+const (
+	RoundDecimalTwo = 100
 )
 
 var ErrNoPickedStock = errors.New("no picked stock")
@@ -41,14 +46,23 @@ func (i *dalImpl) DeletePickedStockByID(ctx context.Context, stockID string) err
 
 func (i *dalImpl) ListPickedStocks(ctx context.Context) (objs []*entity.Selection, err error) {
 	pickedStocks := []string{}
-	if err := i.db.Raw(`select stock_id from picked_stocks 
-                        where deleted_at is null`).Scan(&pickedStocks).Error; err != nil {
-		return nil, err
+	if serr := i.db.Raw(`select stock_id from picked_stocks 
+                        where deleted_at is null`).Scan(&pickedStocks).Error; serr != nil {
+		return nil, serr
 	}
 
 	if len(pickedStocks) == 0 {
 		return nil, ErrNoPickedStock
 	}
 
-	return i.ListSelectionsBasedOnPickedStocks(ctx, pickedStocks)
+	objs, err = i.ListSelectionsBasedOnPickedStocks(ctx, pickedStocks)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range objs {
+		obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * RoundDecimalTwo)
+	}
+
+	return
 }
