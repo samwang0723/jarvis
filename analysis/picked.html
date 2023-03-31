@@ -71,7 +71,7 @@
         }
 
         div.container {
-            width: 700px;
+            width: 680px;
         }
 
         div.target {
@@ -181,7 +181,7 @@
     });
 
     function loadTable() {
-        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/pickedstocks";
+        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/pickedstocks";
 
         $.ajax({
             type: "GET",
