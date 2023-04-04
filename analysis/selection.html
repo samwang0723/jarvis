@@ -71,7 +71,7 @@
         }
 
         div.container {
-            width: 680px;
+            width: 580px;
         }
 
         div.target {
@@ -129,11 +129,11 @@
                         <tr>
                             <th>籌碼</th>
                             <th>標的</th>
-                            <th>產業別</th>
-                            <th>成交價</th>
-                            <th>漲跌幅</th>
-                            <th>成交量</th>
-                            <th>自選股</th>
+                            <th>產業</th>
+                            <th>成交</th>
+                            <th>漲跌</th>
+                            <th>量能</th>
+                            <th>自選</th>
                         </tr>
                     </thead>
                 </table>
@@ -146,11 +146,11 @@
                         <tr>
                             <th>籌碼</th>
                             <th>標的</th>
-                            <th>近1日</th>
-                            <th>近5日</th>
-                            <th>近10日</th>
-                            <th>近20日</th>
-                            <th>近60日</th>
+                            <th>1日</th>
+                            <th>5日</th>
+                            <th>10日</th>
+                            <th>20日</th>
+                            <th>60日</th>
                         </tr>
                     </thead>
                 </table>
@@ -164,9 +164,9 @@
                             <th>籌碼</th>
                             <th>標的</th>
                             <th>投信</th>
-                            <th>投信十日</th>
+                            <th>投十</th>
                             <th>外資</th>
-                            <th>外資十日</th>
+                            <th>外十</th>
                             <th>自營</th>
                             <th>避險</th>
                         </tr>
@@ -352,12 +352,12 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
+                        {"data": "name", "sWidth": "50px"},
                         {"data": "category", "sWidth": "90px"},
-                        {"data": "close", "sWidth": "60px", "className": "text-right"},
-                        {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
-                        {"data": "volume", "sWidth": "60px", "className": "text-right"},
-                        {"data": "action", "sWidth": "60px", "className": "text-right"},
+                        {"data": "close", "sWidth": "50px", "className": "text-right"},
+                        {"data": "quoteChange", "sWidth": "50px", "className": "text-right"},
+                        {"data": "volume", "sWidth": "50px", "className": "text-right"},
+                        {"data": "action", "sWidth": "50px", "className": "text-right"},
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
@@ -398,7 +398,7 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
+                        {"data": "name", "sWidth": "50px"},
                         {"data": "concentration1", "sWidth": "50px", "className": "text-center"},
                         {"data": "concentration5", "sWidth": "50px", "className": "text-center"},
                         {"data": "concentration10", "sWidth": "60px", "className": "text-center"},
@@ -445,11 +445,11 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
+                        {"data": "name", "sWidth": "50px"},
                         {"data": "trust", "sWidth": "50px", "className": "text-center"},
-                        {"data": "trust10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "trust10", "sWidth": "50px", "className": "text-center"},
                         {"data": "foreign", "sWidth": "50px", "className": "text-center"},
-                        {"data": "foreign10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "foreign10", "sWidth": "50px", "className": "text-center"},
                         {"data": "dealer", "sWidth": "50px", "className": "text-center"},
                         {"data": "hedging", "sWidth": "50px", "className": "text-center"},
                     ],
