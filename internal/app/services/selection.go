@@ -46,6 +46,7 @@ const (
 	webScraping                = "WEB_SCRAPING"
 	skipHeader                 = "skip_dates"
 	closeToHighestToday        = 0.985
+	realtimeVolume             = 3000
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
@@ -112,7 +113,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			// override realtime data with history record.
 			history := chips[realtime.StockID]
 			// if its today, check if reach to highest
-			if history == nil || (realtime.Close/realtime.High) <= closeToHighestToday {
+			if history == nil || (realtime.Close/realtime.High) <= closeToHighestToday || realtime.Volume < realtimeVolume {
 				continue
 			}
 
@@ -141,7 +142,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			res = append(res, obj)
 		}
 
-		objs, err = s.dal.AdvancedFiltering(res, req.Strict, req.Date)
+		objs, err = s.dal.AdvancedFiltering(ctx, res, req.Strict, req.Date)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("advanced filtering failed")
 

@@ -39,6 +39,7 @@ const (
 	volumeMV34               = 34
 	threePrimarySumCount     = 10
 	percent                  = -100
+	rewindWeek               = -5
 )
 
 type price struct {
@@ -117,7 +118,7 @@ func (i *dalImpl) GetLatestChip(ctx context.Context) ([]*entity.Selection, error
 			) >= 4
 			and s.exchange_date = ?
 			and d.trade_shares >= ?
-			order by s.stock_id`, date, date, date, minDailyVolume).Scan(&objs).Error
+			order by s.stock_id`, date, date, date, minWeeklyVolume).Scan(&objs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +145,7 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 				IF(s.concentration_60 > 0, 1, 0)
 			) >= 4
 			and s.exchange_date = ?
-			and d.trade_shares >= ?`, date, date, minDailyVolume).Scan(&objs).Error
+			and d.trade_shares >= ?`, date, date, minWeeklyVolume).Scan(&objs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 		return nil, err
 	}
 
-	output, err := i.concentrationBackfill(objs, pickedStocks)
+	output, err := i.concentrationBackfill(ctx, objs, pickedStocks, date)
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +205,13 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 }
 
 //nolint:nolintlint,cyclop,gocognit,gocyclo
-func (i *dalImpl) concentrationBackfill(objs []*entity.Selection, stockIDs []string) ([]*entity.Selection, error) {
-	tList, err := i.retrieveThreePrimaryHistory(stockIDs)
+func (i *dalImpl) concentrationBackfill(
+	ctx context.Context,
+	objs []*entity.Selection,
+	stockIDs []string,
+	date string,
+) ([]*entity.Selection, error) {
+	tList, err := i.retrieveThreePrimaryHistory(ctx, stockIDs, date)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +277,7 @@ func (i *dalImpl) ListSelections(
 	}
 
 	// doing analysis
-	output, err := i.AdvancedFiltering(objs, strict, date)
+	output, err := i.AdvancedFiltering(ctx, objs, strict, date)
 	if err != nil {
 		return nil, err
 	}
@@ -281,6 +287,7 @@ func (i *dalImpl) ListSelections(
 
 //nolint:nolintlint,gomnd
 func (i *dalImpl) AdvancedFiltering(
+	ctx context.Context,
 	objs []*entity.Selection,
 	strict bool,
 	opts ...string,
@@ -301,12 +308,12 @@ func (i *dalImpl) AdvancedFiltering(
 	var err error
 
 	go func() {
-		pList, err = i.retrieveDailyCloseHistory(stockIDs, opts...)
+		pList, err = i.retrieveDailyCloseHistory(ctx, stockIDs, opts...)
 		wg.Done()
 	}()
 
 	go func() {
-		tList, err = i.retrieveThreePrimaryHistory(stockIDs, opts...)
+		tList, err = i.retrieveThreePrimaryHistory(ctx, stockIDs, opts...)
 		wg.Done()
 	}()
 
@@ -474,8 +481,13 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 		return nil, err
 	}
 
+	endDate := helper.RewindDate(date, rewindWeek)
+	if endDate == "" {
+		endDate = date
+	}
+
 	err = i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ?
-			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, date, stockIDs).Scan(&highest).Error
+			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, endDate, stockIDs).Scan(&highest).Error
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +499,8 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	return highestPriceMap, nil
 }
 
-func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) ([]*price, error) {
+//nolint:nolintlint,errcheck
+func (i *dalImpl) retrieveDailyCloseHistory(ctx context.Context, stockIDs []string, opts ...string) ([]*price, error) {
 	var pList []*price
 	var startDate string
 	var err error
@@ -499,9 +512,17 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 	}
 
 	if len(opts) > 0 {
-		err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
-			where exchange_date >= ? and exchange_date < ? and stock_id IN (?) order by
-			stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		searchDate, _ := i.DataCompletionDate(ctx, opts[0])
+
+		if searchDate != "" {
+			err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
+			        where exchange_date >= ? and exchange_date <= ? and stock_id IN (?) order by
+			        stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		} else {
+			err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
+			        where exchange_date >= ? and exchange_date < ? and stock_id IN (?) order by
+			        stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		}
 	}
 
 	if err != nil {
@@ -511,7 +532,12 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 	return pList, nil
 }
 
-func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string) ([]*threePrimary, error) {
+//nolint:nolintlint,errcheck
+func (i *dalImpl) retrieveThreePrimaryHistory(
+	ctx context.Context,
+	stockIDs []string,
+	opts ...string,
+) ([]*threePrimary, error) {
 	var pList []*threePrimary
 	var startDate string
 	var err error
@@ -523,13 +549,25 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 	}
 
 	if len(opts) > 0 {
-		err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
-			floor(trust_trade_shares/1000) as trust_trade_shares, 
-			floor(dealer_trade_shares/1000) as dealer_trade_shares, 
-			floor(hedging_trade_shares/1000) as hedging_trade_shares
-			from three_primary where exchange_date >= ?
-			and exchange_date < ? and stock_id IN (?) 
-			order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		searchDate, _ := i.DataCompletionDate(ctx, opts[0])
+
+		if searchDate != "" {
+			err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
+			        floor(trust_trade_shares/1000) as trust_trade_shares, 
+			        floor(dealer_trade_shares/1000) as dealer_trade_shares, 
+			        floor(hedging_trade_shares/1000) as hedging_trade_shares
+			        from three_primary where exchange_date >= ?
+			        and exchange_date <= ? and stock_id IN (?) 
+			        order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		} else {
+			err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
+			        floor(trust_trade_shares/1000) as trust_trade_shares, 
+			        floor(dealer_trade_shares/1000) as dealer_trade_shares, 
+			        floor(hedging_trade_shares/1000) as hedging_trade_shares
+			        from three_primary where exchange_date >= ?
+			        and exchange_date < ? and stock_id IN (?) 
+			        order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+		}
 	}
 
 	if err != nil {
