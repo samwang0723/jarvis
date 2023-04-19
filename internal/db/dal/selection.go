@@ -271,7 +271,7 @@ func (i *dalImpl) ListSelections(
 	}
 
 	// doing analysis
-	output, err := i.AdvancedFiltering(objs, strict)
+	output, err := i.AdvancedFiltering(objs, strict, date)
 	if err != nil {
 		return nil, err
 	}
@@ -502,11 +502,8 @@ func (i *dalImpl) retrieveDailyCloseHistory(stockIDs []string, opts ...string) (
 		err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
 			where exchange_date >= ? and exchange_date < ? and stock_id IN (?) order by
 			stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
-	} else {
-		err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
-			where exchange_date >= ? and stock_id IN (?) order by
-			stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -533,14 +530,8 @@ func (i *dalImpl) retrieveThreePrimaryHistory(stockIDs []string, opts ...string)
 			from three_primary where exchange_date >= ?
 			and exchange_date < ? and stock_id IN (?) 
 			order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
-	} else {
-		err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
-			floor(trust_trade_shares/1000) as trust_trade_shares, 
-			floor(dealer_trade_shares/1000) as dealer_trade_shares, 
-			floor(hedging_trade_shares/1000) as hedging_trade_shares
-			from three_primary where exchange_date >= ? 
-			and stock_id IN (?) order by stock_id, exchange_date desc`, startDate, stockIDs).Scan(&pList).Error
 	}
+
 	if err != nil {
 		return nil, err
 	}
