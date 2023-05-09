@@ -40,14 +40,14 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			if err != nil {
 				log.Errorf("Kafka:ReadMessage error: %s", err.Error())
 
-				return
+				continue
 			}
 
 			ent, err := unmarshalMessageToEntity(msg)
 			if err != nil {
 				log.Errorf("Unmarshal (%s) failed: %s", msg.Topic, err.Error())
 
-				return
+				continue
 			}
 			respChan <- data{
 				topic:  msg.Topic,

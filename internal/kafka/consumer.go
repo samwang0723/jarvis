@@ -37,6 +37,7 @@ const (
 	maxBytes         = 10e6 // 10MB
 )
 
+//nolint:nolintlint, gomnd
 func New(cfg *config.Config) ikafka.IKafka {
 	return &kafkaImpl{
 		instance: kafka.NewReader(kafka.ReaderConfig{
@@ -49,6 +50,12 @@ func New(cfg *config.Config) ikafka.IKafka {
 			MaxWait:          maxWait,
 			MinBytes:         minBytes,
 			MaxBytes:         maxBytes,
+			Dialer: &kafka.Dialer{
+				Timeout:       10 * time.Second,
+				KeepAlive:     30 * time.Second,
+				DualStack:     true,
+				FallbackDelay: 10 * time.Millisecond,
+			},
 		}),
 	}
 }
