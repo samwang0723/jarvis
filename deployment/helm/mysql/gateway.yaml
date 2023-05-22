@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: mysql-gateway
+spec:
+  selector:
+    istio: ingressgateway # use Istio default gateway implementation
+  servers:
+  - port:
+      number: 3306
+      name: mysql-primary
+      protocol: TCP
+    hosts:
+    - "*"
+  - port:
+      number: 3307
+      name: mysql-secondary
+      protocol: TCP
+    hosts:
+    - "*"
+

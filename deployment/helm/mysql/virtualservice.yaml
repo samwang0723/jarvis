@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mysql-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - mysql-gateway
+  tcp:
+  - match:
+    - port: 3306
+    route:
+    - destination:
+        host: mysql-primary-headless.default.svc.cluster.local
+        port:
+          number: 3306
+  - match:
+    - port: 3307
+    route:
+    - destination:
+        host: mysql-secondary-headless.default.svc.cluster.local
+        port:
+          number: 3306
+
