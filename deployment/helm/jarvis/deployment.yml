@@ -76,4 +76,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: redis-secret
-              key: password
+              key: redis-password
