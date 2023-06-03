@@ -33,3 +33,6 @@ spec:
         host: jarvis-service
         port:
           number: 8080
+    corsPolicy:
+      allowOrigin:
+        - '*'
