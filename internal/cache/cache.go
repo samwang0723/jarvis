@@ -49,6 +49,9 @@ type Config struct {
 
 	// Redis sentinel addresses
 	SentinelAddrs []string
+
+	// Redis password
+	Password string
 }
 
 type redisImpl struct {
@@ -62,6 +65,7 @@ func New(cfg Config) Redis {
 		instance: redis.NewFailoverClient(&redis.FailoverOptions{
 			MasterName:    cfg.Master,
 			SentinelAddrs: cfg.SentinelAddrs,
+			Password:      cfg.Password,
 		}),
 	}
 

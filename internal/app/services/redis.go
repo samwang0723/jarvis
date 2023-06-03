@@ -29,6 +29,9 @@ type RedisConfig struct {
 	// The logger to use. If not defined an output-discarding logger will
 	// be used instead.
 	Logger *zerolog.Logger
+
+	// Redis password
+	Password string
 }
 
 func (cfg *RedisConfig) validate() error {

@@ -89,6 +89,7 @@ func Serve() {
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
 			Logger:        &newLogger,
+			Password:      cfg.RedisCache.Password,
 		}),
 		services.WithCronJob(services.CronjobConfig{
 			Logger: &newLogger,

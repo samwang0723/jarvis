@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jarvis-api
+  template:
+    metadata:
+      labels:
+        app: jarvis-api
+    spec:
+      containers:
+      - name: application
+        image: samwang0723/jarvis-api:v1.3.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: rest-api-port
+          containerPort: 8080
+        - name: grpc-port
+          containerPort: 8081
+        - name: mysql-port
+          containerPort: 3306
+        - name: redis-port
+          containerPort: 6379
+        - name: http-port
+          containerPort: 80
+        - name: https-port
+          containerPort: 443
+        # define a liveness probe that checks every 5 seconds, starting after 5 seconds
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # define a readiness probe that checks every 5 seconds
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          periodSeconds: 5
+        env:
+        - name: MY_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: ENVIRONMENT
+          value: "development"
+        - name: START_CRON
+          value: "true"
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: username
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: password
+        - name: WEB_SCRAPING
+          valueFrom:
+            secretKeyRef:
+              name: proxy-secret-webscraping
+              key: token
+        - name: WEB_SCRAPING_BACKUP
+          valueFrom:
+            secretKeyRef:
+              name: proxy-secret-proxycrawl
+              key: token
+        - name: REDIS_PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password

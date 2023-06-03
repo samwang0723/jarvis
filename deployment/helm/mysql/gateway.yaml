@@ -12,10 +12,21 @@ spec:
       protocol: TCP
     hosts:
     - "*"
-  - port:
-      number: 3307
-      name: mysql-secondary
-      protocol: TCP
-    hosts:
-    - "*"
-
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: mysql-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - mysql-gateway
+  tcp:
+  - match:
+    - port: 3306
+    route:
+    - destination:
+        host: mysql-primary-headless.default.svc.cluster.local
+        port:
+          number: 3306

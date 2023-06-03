@@ -24,6 +24,7 @@ import (
 const (
 	SecretUsername = "SECRET_USERNAME"
 	SecretPassword = "SECRET_PASSWORD"
+	RedisPassword  = "REDIS_PASSWD"
 )
 
 type Config struct {
@@ -69,6 +70,7 @@ type Config struct {
 	RedisCache struct {
 		Master        string   `yaml:"master"`
 		SentinelAddrs []string `yaml:"sentinelAddrs"`
+		Password      string   `yaml:"password"`
 	} `yaml:"redis"`
 }
 
@@ -100,6 +102,10 @@ func Load() {
 	if passwd := os.Getenv(SecretPassword); len(passwd) > 0 {
 		instance.Database.Password = passwd
 		instance.Replica.Password = passwd
+	}
+
+	if redisPasswd := os.Getenv(RedisPassword); len(redisPasswd) > 0 {
+		instance.RedisCache.Password = redisPasswd
 	}
 }
 

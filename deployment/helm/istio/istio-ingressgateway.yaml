@@ -9,9 +9,6 @@ spec:
     app: istio-ingressgateway
     istio: ingressgateway
   ports:
-    - name: mysql-primary
-      port: 3306
-      targetPort: 3306
-    - name: mysql-secondary
-      port: 3307
-      targetPort: 3307
+    - name: jarvis-api
+      port: 8080
+      targetPort: 8080
