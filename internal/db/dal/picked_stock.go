@@ -24,10 +24,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-const (
-	RoundDecimalTwo = 100
-)
-
 var ErrNoPickedStock = errors.New("no picked stock")
 
 func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.PickedStock) error {
@@ -61,7 +57,7 @@ func (i *dalImpl) ListPickedStocks(ctx context.Context) (objs []*entity.Selectio
 	}
 
 	for _, obj := range objs {
-		obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * RoundDecimalTwo)
+		obj.QuoteChange = helper.RoundDecimalTwo((1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent)
 	}
 
 	return
