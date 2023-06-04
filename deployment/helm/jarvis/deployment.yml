@@ -16,7 +16,7 @@ spec:
       containers:
       - name: application
         image: samwang0723/jarvis-api:v1.3.0
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - name: rest-api-port
           containerPort: 8080
