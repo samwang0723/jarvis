@@ -16,7 +16,9 @@ package services
 
 import (
 	"context"
+	"time"
 
+	"github.com/bsm/redislock"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
@@ -49,6 +51,7 @@ type IService interface {
 	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
 	DeletePickedStockByID(ctx context.Context, stockID string) error
 	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)
+	ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock
 }
 
 type serviceImpl struct {

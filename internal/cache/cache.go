@@ -15,9 +15,11 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/bsm/redislock"
 	redis "github.com/go-redis/redis/v8"
 	"github.com/rs/zerolog"
 	"golang.org/x/xerrors"
@@ -35,6 +37,7 @@ type Redis interface {
 	Set(ctx context.Context, key, val string, expired time.Duration) error
 	Get(ctx context.Context, key string) (string, error)
 	MGet(ctx context.Context, keys ...string) ([]string, error)
+	ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock
 	Close() error
 }
 
@@ -144,6 +147,25 @@ func (r *redisImpl) Get(ctx context.Context, key string) (string, error) {
 	r.cfg.Logger.Info().Msgf("cache.Get: success, res=%+v;", res)
 
 	return res, nil
+}
+
+func (r *redisImpl) ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock {
+	// Create a new lock client.
+	locker := redislock.New(r.instance)
+
+	// Try to obtain lock.
+	lock, err := locker.Obtain(ctx, key, expire, nil)
+	if errors.Is(err, redislock.ErrNotObtained) {
+		r.cfg.Logger.Error().Err(err).Msg("cache.ObtainLock: failed, could not obtain lock!")
+
+		return nil
+	} else if err != nil {
+		return nil
+	}
+
+	r.cfg.Logger.Debug().Msgf("cache.ObtainLock: success, key=%s;", key)
+
+	return lock
 }
 
 func (r *redisImpl) Close() error {
