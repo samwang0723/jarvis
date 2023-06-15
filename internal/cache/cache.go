@@ -71,7 +71,6 @@ func New(cfg Config) Redis {
 			SentinelAddrs:    cfg.SentinelAddrs,
 			Password:         cfg.Password,
 			SentinelPassword: cfg.Password,
-			DB:               0,
 		}),
 	}
 
