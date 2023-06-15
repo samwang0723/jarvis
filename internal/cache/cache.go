@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	CronjobLock = "jarvis-realtime-lock"
+	CronjobStockListLock = "jarvis-stock-list-lock"
+	CronjobLock          = "jarvis-realtime-lock"
 )
 
 //go:generate mockgen -source=redis.go -destination=mocks/redis.go -package=cache

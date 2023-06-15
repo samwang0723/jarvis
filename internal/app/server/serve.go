@@ -288,7 +288,7 @@ func (s *server) Run(ctx context.Context) error {
 
 	select {
 	case <-quit:
-		log.Warn("singal interrupt")
+		log.Warn("signal interrupt")
 		cancel()
 	case <-childCtx.Done():
 		log.Warn("main context being cancelled")

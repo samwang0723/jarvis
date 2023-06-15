@@ -41,7 +41,7 @@ func (h *handlerImpl) ListSelections(
 
 func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context, schedule string) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
-		if h.dataService.ObtainLock(ctx, cache.CronjobLock, cronLockPeriod*time.Minute) == nil {
+		if h.dataService.ObtainLock(ctx, cache.CronjobStockListLock, cronLockPeriod*time.Minute) == nil {
 			h.logger.Info().Msg("cronjob lock is not obtained")
 
 			return
