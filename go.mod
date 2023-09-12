@@ -6,7 +6,7 @@ require (
 	github.com/getsentry/sentry-go v0.16.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/sony/sonyflake v1.1.0
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
 )
