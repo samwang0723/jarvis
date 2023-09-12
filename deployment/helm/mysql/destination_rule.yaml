@@ -1,0 +1,9 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: mysql-disable-mtls
+spec:
+  host: mysql-primary-headless.default.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE

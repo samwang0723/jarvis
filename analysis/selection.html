@@ -1,9 +1,19 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="180x180" href="/analysis/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/analysis/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/analysis/static/favicon-16x16.png">
+    <link rel="manifest" href="/analysis/static/site.webmanifest" crossorigin="use-credentials">
+    <link rel="mask-icon" href="/analysis/static/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <title>Jarvis - Selections</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
-    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
@@ -61,7 +71,7 @@
         }
 
         div.container {
-            width: 620px;
+            width: 580px;
         }
 
         div.target {
@@ -80,10 +90,24 @@
             align-items: center;
             justify-content: space-between;
         }
+
+        #alert {
+            position: fixed;
+            z-index: 9999;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        p.existed {
+            color: lightgrey;
+        }
     </style>
 </head>
 
 <body>
+    <div id="alert" class="alert" role="alert"></div>
+
     <div class="container">
         <br>
         <!-- Nav tabs -->
@@ -99,49 +123,50 @@
         <!-- Tab panes -->
         <div class="tab-content">
             <div role="tabpanel" class="tab-pane fade in active" id="tab1">
-                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
                             <th>籌碼</th>
                             <th>標的</th>
-                            <th>產業別</th>
-                            <th>成交價</th>
-                            <th>漲跌幅</th>
-                            <th>成交量</th>
+                            <th>產業</th>
+                            <th>成交</th>
+                            <th>漲跌</th>
+                            <th>量能</th>
+                            <th>自選</th>
                         </tr>
                     </thead>
                 </table>
             </div>
 
             <div role="tabpanel" class="tab-pane fade" id="tab2">
-                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
                             <th>籌碼</th>
                             <th>標的</th>
-                            <th>近1日</th>
-                            <th>近5日</th>
-                            <th>近10日</th>
-                            <th>近20日</th>
-                            <th>近60日</th>
+                            <th>1日</th>
+                            <th>5日</th>
+                            <th>10日</th>
+                            <th>20日</th>
+                            <th>60日</th>
                         </tr>
                     </thead>
                 </table>
             </div>
 
             <div role="tabpanel" class="tab-pane fade" id="tab3">
-                <table id="myTable3" class="table table-hover table-striped table-bordered table-condensed"
+                <table id="myTable3" class="table table-hover table-striped table-bordered table-condensed responsive"
                     cellspacing="0" width="100%">
                     <thead>
                         <tr>
                             <th>籌碼</th>
                             <th>標的</th>
                             <th>投信</th>
-                            <th>投信十日</th>
+                            <th>投十</th>
                             <th>外資</th>
-                            <th>外資十日</th>
+                            <th>外十</th>
                             <th>自營</th>
                             <th>避險</th>
                         </tr>
@@ -157,9 +182,67 @@
 
 <script>
     $(document).ready(function () {
-        var requestURL = "http://" + getUrlParameter("ip") + ":8080/v1/selections";
+        loadSelfPicked();
+    });
+
+    function getLastWorkingDay() {
+        const skip_dates = [
+            "20230102",
+            "20230118",
+            "20230119",
+            "20230120",
+            "20230123",
+            "20230124",
+            "20230125",
+            "20230126",
+            "20230127",
+            "20230227",
+            "20230228",
+            "20230403",
+            "20230404",
+            "20230405",
+            "20230501",
+            "20230622",
+            "20230623",
+            "20230929",
+            "20231009",
+            "20231010"
+        ];
+
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const daysToSubtract = dayOfWeek === 0 ? 2 : dayOfWeek === 1 ? 3 : 1;
+        let lastWorkingDay = new Date(today.getTime() - (daysToSubtract * 24 * 60 * 60 * 1000));
+        let lastWorkingDayStr = formatDate(lastWorkingDay);
+
+        while (skip_dates.includes(lastWorkingDayStr) || !isWorkingDay(lastWorkingDay)) {
+            lastWorkingDay = new Date(lastWorkingDay.getTime() - (24 * 60 * 60 * 1000));
+            lastWorkingDayStr = formatDate(lastWorkingDay);
+        }
+
+        return lastWorkingDayStr;
+    }
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}${month}${day}`;
+    }
+
+    function isWorkingDay(date) {
+        const dayOfWeek = date.getDay();
+        return dayOfWeek !== 0 && dayOfWeek !== 6;
+    }
+
+
+    function loadTable(selfPicked) {
+        console.log("domain: " + document.domain + ", port: " + location.port);
+        console.log("date: " + getUrlParameter("date") + ", strict: " + getUrlParameter("strict"));
+        console.log("lastWorkingDay: " + getLastWorkingDay());
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/selections";
         var dataJSON = {};
-        dataJSON["date"] = getUrlParameter("date");
+        dataJSON["date"] = getUrlParameter("date") || getLastWorkingDay();
         dataJSON["strict"] = getUrlParameter("strict") === 'true';
 
         $.ajax({
@@ -176,7 +259,7 @@
                         val.close = val.close + "▼";
                     }
 
-                    val.name = '<div class="innerContainer"><div class="target"><a href="https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcw/zcw1_' + val.stockID + '.djhtm" target="_blank" rel="noopener noreferrer">' + val.stockID + "<br>" + val.name + '</a></div><div class="candle"><canvas class="canvas' + val.stockID + '" width="20px" height="40px"></canvas></div></div>';
+                    val.name = '<div class="innerContainer"><div class="target"><a href="https://stock.wearn.com/finance_chart.asp?stockid=' + val.stockID + '&timekind=0&timeblock=120&sma1=8&sma2=21&sma3=55&volume=1" target="_blank" rel="noopener noreferrer">' + val.stockID + "<br>" + val.name + '</a></div><div class="candle"><canvas class="canvas' + val.stockID + '" width="20px" height="40px"></canvas></div></div>';
 
                     var count = 0;
                     count += val.concentration1 > 0 ? 1 : 0;
@@ -199,6 +282,12 @@
                     if (count >= 9) {
                         val["rate"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">滿貫</span>';
                     }
+
+                    if (selfPicked.includes(val.stockID)) {
+                        val["action"] = '<p class="existed">已加入</p>';
+                    } else {
+                        val["action"] = '<button id="' + val.stockID + '" type="button" class="btn btn-primary">加入</button>';
+                    }
                 });
 
                 $('#myTable').DataTable({
@@ -209,9 +298,23 @@
                     scrollX: true,
                     columnDefs: [
                         {
-                            targets: [0, 1, 2],
+                            targets: [0, 1],
                             searchable: true,
                             responsivePriority: 1
+                        },
+                        {
+                            targets: [2],
+                            searchable: true,
+                            responsivePriority: 1,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                current = $(td).text();
+                                category = current.split(".")[0];
+                                if (current.includes(".tse")) {
+                                    $(td).html(category + ' <span class="badge badge-primary" style="font-size:1.4rem;">上市</span>');
+                                } else if (current.includes(".otc")) {
+                                    $(td).html(category + ' <span class="badge badge-info" style="font-size:1.4rem;">上櫃</span>');
+                                }
+                            }
                         },
                         {
                             targets: [3],
@@ -249,11 +352,12 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
-                        {"data": "category"},
-                        {"data": "close", "sWidth": "60px", "className": "text-right"},
-                        {"data": "quoteChange", "sWidth": "60px", "className": "text-right"},
-                        {"data": "volume", "sWidth": "60px", "className": "text-right"},
+                        {"data": "name", "sWidth": "50px"},
+                        {"data": "category", "sWidth": "90px"},
+                        {"data": "close", "sWidth": "50px", "className": "text-right"},
+                        {"data": "quoteChange", "sWidth": "50px", "className": "text-right"},
+                        {"data": "volume", "sWidth": "50px", "className": "text-right"},
+                        {"data": "action", "sWidth": "50px", "className": "text-right"},
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
@@ -294,7 +398,7 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
+                        {"data": "name", "sWidth": "50px"},
                         {"data": "concentration1", "sWidth": "50px", "className": "text-center"},
                         {"data": "concentration5", "sWidth": "50px", "className": "text-center"},
                         {"data": "concentration10", "sWidth": "60px", "className": "text-center"},
@@ -341,11 +445,11 @@
                     data: data.entries,
                     columns: [
                         {"data": "rate", "sWidth": "50px"},
-                        {"data": "name", "sWidth": "70px"},
+                        {"data": "name", "sWidth": "50px"},
                         {"data": "trust", "sWidth": "50px", "className": "text-center"},
-                        {"data": "trust10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "trust10", "sWidth": "50px", "className": "text-center"},
                         {"data": "foreign", "sWidth": "50px", "className": "text-center"},
-                        {"data": "foreign10", "sWidth": "60px", "className": "text-center"},
+                        {"data": "foreign10", "sWidth": "50px", "className": "text-center"},
                         {"data": "dealer", "sWidth": "50px", "className": "text-center"},
                         {"data": "hedging", "sWidth": "50px", "className": "text-center"},
                     ],
@@ -363,12 +467,54 @@
             error: function () {
             }
         });
+    };
 
-    });
+    function loadSelfPicked() {
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
+        var result = [];
+
+        $.ajax({
+            type: "GET",
+            url: requestURL,
+            success: function (data) {
+                $.each(data.entries, function (_, val) {
+                    result.push(val.stockID);
+                });
+
+                loadTable(result);
+            },
+            error: function () {
+            }
+        });
+    };
 
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();
+    });
+
+    $(document).on('click', '.btn-primary', function () {
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
+        var dataJSON = {"stockIDs": [$(this).attr('id')]};
+
+        $.post(requestURL, JSON.stringify(dataJSON), function (response) {
+            console.log('Response: ' + response);
+            // check if the response was successful
+            if (response.success == true) {
+                // display success message in the alert
+                $('#alert').addClass('alert-success').text('成功加入自選股');
+                loadSelfPicked();
+            } else {
+                // display failure message in the alert
+                $('#alert').addClass('alert-danger').text('加入自選股失敗');
+            }
+            // show the alert
+            $('#alert').show();
+            // dismiss the alert after 3 seconds
+            setTimeout(function () {
+                $('#alert').hide();
+            }, 3000);
+        });
     });
 
     function getUrlParameter(sParam) {
@@ -392,6 +538,10 @@
         var canvas = document.getElementsByClassName("canvas" + id)[idx];
         var ctx = canvas.getContext("2d");
 
+        // Set canvas width and height explicitly
+        canvas.width = Math.floor(canvas.clientWidth);
+        canvas.height = Math.floor(canvas.clientHeight);
+
         // Draw the wick
         var maxValue = high
         var minValue = low
@@ -402,10 +552,10 @@
         let ratio = canvas.height / (maxValue - minValue);
 
         // scale down the values
-        high = (high - minValue + 0.0001) * ratio;
-        low = (low - minValue + 0.0001) * ratio;
-        open = (open - minValue + 0.0001) * ratio;
-        close = (close - minValue + 0.0001) * ratio;
+        high = Math.round((high - minValue + 0.0001) * ratio);
+        low = Math.round((low - minValue + 0.0001) * ratio);
+        open = Math.round((open - minValue + 0.0001) * ratio);
+        close = Math.round((close - minValue + 0.0001) * ratio);
 
         // set candlestick bar color
         let barColor = 'green';
@@ -420,14 +570,16 @@
 
         let max = Math.max(open, close)
         max = (max != Infinity && max > 1) ? max : 20;
+        max = Math.round(max);
+        diff = Math.round(diff);
 
         ctx.fillRect(4, canvas.height - max, 12, diff);
 
         // draw wick
         ctx.strokeStyle = barColor;
         ctx.beginPath();
-        ctx.moveTo(canvas.width / 2, high);
-        ctx.lineTo(canvas.width / 2, low);
+        ctx.moveTo(Math.floor(canvas.width / 2) + 0.5, high + 0.5);
+        ctx.lineTo(Math.floor(canvas.width / 2) + 0.5, low + 0.5);
         ctx.stroke();
     };
 </script>

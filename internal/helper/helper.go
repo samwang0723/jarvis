@@ -18,6 +18,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 	"unsafe"
 )
 
@@ -85,4 +86,17 @@ func StringToUint64(s string) (uint64, error) {
 	}
 
 	return f, nil
+}
+
+func Today() string {
+	return time.Now().Format("20060102")
+}
+
+func RewindDate(dateStr string, rewind int) string {
+	date, err := time.Parse("20060102", dateStr)
+	if err != nil {
+		return ""
+	}
+
+	return date.AddDate(0, 0, rewind).Format("20060102")
 }

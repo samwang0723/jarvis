@@ -15,8 +15,14 @@ package handlers
 
 import (
 	"context"
+	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
+	"github.com/samwang0723/jarvis/internal/cache"
+)
+
+const (
+	cronLockPeriod = 1
 )
 
 func (h *handlerImpl) ListSelections(
@@ -33,9 +39,9 @@ func (h *handlerImpl) ListSelections(
 	}, nil
 }
 
-func (h *handlerImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context, schedule string) error {
+func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context, schedule string) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
-		err := h.dataService.CronjobPresetRealtimMonitoringKeys(ctx)
+		err := h.dataService.CronjobPresetRealtimeMonitoringKeys(ctx)
 		if err != nil {
 			h.logger.Error().Msgf("failed to preset real time keys: %s", err)
 		}
@@ -49,6 +55,11 @@ func (h *handlerImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context, sc
 
 func (h *handlerImpl) RetrieveRealTimePrice(ctx context.Context, schedule string) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
+		if h.dataService.ObtainLock(ctx, cache.CronjobLock, cronLockPeriod*time.Minute) == nil {
+			h.logger.Info().Msg("cronjob lock is not obtained")
+
+			return
+		}
 		err := h.dataService.RetrieveRealTimePrice(ctx)
 		if err != nil {
 			h.logger.Error().Msgf("failed to retrieve real time price: %s", err)

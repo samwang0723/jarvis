@@ -89,6 +89,7 @@ func Serve() {
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
 			Logger:        &newLogger,
+			Password:      cfg.RedisCache.Password,
 		}),
 		services.WithCronJob(services.CronjobConfig{
 			Logger: &newLogger,
@@ -207,7 +208,7 @@ _______________________________________________
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
-	// start revered proxy http server
+	// start reversed proxy http server
 	go s.startGRPCGateway(ctx, addr)
 
 	lis, err := net.Listen("tcp", addr)
@@ -270,7 +271,7 @@ func (s *server) Run(ctx context.Context) error {
 	go func(ctx context.Context, svc *server) {
 		defer waitGroup.Done()
 
-		err := svc.Handler().CronjobPresetRealtimMonitoringKeys(childCtx, "00 6 * * 1-5")
+		err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
 		if err != nil {
 			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
 		}
@@ -287,7 +288,7 @@ func (s *server) Run(ctx context.Context) error {
 
 	select {
 	case <-quit:
-		log.Warn("singal interrupt")
+		log.Warn("signal interrupt")
 		cancel()
 	case <-childCtx.Done():
 		log.Warn("main context being cancelled")

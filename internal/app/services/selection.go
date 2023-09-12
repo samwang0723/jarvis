@@ -46,6 +46,7 @@ const (
 	webScraping                = "WEB_SCRAPING"
 	skipHeader                 = "skip_dates"
 	closeToHighestToday        = 0.985
+	realtimeVolume             = 3000
 )
 
 //nolint:nolintlint, gochecknoglobals, gosec
@@ -62,7 +63,7 @@ var (
 func (s *serviceImpl) ListSelections(ctx context.Context,
 	req *dto.ListSelectionRequest,
 ) (objs []*entity.Selection, err error) {
-	today := today()
+	today := helper.Today()
 	latestDate, err := s.dal.DataCompletionDate(ctx, today)
 	if err != nil {
 		return nil, err
@@ -112,7 +113,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			// override realtime data with history record.
 			history := chips[realtime.StockID]
 			// if its today, check if reach to highest
-			if history == nil || (realtime.Close/realtime.High) <= closeToHighestToday {
+			if history == nil || (realtime.Close/realtime.High) <= closeToHighestToday || realtime.Volume < realtimeVolume {
 				continue
 			}
 
@@ -141,7 +142,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			res = append(res, obj)
 		}
 
-		objs, err = s.dal.AdvancedFiltering(res, req.Strict, req.Date)
+		objs, err = s.dal.AdvancedFiltering(ctx, res, req.Strict, req.Date)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("advanced filtering failed")
 
@@ -152,13 +153,13 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	return objs, nil
 }
 
-func (s *serviceImpl) CronjobPresetRealtimMonitoringKeys(ctx context.Context) error {
+func (s *serviceImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error {
 	keys, err := s.dal.GetRealTimeMonitoringKeys(ctx)
 	if err != nil {
 		return err
 	}
 
-	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, today())
+	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, helper.Today())
 	err = s.cache.SAdd(ctx, redisKey, keys)
 	if err != nil {
 		return err
@@ -233,7 +234,7 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 			}
 
 			// insert temp cache into redis
-			redisKey := fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, today(), key)
+			redisKey := fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, helper.Today(), key)
 			err = ca.Set(ctx, redisKey, rawStr, defaultRealtimeCacheExpire)
 			if err != nil {
 				return
@@ -287,7 +288,7 @@ func (s *serviceImpl) checkHoliday(ctx context.Context) error {
 	}
 
 	for _, date := range skipDates {
-		if date == today() {
+		if date == helper.Today() {
 			return xerrors.New("skip holiday")
 		}
 	}
@@ -296,9 +297,5 @@ func (s *serviceImpl) checkHoliday(ctx context.Context) error {
 }
 
 func getRealtimeMonitoringKeys() string {
-	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, today())
-}
-
-func today() string {
-	return time.Now().Format("20060102")
+	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, helper.Today())
 }

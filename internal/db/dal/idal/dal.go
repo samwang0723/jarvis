@@ -23,4 +23,5 @@ type IDAL interface {
 	IStakeConcentrationDAL
 	IThreePrimaryDAL
 	ISelectionDAL
+	IPickedStockDAL
 }

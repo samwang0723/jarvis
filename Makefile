@@ -58,10 +58,10 @@ lint-skip-fix: ## skip linting the system generate files
 # benchmark #
 #############
 
-bench: ## launch benchs
+bench: ## launch benches
 	go test $(SOURCE_LIST) -bench=. -benchmem | tee ./bench.txt
 
-bench-compare: ## compare benchs results
+bench-compare: ## compare benches results
 	benchstat ./bench.txt
 
 #######
@@ -108,19 +108,23 @@ build:
 	@echo "[go build] build executable binary for development"
 	@go build -o jarvis-api cmd/main.go
 
+# protoc -I third_party --openapiv2_out api --openapiv2_opt logtostderr=true --proto_path=internal/app/pb jarvis.v1.proto
 proto: ## generate proto files
-	@echo "[protoc] generate protobuf related go files, grpc_gateway reversed proxy and swagger"
+	@echo "[protoc] generate protobuf related go files, grpc_gateway reversed proxy"
 	@protoc jarvis.v1.proto -I . \
-		-I $$GOPATH/src/github.com/samwang0723/jarvis/third_party \
+		-I ./third_party \
+		-I ./internal/app/pb \
 		--go_out ./internal/app/pb --go_opt paths=source_relative \
 		--go-grpc_opt=require_unimplemented_servers=false \
     	--go-grpc_out ./internal/app/pb --go-grpc_opt paths=source_relative  \
 		--grpc-gateway_out ./internal/app/pb/gateway \
 		--grpc-gateway_opt logtostderr=true \
 		--grpc-gateway_opt paths=source_relative \
-		--grpc-gateway_opt standalone=true \
-		--openapiv2_out=logtostderr=true:$$GOPATH/src/github.com/samwang0723/jarvis/api \
-		--proto_path=$$GOPATH/src/github.com/samwang0723/jarvis/internal/app/pb
+		--grpc-gateway_opt standalone=true
+
+	@echo "[protoc] generate openapiv2 swagger json"
+	@protoc -I ./third_party -I ./internal/app/pb --openapiv2_out api --openapiv2_opt logtostderr=true jarvis.v1.proto
+		
 
 docker-build: lint test docker-m1 ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
@@ -134,7 +138,7 @@ docker-m1:
 		-f build/docker/app/Dockerfile.local .
 
 docker-amd64-deps:
-	@echo "[docker buildx] install buildx depedency"
+	@echo "[docker buildx] install buildx dependency"
 	@docker buildx create --name m1-builder
 	@docker buildx use m1-builder
 	@docker buildx inspect --bootstrap

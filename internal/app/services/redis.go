@@ -14,6 +14,10 @@
 package services
 
 import (
+	"context"
+	"time"
+
+	"github.com/bsm/redislock"
 	"github.com/rs/zerolog"
 	"golang.org/x/xerrors"
 )
@@ -29,6 +33,9 @@ type RedisConfig struct {
 	// The logger to use. If not defined an output-discarding logger will
 	// be used instead.
 	Logger *zerolog.Logger
+
+	// Redis password
+	Password string
 }
 
 func (cfg *RedisConfig) validate() error {
@@ -41,6 +48,14 @@ func (cfg *RedisConfig) validate() error {
 	}
 
 	return nil
+}
+
+func (s *serviceImpl) ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock {
+	if s.cache == nil {
+		return nil
+	}
+
+	return s.cache.ObtainLock(ctx, key, expire)
 }
 
 func (s *serviceImpl) StopRedis() error {

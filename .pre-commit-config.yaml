@@ -1,40 +1,21 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v0.7.1
-  hooks:
-    - id: check-merge-conflict
-    - id: check-yaml
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-repos:
-- repo: https://github.com/ambv/black
-  rev: stable
-  hooks:
-    - id: black
-      exclude: |
-        (?x)(
-          ^third_party/|
-          ^tools/|
-          ^api/|
-          ^internal/app/pb/
-          )
-
-- repo: https://github.com/golangci/golangci-lint # golangci-lint hook repo
-  rev: v1.48.0 # golangci-lint hook repo revision
-  hooks:
-    - id: golangci-lint # hook id
-
-- repo: https://github.com/dnephin/pre-commit-golang
-  rev: v0.5.1
-  hooks:
-    - id: go-fmt
-    - id: go-imports
-    # - id: go-cyclo
-    #  args: [-over=15]
-    - id: validate-toml
-    - id: no-go-testing
-    - id: golangci-lint
-    # - id: go-critic
-    # - id: go-unit-tests
-    # - id: go-build
-    - id: go-mod-tidy
+  - repo: https://github.com/ambv/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        exclude:
+          "(?x)(\n  ^third_party/|\n  ^tools/|\n  ^api/|\n  ^internal/app/pb/\n
+          \ )\n"
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.51.1
+    hooks:
+      - id: golangci-lint
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-imports
+      - id: validate-toml
+      - id: no-go-testing
+      - id: golangci-lint
+      - id: go-mod-tidy
