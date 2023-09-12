@@ -13,7 +13,7 @@
     <title>Jarvis - Self Picked Stocks</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
-    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
@@ -181,7 +181,7 @@
     });
 
     function loadTable() {
-        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/pickedstocks";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
 
         $.ajax({
             type: "GET",
@@ -409,7 +409,7 @@
     });
 
     $(document).on('click', '.btn-danger', function () {
-        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/pickedstocks/" + $(this).attr('id');
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks/" + $(this).attr('id');
 
         $.ajax({
             type: "DELETE",

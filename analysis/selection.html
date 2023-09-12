@@ -13,7 +13,7 @@
     <title>Jarvis - Selections</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
-    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
@@ -240,7 +240,7 @@
         console.log("domain: " + document.domain + ", port: " + location.port);
         console.log("date: " + getUrlParameter("date") + ", strict: " + getUrlParameter("strict"));
         console.log("lastWorkingDay: " + getLastWorkingDay());
-        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/selections";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/selections";
         var dataJSON = {};
         dataJSON["date"] = getUrlParameter("date") || getLastWorkingDay();
         dataJSON["strict"] = getUrlParameter("strict") === 'true';
@@ -470,7 +470,7 @@
     };
 
     function loadSelfPicked() {
-        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/pickedstocks";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
         var result = [];
 
         $.ajax({
@@ -494,7 +494,7 @@
     });
 
     $(document).on('click', '.btn-primary', function () {
-        var requestURL = "http://" + document.domain + ":" + location.port + "/v1/pickedstocks";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
         var dataJSON = {"stockIDs": [$(this).attr('id')]};
 
         $.post(requestURL, JSON.stringify(dataJSON), function (response) {
