@@ -31,7 +31,7 @@ test-coverage-report:
 ########
 
 lint: lint-check-deps ## lints the entire codebase
-	@golangci-lint run ./... --config=./.golangci.toml && \
+	@golangci-lint run ./... --config=./.golangci.toml --timeout=15m && \
 	if [ $$(gofumpt -e -l --extra cmd/ | wc -l) = "0" ] && \
 		[ $$(gofumpt -e -l --extra internal/ | wc -l) = "0" ] && \
 		[ $$(gofumpt -e -l --extra configs/ | wc -l) = "0" ] ; \
