@@ -21,8 +21,8 @@ import (
 )
 
 type IStakeConcentrationDAL interface {
-	GetStakeConcentrationByStockID(ctx context.Context, stockID string, date string) (*entity.StakeConcentration, error)
+	GetStakeConcentrationByStockID(ctx context.Context, stockID, date string) (*entity.StakeConcentration, error)
 	GetStakeConcentrationsWithVolumes(ctx context.Context,
-		stockID string, date string) (objs []*entity.CalculationBase, err error)
+		stockID, date string) (objs []*entity.CalculationBase, err error)
 	BatchUpsertStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/sirupsen/logrus"
-
 	logtest "github.com/sirupsen/logrus/hooks/test"
 )
 

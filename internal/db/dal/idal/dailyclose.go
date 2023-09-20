@@ -28,7 +28,11 @@ type ListDailyCloseSearchParams struct {
 type IDailyCloseDAL interface {
 	CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error
 	BatchUpsertDailyClose(ctx context.Context, objs []*entity.DailyClose) error
-	ListDailyClose(ctx context.Context, offset int32, limit int32,
-		searchParams *ListDailyCloseSearchParams) (objs []*entity.DailyClose, totalCount int64, err error)
+	ListDailyClose(
+		ctx context.Context,
+		offset,
+		limit int32,
+		searchParams *ListDailyCloseSearchParams,
+	) (objs []*entity.DailyClose, totalCount int64, err error)
 	HasDailyClose(ctx context.Context, date string) bool
 }

@@ -29,6 +29,6 @@ type ListThreePrimarySearchParams struct {
 type IThreePrimaryDAL interface {
 	CreateThreePrimary(ctx context.Context, obj *entity.ThreePrimary) error
 	BatchUpsertThreePrimary(ctx context.Context, objs []*entity.ThreePrimary) error
-	ListThreePrimary(ctx context.Context, offset int32, limit int32,
+	ListThreePrimary(ctx context.Context, offset, limit int32,
 		searchParam *ListThreePrimarySearchParams) (objs []*entity.ThreePrimary, totalCount int64, err error)
 }

@@ -26,5 +26,5 @@ import (
 type ITransactionDAL interface {
 	CreateTransaction(ctx context.Context, obj *entity.Transaction) error
 	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
-	ListTransactions(ctx context.Context, userID uint64, limit int, offset int) ([]*entity.Transaction, error)
+	ListTransactions(ctx context.Context, userID uint64, limit, offset int) ([]*entity.Transaction, error)
 }

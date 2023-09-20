@@ -15,7 +15,6 @@ package dal
 
 import (
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-
 	"gorm.io/gorm"
 )
 

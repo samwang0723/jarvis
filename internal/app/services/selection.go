@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	// this is to autoload the .env file
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -30,9 +32,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"golang.org/x/xerrors"
-
-	// this is to autoload the .env file
-	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
@@ -191,7 +190,7 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 			uri := fmt.Sprintf(realTimePriceURI, key)
 			finalURI := fmt.Sprintf(proxyURI, token, uri)
 
-			req, err := http.NewRequestWithContext(ctx, "GET", finalURI, http.NoBody)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, finalURI, http.NoBody)
 			if err != nil {
 				logger.Error().Err(err).Msg("failed to create request")
 

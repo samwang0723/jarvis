@@ -32,15 +32,15 @@ test-coverage-report:
 
 lint: lint-check-deps ## lints the entire codebase
 	@golangci-lint run ./... --config=./.golangci.toml && \
-	if [ $$(gofumpt -e -l cmd/ | wc -l) = "0" ] && \
-		[ $$(gofumpt -e -l internal/ | wc -l) = "0" ] && \
-		[ $$(gofumpt -e -l configs/ | wc -l) = "0" ] ; \
+	if [ $$(gofumpt -e -l --extra cmd/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l --extra internal/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l --extra configs/ | wc -l) = "0" ] ; \
 		then exit 0; \
 	else \
 		echo "these files needs to be gofumpt-ed"; \
-		gofumpt -e -l cmd/; \
-		gofumpt -e -l internal/; \
-		gofumpt -e -l configs/; \
+		gofumpt -e -l --extra cmd/; \
+		gofumpt -e -l --extra internal/; \
+		gofumpt -e -l --extra configs/; \
 	fi
 
 lint-check-deps:
