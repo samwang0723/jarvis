@@ -41,7 +41,7 @@ jobs:
         timeout-minutes: 10
         uses: golangci/golangci-lint-action@v3
         with:
-          version: "v1.54"
+          version: "v1.52"
   test:
     name: Test
     needs:
