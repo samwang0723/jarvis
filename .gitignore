@@ -10,3 +10,4 @@ operation/
 backup.sql
 bench.txt
 coverage.out
+secrets.yaml
