@@ -117,3 +117,21 @@ func (s *server) DeletePickedStocks(
 
 	return dto.DeletePickedStocksResponseToPB(res), nil
 }
+
+func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	res, err := s.Handler().CreateUser(ctx, dto.CreateUserRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.CreateUserResponseToPB(res), nil
+}
+
+func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.ListUsersResponse, error) {
+	res, err := s.Handler().ListUsers(ctx, dto.ListUsersRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListUsersResponseToPB(res), nil
+}

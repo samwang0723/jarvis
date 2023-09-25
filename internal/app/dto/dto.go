@@ -123,3 +123,28 @@ type DeletePickedStocksResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type ListUsersRequest struct {
+	Offset int32 `json:"offset"`
+	Limit  int32 `json:"limit"`
+}
+
+type ListUsersResponse struct {
+	Entries    []*entity.User `json:"entries"`
+	Offset     int32          `json:"offset"`
+	Limit      int32          `json:"limit"`
+	TotalCount int64          `json:"totalCount"`
+}
+
+type CreateUserRequest struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
+}
+
+type CreateUserResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}

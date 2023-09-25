@@ -15,6 +15,7 @@ package dal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
@@ -31,7 +32,7 @@ func (i *dalImpl) UpdateUser(ctx context.Context, obj *entity.User) error {
 	return err
 }
 
-func (i *dalImpl) DeleteUserByID(ctx context.Context, id entity.ID) error {
+func (i *dalImpl) DeleteUserByID(ctx context.Context, id uint64) error {
 	err := i.db.Delete(&entity.User{}, id).Error
 
 	return err
@@ -64,11 +65,21 @@ func (i *dalImpl) GetUserByPhone(ctx context.Context, phone string) (*entity.Use
 	return res, nil
 }
 
-func (i *dalImpl) ListUsers(ctx context.Context, offset, limit int) ([]*entity.User, error) {
-	res := []*entity.User{}
-	if err := i.db.Offset(offset).Limit(limit).Find(&res).Error; err != nil {
-		return nil, err
+func (i *dalImpl) ListUsers(
+	ctx context.Context,
+	offset,
+	limit int32,
+) (objs []*entity.User, totalCount int64, err error) {
+	sql := "select count(*) from users"
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return res, nil
+	sql = fmt.Sprintf(`select * from users order by created_at desc limit %d, %d`, offset, limit)
+	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
+		return nil, totalCount, err
+	}
+
+	return objs, totalCount, nil
 }

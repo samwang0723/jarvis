@@ -87,7 +87,7 @@ enable = [
     "sqlclosecheck",
     "staticcheck",
     # "structcheck", deprecated
-    "stylecheck",
+    # "stylecheck",
     # "tagliatelle",
     "tenv",
     "testableexamples",

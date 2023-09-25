@@ -35,6 +35,8 @@ type IHandler interface {
 	ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error)
 	InsertPickedStocks(ctx context.Context, req *dto.InsertPickedStocksRequest) (*dto.InsertPickedStocksResponse, error)
 	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
+	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
+	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
 }
 
 type handlerImpl struct {

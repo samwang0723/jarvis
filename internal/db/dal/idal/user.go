@@ -23,9 +23,9 @@ import (
 type IUserDAL interface {
 	CreateUser(ctx context.Context, obj *entity.User) error
 	UpdateUser(ctx context.Context, obj *entity.User) error
-	DeleteUserByID(ctx context.Context, id entity.ID) error
+	DeleteUserByID(ctx context.Context, id uint64) error
 	GetUserByID(ctx context.Context, id uint64) (*entity.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	GetUserByPhone(ctx context.Context, phone string) (*entity.User, error)
-	ListUsers(ctx context.Context, offset, limit int) ([]*entity.User, error)
+	ListUsers(ctx context.Context, offset, limit int32) ([]*entity.User, int64, error)
 }

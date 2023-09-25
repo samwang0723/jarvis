@@ -583,3 +583,103 @@ func DeletePickedStocksResponseToPB(in *DeletePickedStocksResponse) *pb.DeletePi
 		ErrorMessage: pbErrorMessage,
 	}
 }
+
+func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbEmail := in.Email
+	pbPhone := in.Phone
+	pbName := in.Name
+
+	return &CreateUserRequest{
+		Email: pbEmail,
+		Phone: pbPhone,
+		Name:  pbName,
+	}
+}
+
+func CreateUserResponseToPB(in *CreateUserResponse) *pb.CreateUserResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateUserResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func ListUsersRequestFromPB(in *pb.ListUsersRequest) *ListUsersRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &ListUsersRequest{
+		Offset: in.Offset,
+		Limit:  in.Limit,
+	}
+}
+
+func ListUsersResponseToPB(in *ListUsersResponse) *pb.ListUsersResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.User, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, UserToPB(obj))
+	}
+
+	return &pb.ListUsersResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func UserToPB(in *entity.User) *pb.User {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbEmail := in.Email
+	pbPhone := in.Phone
+	pbName := in.Name
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	}
+
+	return &pb.User{
+		Id:        pbID.Uint64(),
+		Email:     pbEmail,
+		Phone:     pbPhone,
+		Name:      pbName,
+		CreatedAt: pbCreatedAt,
+		UpdatedAt: pbUpdatedAt,
+		DeletedAt: pbDeletedAt,
+	}
+}

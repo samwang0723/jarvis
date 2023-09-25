@@ -15,9 +15,6 @@
 package structuredlog
 
 import (
-	"time"
-
-	"github.com/getsentry/sentry-go"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
@@ -25,11 +22,6 @@ import (
 
 //nolint:nolintlint, gochecknoglobals
 var instance ILogger
-
-const (
-	// sampleRate   = 0.2
-	flushTimeout = 2 * time.Second
-)
 
 type ILogger interface {
 	RawLogger() *logrus.Logger
@@ -88,23 +80,9 @@ func NullLogger() ILogger {
 	return instance
 }
 
-// func initSentry() {
-//	err := sentry.Init(sentry.ClientOptions{
-//		Dsn:         "https://f3fb4890176c442aafef411fcf812312@o1049557.ingest.sentry.io/6030819",
-//		Environment: "development",
-//		// Specify a fixed sample rate:
-//		TracesSampleRate: sampleRate,
-//	})
-//	if err != nil {
-//		log.Fatalf("sentry.Init: %s", err)
-//	}
-//}
-
 func (l *structuredLogger) RawLogger() *logrus.Logger {
 	return l.logger
 }
 
 func (l *structuredLogger) Flush() {
-	// Flush buffered events before the program terminates.
-	sentry.Flush(flushTimeout)
 }
