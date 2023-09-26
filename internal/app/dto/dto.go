@@ -148,3 +148,23 @@ type CreateUserResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type UpdateBalanceViewRequest struct {
+	UserID        uint64  `json:"userID"`
+	CurrentAmount float32 `json:"amount"`
+}
+
+type UpdateBalanceViewResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}
+
+type GetBalanceViewRequest struct {
+	UserID uint64 `json:"userID"`
+}
+
+type GetBalanceViewResponse struct {
+	Balance *entity.BalanceView `json:"balance"`
+}

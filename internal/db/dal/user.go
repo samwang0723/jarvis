@@ -15,18 +15,40 @@ package dal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"gorm.io/gorm"
 )
 
+var ErrNoUserID = errors.New("no user id used in update method")
+
 func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
-	err := i.db.Create(obj).Error
+	err := i.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(obj).Error; err != nil {
+			return err
+		}
+
+		balanceView := &entity.BalanceView{
+			UserID:        obj.ID.Uint64(),
+			CurrentAmount: 0,
+		}
+		if err := tx.Create(balanceView).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return err
 }
 
 func (i *dalImpl) UpdateUser(ctx context.Context, obj *entity.User) error {
+	if obj.ID.Uint64() == 0 {
+		return ErrNoUserID
+	}
+
 	err := i.db.Unscoped().Model(&entity.User{}).Save(obj).Error
 
 	return err

@@ -135,3 +135,21 @@ func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.L
 
 	return dto.ListUsersResponseToPB(res), nil
 }
+
+func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb.GetBalanceResponse, error) {
+	res, err := s.Handler().GetBalanceViewByUserID(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.GetBalanceResponseToPB(res), nil
+}
+
+func (s *server) UpdateBalance(ctx context.Context, req *pb.UpdateBalanceRequest) (*pb.UpdateBalanceResponse, error) {
+	res, err := s.Handler().UpdateBalanceView(ctx, dto.UpdateBalanceRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.UpdateBalanceResponseToPB(res), nil
+}

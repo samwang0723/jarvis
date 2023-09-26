@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package idal
+package services
 
 import (
 	"context"
@@ -20,8 +20,23 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IBalanceViewDAL interface {
-	CreateBalanceView(ctx context.Context, obj *entity.BalanceView) error
-	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) error
-	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
+func (s *serviceImpl) UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error) {
+	err = s.dal.UpdateBalanceView(ctx, obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceImpl) GetBalanceViewByUserID(
+	ctx context.Context,
+	userID uint64,
+) (obj *entity.BalanceView, err error) {
+	obj, err = s.dal.GetBalanceViewByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
 }

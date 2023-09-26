@@ -94,7 +94,7 @@ type Model struct {
 	ID        ID         `gorm:"primaryKey" mapstructure:"id"`
 	CreatedAt *time.Time `gorm:"column:created_at" mapstructure:"created_at"`
 	UpdatedAt *time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
-	DeletedAt *time.Time `gorm:"column:deleted_at" mapstructure:"deleted_at"`
+	DeletedAt gorm.DeletedAt
 }
 
 func (m *Model) BeforeCreate(tx *gorm.DB) (err error) {

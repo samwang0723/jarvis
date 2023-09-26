@@ -59,6 +59,8 @@ type IService interface {
 	DeleteUserByID(ctx context.Context, id uint64) (err error)
 	GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error)
 	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
+	GetBalanceViewByUserID(ctx context.Context, userID uint64) (obj *entity.BalanceView, err error)
+	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error)
 }
 
 type serviceImpl struct {

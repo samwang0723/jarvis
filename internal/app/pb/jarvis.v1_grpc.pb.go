@@ -34,6 +34,8 @@ type JarvisV1Client interface {
 	DeletePickedStocks(ctx context.Context, in *DeletePickedStocksRequest, opts ...grpc.CallOption) (*DeletePickedStocksResponse, error)
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
+	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
+	UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error)
 }
 
 type jarvisV1Client struct {
@@ -143,6 +145,24 @@ func (c *jarvisV1Client) ListUsers(ctx context.Context, in *ListUsersRequest, op
 	return out, nil
 }
 
+func (c *jarvisV1Client) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
+	out := new(GetBalanceResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/GetBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jarvisV1Client) UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error) {
+	out := new(UpdateBalanceResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/UpdateBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JarvisV1Server is the server API for JarvisV1 service.
 // All implementations should embed UnimplementedJarvisV1Server
 // for forward compatibility
@@ -158,44 +178,63 @@ type JarvisV1Server interface {
 	DeletePickedStocks(context.Context, *DeletePickedStocksRequest) (*DeletePickedStocksResponse, error)
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
+	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
+	UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error)
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
-type UnimplementedJarvisV1Server struct {
-}
+type UnimplementedJarvisV1Server struct{}
 
 func (UnimplementedJarvisV1Server) ListDailyClose(context.Context, *ListDailyCloseRequest) (*ListDailyCloseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDailyClose not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListStocks(context.Context, *ListStockRequest) (*ListStockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStocks not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCategories not implemented")
 }
+
 func (UnimplementedJarvisV1Server) GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStakeConcentration not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListThreePrimary not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListSelections(context.Context, *ListSelectionRequest) (*ListSelectionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSelections not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListPickedStocks(context.Context, *ListPickedStocksRequest) (*ListPickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPickedStocks not implemented")
 }
+
 func (UnimplementedJarvisV1Server) InsertPickedStocks(context.Context, *InsertPickedStocksRequest) (*InsertPickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertPickedStocks not implemented")
 }
+
 func (UnimplementedJarvisV1Server) DeletePickedStocks(context.Context, *DeletePickedStocksRequest) (*DeletePickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePickedStocks not implemented")
 }
+
 func (UnimplementedJarvisV1Server) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
+
 func (UnimplementedJarvisV1Server) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
+}
+
+func (UnimplementedJarvisV1Server) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
+}
+
+func (UnimplementedJarvisV1Server) UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalance not implemented")
 }
 
 // UnsafeJarvisV1Server may be embedded to opt out of forward compatibility for this service.
@@ -407,6 +446,42 @@ func _JarvisV1_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JarvisV1_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisV1Server).GetBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.v1.JarvisV1/GetBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisV1Server).GetBalance(ctx, req.(*GetBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JarvisV1_UpdateBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisV1Server).UpdateBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.v1.JarvisV1/UpdateBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisV1Server).UpdateBalance(ctx, req.(*UpdateBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JarvisV1_ServiceDesc is the grpc.ServiceDesc for JarvisV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -457,6 +532,14 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListUsers",
 			Handler:    _JarvisV1_ListUsers_Handler,
+		},
+		{
+			MethodName: "GetBalance",
+			Handler:    _JarvisV1_GetBalance_Handler,
+		},
+		{
+			MethodName: "UpdateBalance",
+			Handler:    _JarvisV1_UpdateBalance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

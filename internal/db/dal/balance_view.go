@@ -28,12 +28,14 @@ func (i *dalImpl) CreateBalanceView(ctx context.Context, obj *entity.BalanceView
 
 // UpdateBalanceView updates a balance view while user inserts a transaction.
 func (i *dalImpl) UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) error {
-	err := i.db.Unscoped().Model(&entity.BalanceView{}).Save(obj).Error
+	err := i.db.Model(&entity.BalanceView{}).
+		Where("user_id = ?", obj.UserID).
+		Updates(obj).Error
 
 	return err
 }
 
-func (i *dalImpl) GetBalanceViewByUserID(ctx context.Context, userID entity.ID) (*entity.BalanceView, error) {
+func (i *dalImpl) GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error) {
 	res := &entity.BalanceView{}
 	if err := i.db.First(res, "user_id = ?", userID).Error; err != nil {
 		return nil, err

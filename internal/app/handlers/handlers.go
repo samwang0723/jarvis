@@ -37,6 +37,8 @@ type IHandler interface {
 	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
+	UpdateBalanceView(ctx context.Context, req *dto.UpdateBalanceViewRequest) (*dto.UpdateBalanceViewResponse, error)
+	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
 }
 
 type handlerImpl struct {

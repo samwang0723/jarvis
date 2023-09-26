@@ -92,6 +92,19 @@ service JarvisV1 {
     option idempotency_level = NO_SIDE_EFFECTS;
     option (google.api.http) = {get: "/v1/users"};
   }
+
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {get: "/v1/balances/{userID}"};
+  }
+
+  rpc UpdateBalance(UpdateBalanceRequest) returns (UpdateBalanceResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/balances"
+      body: "*"
+    };
+  }
 }
 
 message ListDailyCloseRequest {
@@ -327,4 +340,33 @@ message ListUsersResponse {
   int32 limit = 2;
   int64 totalCount = 3;
   repeated User entries = 4;
+}
+
+message GetBalanceRequest {
+  uint64 userID = 1;
+}
+
+message GetBalanceResponse {
+  Balance balance = 1;
+}
+
+message Balance {
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  google.protobuf.Timestamp deletedAt = 4;
+  uint64 userID = 5;
+  float amount = 6;
+}
+
+message UpdateBalanceRequest {
+  uint64 userID = 1;
+  float amount = 2;
+}
+
+message UpdateBalanceResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
 }
