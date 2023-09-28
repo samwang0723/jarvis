@@ -17,20 +17,23 @@ const (
 	OrderTypeBid = iota
 	OrderTypeAsk
 	OrderTypeFee
+	OrderTypeTax
+	OrderTypeLending
 )
 
 type Transaction struct {
 	Model
 
 	StockID      string  `gorm:"column:stock_id" json:"stockId"`
-	UserID       ID      `gorm:"column:user_id" json:"userId"`
-	OrderType    int     `gorm:"column:order_type" json:"orderType"`
-	TradePrice   float32 `gorm:"column:trade_price" json:"trade_price"`
+	UserID       uint64  `gorm:"column:user_id" json:"userId"`
+	OrderType    int32   `gorm:"column:order_type" json:"orderType"`
+	TradePrice   float32 `gorm:"column:trade_price" json:"tradePrice"`
 	Quantity     uint64  `gorm:"column:quantity" json:"quantity"`
 	ExchangeDate string  `gorm:"column:exchange_date" json:"exchangeDate"`
 	CreditAmount float32 `gorm:"column:credit_amount" json:"creditAmount"`
 	DebitAmount  float32 `gorm:"column:debit_amount" json:"debitAmount"`
 	Description  string  `gorm:"column:description" json:"description"`
+	ReferenceID  uint64  `gorm:"column:reference_id" json:"referenceId"`
 }
 
 func (Transaction) TableName() string {

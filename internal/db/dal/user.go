@@ -92,13 +92,13 @@ func (i *dalImpl) ListUsers(
 	offset,
 	limit int32,
 ) (objs []*entity.User, totalCount int64, err error) {
-	sql := "select count(*) from users"
+	sql := "select count(*) from users where deleted_at is null"
 	err = i.db.Raw(sql).Scan(&totalCount).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	sql = fmt.Sprintf(`select * from users order by created_at desc limit %d, %d`, offset, limit)
+	sql = fmt.Sprintf(`select * from users where deleted_at is null order by created_at desc limit %d, %d`, offset, limit)
 	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, totalCount, err
 	}

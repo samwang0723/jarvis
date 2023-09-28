@@ -24,7 +24,11 @@ import (
 // Use double-entry accounting system can only add transaction, but not update or delete
 // Any adjustment should be done by adding a new transaction
 type ITransactionDAL interface {
-	CreateTransaction(ctx context.Context, obj *entity.Transaction) error
+	CreateTransactions(ctx context.Context, obj []*entity.Transaction) error
 	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
-	ListTransactions(ctx context.Context, userID uint64, limit, offset int) ([]*entity.Transaction, error)
+	ListTransactions(
+		ctx context.Context,
+		userID uint64,
+		limit, offset int32,
+	) (objs []*entity.Transaction, totalCount int64, err error)
 }

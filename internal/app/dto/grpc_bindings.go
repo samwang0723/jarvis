@@ -771,3 +771,47 @@ func GetBalanceResponseToPB(in *entity.BalanceView) *pb.GetBalanceResponse {
 		Balance: BalanceToPB(in),
 	}
 }
+
+func CreateTransactionsRequestFromPB(in *pb.CreateTransactionsRequest) *CreateTransactionsRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbOrderType := in.OrderType
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+	pbExchangeDate := in.ExchangeDate
+	pbDescription := in.Description
+	pbReferenceID := in.ReferenceID
+
+	return &CreateTransactionsRequest{
+		UserID:       pbUserID,
+		StockID:      pbStockID,
+		OrderType:    pbOrderType,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+		ExchangeDate: pbExchangeDate,
+		Description:  pbDescription,
+		ReferenceID:  pbReferenceID,
+	}
+}
+
+func CreateTransactionsResponseToPB(in *CreateTransactionsResponse) *pb.CreateTransactionsResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateTransactionsResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}

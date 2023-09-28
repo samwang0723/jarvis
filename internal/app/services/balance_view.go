@@ -23,6 +23,8 @@ import (
 func (s *serviceImpl) UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error) {
 	err = s.dal.UpdateBalanceView(ctx, obj)
 	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update balance view")
+
 		return err
 	}
 

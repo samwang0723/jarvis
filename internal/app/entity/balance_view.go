@@ -16,8 +16,8 @@ package entity
 type BalanceView struct {
 	Model
 
-	UserID        uint64  `gorm:"column:user_id" json:"user_id"`
-	CurrentAmount float32 `gorm:"column:current_amount" json:"current_amount"`
+	UserID        uint64  `gorm:"column:user_id" json:"userId"`
+	CurrentAmount float32 `gorm:"column:current_amount" json:"currentAmount"`
 }
 
 func (BalanceView) TableName() string {

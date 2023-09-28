@@ -24,8 +24,8 @@ import (
 
 var ErrUserNotFound = errors.New("user not found")
 
-func (i *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error) {
-	obj, err = i.dal.GetUserByID(ctx, id)
+func (s *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error) {
+	obj, err = s.dal.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,30 @@ func (i *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.U
 	return obj, nil
 }
 
-func (i *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err error) {
-	err = i.dal.CreateUser(ctx, obj)
+func (s *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err error) {
+	err = s.dal.CreateUser(ctx, obj)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to create user")
+
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceImpl) UpdateUser(ctx context.Context, obj *entity.User) (err error) {
+	err = s.dal.UpdateUser(ctx, obj)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update user")
+
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceImpl) DeleteUserByID(ctx context.Context, id uint64) (err error) {
+	err = s.dal.DeleteUserByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -46,29 +68,11 @@ func (i *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err err
 	return nil
 }
 
-func (i *serviceImpl) UpdateUser(ctx context.Context, obj *entity.User) (err error) {
-	err = i.dal.UpdateUser(ctx, obj)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (i *serviceImpl) DeleteUserByID(ctx context.Context, id uint64) (err error) {
-	err = i.dal.DeleteUserByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (i *serviceImpl) ListUsers(
+func (s *serviceImpl) ListUsers(
 	ctx context.Context,
 	req *dto.ListUsersRequest,
 ) (objs []*entity.User, totalCount int64, err error) {
-	objs, totalCount, err = i.dal.ListUsers(ctx, req.Offset, req.Limit)
+	objs, totalCount, err = s.dal.ListUsers(ctx, req.Offset, req.Limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -76,8 +80,8 @@ func (i *serviceImpl) ListUsers(
 	return objs, totalCount, nil
 }
 
-func (i *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error) {
-	obj, err = i.dal.GetUserByEmail(ctx, email)
+func (s *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error) {
+	obj, err = s.dal.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +93,8 @@ func (i *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *en
 	return obj, nil
 }
 
-func (i *serviceImpl) GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error) {
-	obj, err = i.dal.GetUserByPhone(ctx, phone)
+func (s *serviceImpl) GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error) {
+	obj, err = s.dal.GetUserByPhone(ctx, phone)
 	if err != nil {
 		return nil, err
 	}

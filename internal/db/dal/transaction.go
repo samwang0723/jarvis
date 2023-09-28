@@ -15,12 +15,49 @@ package dal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"gorm.io/gorm"
 )
 
-func (i *dalImpl) CreateTransaction(ctx context.Context, obj *entity.Transaction) error {
-	err := i.db.Create(obj).Error
+func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transaction) error {
+	var totalDebitAmount float32
+	var totalCreditAmount float32
+	var createdReferenceID uint64
+
+	balanceView := &entity.BalanceView{}
+	if err := i.db.First(balanceView, "user_id = ?", objs[0].UserID).Error; err != nil {
+		return err
+	}
+
+	err := i.db.Transaction(func(tx *gorm.DB) error {
+		totalDebitAmount = 0.0
+		totalCreditAmount = 0.0
+		for _, obj := range objs {
+			if createdReferenceID != 0 {
+				obj.ReferenceID = createdReferenceID
+			}
+			if err := tx.Create(obj).Error; err != nil {
+				return err
+			}
+			if createdReferenceID == 0 {
+				createdReferenceID = uint64(obj.ID)
+			}
+			totalDebitAmount += obj.DebitAmount
+			totalCreditAmount += obj.CreditAmount
+		}
+
+		balanceView.CurrentAmount = balanceView.CurrentAmount - totalDebitAmount + totalCreditAmount
+		err := tx.Model(&entity.BalanceView{}).
+			Where("user_id = ?", balanceView.UserID).
+			Updates(balanceView).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return err
 }
@@ -37,13 +74,19 @@ func (i *dalImpl) GetTransactionByID(ctx context.Context, id uint64) (*entity.Tr
 func (i *dalImpl) ListTransactions(
 	ctx context.Context,
 	userID uint64,
-	limit int,
-	offset int,
-) ([]*entity.Transaction, error) {
-	res := []*entity.Transaction{}
-	if err := i.db.Offset(offset).Limit(limit).Find(&res, "user_id = ?", userID).Error; err != nil {
-		return nil, err
+	limit, offset int32,
+) (objs []*entity.Transaction, totalCount int64, err error) {
+	sql := fmt.Sprintf(`select count(*) from transactions where user_id = %d and deleted_at is null`, userID)
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return res, nil
+	sql = fmt.Sprintf(`select * from transactions where user_id = %d 
+                and deleted_at is null order by created_at desc limit %d, %d`, userID, offset, limit)
+	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return objs, totalCount, nil
 }
