@@ -113,6 +113,11 @@ service JarvisV1 {
       body: "*"
     };
   }
+
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {get: "/v1/transactions/{userID}"};
+  }
 }
 
 message ListDailyCloseRequest {

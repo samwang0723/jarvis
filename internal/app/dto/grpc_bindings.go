@@ -861,6 +861,8 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 	pbExchangeDate := in.ExchangeDate
 	pbDescription := in.Description
 	pbReferenceID := in.ReferenceID
+	pbCreditAmount := in.CreditAmount
+	pbDebitAmount := in.DebitAmount
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -890,5 +892,7 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		CreatedAt:    pbCreatedAt,
 		UpdatedAt:    pbUpdatedAt,
 		DeletedAt:    pbDeletedAt,
+		CreditAmount: pbCreditAmount,
+		DebitAmount:  pbDebitAmount,
 	}
 }

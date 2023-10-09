@@ -378,6 +378,51 @@
         ]
       }
     },
+    "/v1/transactions/{userID}": {
+      "get": {
+        "operationId": "JarvisV1_ListTransactions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListTransactionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/users": {
       "get": {
         "operationId": "JarvisV1_ListUsers",
@@ -954,6 +999,29 @@
         }
       }
     },
+    "v1ListTransactionsResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Transaction"
+          }
+        }
+      }
+    },
     "v1ListUsersResponse": {
       "type": "object",
       "properties": {
@@ -1205,6 +1273,64 @@
         "hedgingTradeShares": {
           "type": "string",
           "format": "int64"
+        }
+      }
+    },
+    "v1Transaction": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "userID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "exchangeDate": {
+          "type": "string"
+        },
+        "tradePrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "quantity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orderType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "description": {
+          "type": "string"
+        },
+        "referenceID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "creditAmount": {
+          "type": "number",
+          "format": "float"
+        },
+        "debitAmount": {
+          "type": "number",
+          "format": "float"
         }
       }
     },
