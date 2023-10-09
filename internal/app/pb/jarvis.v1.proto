@@ -413,3 +413,16 @@ message Transaction {
   float creditAmount = 13;
   float debitAmount = 14;
 }
+
+message ListTransactionsRequest {
+  uint64 userID = 1;
+  int32 offset = 2;
+  int32 limit = 3;
+}
+
+message ListTransactionsResponse {
+  int32 offset = 1;
+  int32 limit = 2;
+  int64 totalCount = 3;
+  repeated Transaction entries = 4;
+}

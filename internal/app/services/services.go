@@ -63,7 +63,7 @@ type IService interface {
 	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error)
 	CreateTransactions(ctx context.Context, objs []*entity.Transaction) error
 	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
-	ListTransactions(ctx context.Context, userID uint64, limit, offset int32) ([]*entity.Transaction, int64, error)
+	ListTransactions(ctx context.Context, req *dto.ListTransactionsRequest) ([]*entity.Transaction, int64, error)
 }
 
 type serviceImpl struct {

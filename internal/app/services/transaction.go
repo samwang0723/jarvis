@@ -17,6 +17,7 @@ package services
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
@@ -44,10 +45,9 @@ func (s *serviceImpl) GetTransactionByID(ctx context.Context, id uint64) (*entit
 
 func (s *serviceImpl) ListTransactions(
 	ctx context.Context,
-	userID uint64,
-	limit, offset int32,
+	req *dto.ListTransactionsRequest,
 ) (objs []*entity.Transaction, totalCount int64, err error) {
-	transactions, totalCount, err := s.dal.ListTransactions(ctx, userID, limit, offset)
+	transactions, totalCount, err := s.dal.ListTransactions(ctx, req.UserID, req.Limit, req.Offset)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to list transactions")
 

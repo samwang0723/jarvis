@@ -29,6 +29,23 @@ const (
 	BrokerFeeDiscount   = 0.25
 )
 
+func (h *handlerImpl) ListTransactions(
+	ctx context.Context,
+	req *dto.ListTransactionsRequest,
+) (*dto.ListTransactionsResponse, error) {
+	entries, totalCount, err := h.dataService.ListTransactions(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ListTransactionsResponse{
+		Offset:     req.Offset,
+		Limit:      req.Limit,
+		Entries:    entries,
+		TotalCount: totalCount,
+	}, nil
+}
+
 func (h *handlerImpl) CreateTransactions(
 	ctx context.Context,
 	req *dto.CreateTransactionsRequest,

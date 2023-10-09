@@ -165,3 +165,15 @@ func (s *server) CreateTransactions(
 
 	return dto.CreateTransactionsResponseToPB(res), nil
 }
+
+func (s *server) ListTransactions(
+	ctx context.Context,
+	req *pb.ListTransactionsRequest,
+) (*pb.ListTransactionsResponse, error) {
+	res, err := s.Handler().ListTransactions(ctx, dto.ListTransactionsRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListTransactionsResponseToPB(res), nil
+}

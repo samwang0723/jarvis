@@ -194,60 +194,48 @@ type JarvisV1Server interface {
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
-type UnimplementedJarvisV1Server struct{}
+type UnimplementedJarvisV1Server struct {
+}
 
 func (UnimplementedJarvisV1Server) ListDailyClose(context.Context, *ListDailyCloseRequest) (*ListDailyCloseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDailyClose not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListStocks(context.Context, *ListStockRequest) (*ListStockResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListStocks not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListCategories(context.Context, *ListCategoriesRequest) (*ListCategoriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCategories not implemented")
 }
-
 func (UnimplementedJarvisV1Server) GetStakeConcentration(context.Context, *GetStakeConcentrationRequest) (*GetStakeConcentrationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStakeConcentration not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListThreePrimary(context.Context, *ListThreePrimaryRequest) (*ListThreePrimaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListThreePrimary not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListSelections(context.Context, *ListSelectionRequest) (*ListSelectionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSelections not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListPickedStocks(context.Context, *ListPickedStocksRequest) (*ListPickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPickedStocks not implemented")
 }
-
 func (UnimplementedJarvisV1Server) InsertPickedStocks(context.Context, *InsertPickedStocksRequest) (*InsertPickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InsertPickedStocks not implemented")
 }
-
 func (UnimplementedJarvisV1Server) DeletePickedStocks(context.Context, *DeletePickedStocksRequest) (*DeletePickedStocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePickedStocks not implemented")
 }
-
 func (UnimplementedJarvisV1Server) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-
 func (UnimplementedJarvisV1Server) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
 }
-
 func (UnimplementedJarvisV1Server) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
 }
-
 func (UnimplementedJarvisV1Server) UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalance not implemented")
 }
-
 func (UnimplementedJarvisV1Server) CreateTransactions(context.Context, *CreateTransactionsRequest) (*CreateTransactionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTransactions not implemented")
 }

@@ -187,3 +187,16 @@ type CreateTransactionsResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type ListTransactionsRequest struct {
+	UserID uint64 `json:"userID"`
+	Offset int32  `json:"offset"`
+	Limit  int32  `json:"limit"`
+}
+
+type ListTransactionsResponse struct {
+	Entries    []*entity.Transaction `json:"entries"`
+	Offset     int32                 `json:"offset"`
+	Limit      int32                 `json:"limit"`
+	TotalCount int64                 `json:"totalCount"`
+}

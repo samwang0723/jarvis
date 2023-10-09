@@ -815,3 +815,80 @@ func CreateTransactionsResponseToPB(in *CreateTransactionsResponse) *pb.CreateTr
 		ErrorMessage: pbErrorMessage,
 	}
 }
+
+func ListTransactionsRequestFromPB(in *pb.ListTransactionsRequest) *ListTransactionsRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &ListTransactionsRequest{
+		UserID: in.UserID,
+		Offset: in.Offset,
+		Limit:  in.Limit,
+	}
+}
+
+func ListTransactionsResponseToPB(in *ListTransactionsResponse) *pb.ListTransactionsResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Transaction, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, TransactionToPB(obj))
+	}
+
+	return &pb.ListTransactionsResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func TransactionToPB(in *entity.Transaction) *pb.Transaction {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbOrderType := in.OrderType
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+	pbExchangeDate := in.ExchangeDate
+	pbDescription := in.Description
+	pbReferenceID := in.ReferenceID
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	}
+
+	return &pb.Transaction{
+		Id:           pbID.Uint64(),
+		UserID:       pbUserID,
+		StockID:      pbStockID,
+		OrderType:    pbOrderType,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+		ExchangeDate: pbExchangeDate,
+		Description:  pbDescription,
+		ReferenceID:  pbReferenceID,
+		CreatedAt:    pbCreatedAt,
+		UpdatedAt:    pbUpdatedAt,
+		DeletedAt:    pbDeletedAt,
+	}
+}
