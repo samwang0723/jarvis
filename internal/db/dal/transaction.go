@@ -59,6 +59,7 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 					Payload: entity.TransactionPayload{
 						CreditAmount: obj.CreditAmount,
 						DebitAmount:  obj.DebitAmount,
+						EventType:    state,
 						Auditor:      "system",
 						Description:  "",
 					}.ToJSON(),
@@ -95,7 +96,7 @@ func (i *dalImpl) updateSnapshot(transactionIDs []uint64) {
 			// Get the count of events for this transaction
 			var eventCount int
 			if err := i.db.Raw(
-				"select count(*) from events where aggregate_id = ? and deleted_at is null", transactionID,
+				"select count(*) from events where aggregate_id = ?", transactionID,
 			).Scan(&eventCount).Error; err != nil {
 				return
 			}
@@ -103,7 +104,7 @@ func (i *dalImpl) updateSnapshot(transactionIDs []uint64) {
 			if eventCount >= snapshotEventThreshold {
 				event := entity.Event{}
 				if err := i.db.Raw(
-					"select * from events where aggregate_id = ? and deleted_at is null order by version desc limit 1", transactionID,
+					"select * from events where aggregate_id = ? order by version desc limit 1", transactionID,
 				).Scan(&event).Error; err != nil {
 					return
 				}

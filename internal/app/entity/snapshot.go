@@ -14,9 +14,9 @@
 package entity
 
 type Snapshot struct {
-	Model
+	EventSourcingModel
 
-	AggregateID uint64 `gorm:"column:aggreate_id"` // foreign key to the Transaction table
-	Data        string `gorm:"column:data"`        // JSON-encoded snapshot data
-	Version     int    `gorm:"column:version"`     // version number of the last event included in the snapshot
+	AggregateID uint64 `gorm:"column:aggregate_id"` // foreign key to the Transaction table
+	Data        string `gorm:"column:data"`         // JSON-encoded snapshot data
+	Version     int    `gorm:"column:version"`      // version number of the last event included in the snapshot
 }

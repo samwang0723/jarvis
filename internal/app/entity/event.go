@@ -22,10 +22,10 @@ const (
 )
 
 type Event struct {
-	Model
+	EventSourcingModel
 
-	AggregateID uint64 `gorm:"column:aggreate_id"` // foreign key to the Transaction table
-	EventType   string `gorm:"column:event_type"`  // e.g., "TransactionCreated", "TransactionStatusUpdated"
-	Payload     string `gorm:"column:payload"`     // JSON-encoded event data
-	Version     int    `gorm:"column:version"`     // event version number, used for ordering events
+	AggregateID uint64 `gorm:"column:aggregate_id"` // foreign key to the Transaction table
+	EventType   string `gorm:"column:event_type"`   // e.g., "TransactionCreated", "TransactionStatusUpdated"
+	Payload     string `gorm:"column:payload"`      // JSON-encoded event data
+	Version     int    `gorm:"column:version"`      // event version number, used for ordering events
 }

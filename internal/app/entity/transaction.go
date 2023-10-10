@@ -26,6 +26,7 @@ const (
 type TransactionPayload struct {
 	CreditAmount float32 `json:"creditAmount"`
 	DebitAmount  float32 `json:"debitAmount"`
+	EventType    string  `json:"type"`
 	Auditor      string  `json:"auditor"`
 	Description  string  `json:"description"`
 }
