@@ -147,14 +147,14 @@ func (i *dalImpl) ListTransactions(
 	userID uint64,
 	limit, offset int32,
 ) (objs []*entity.Transaction, totalCount int64, err error) {
-	sql := fmt.Sprintf(`select count(*) from transactions where user_id = %d and deleted_at is null`, userID)
+	sql := fmt.Sprintf(`select count(*) from transactions where user_id = %d`, userID)
 	err = i.db.Raw(sql).Scan(&totalCount).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
 	sql = fmt.Sprintf(`select * from transactions where user_id = %d 
-                and deleted_at is null order by created_at desc limit %d, %d`, userID, offset, limit)
+                order by created_at desc limit %d, %d`, userID, offset, limit)
 	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}

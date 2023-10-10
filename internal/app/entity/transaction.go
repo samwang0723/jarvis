@@ -42,7 +42,7 @@ func (payload TransactionPayload) ToJSON() string {
 }
 
 type Transaction struct {
-	Model
+	EventSourcingModel
 
 	StockID      string  `gorm:"column:stock_id" json:"stockId"`
 	UserID       uint64  `gorm:"column:user_id" json:"userId"`

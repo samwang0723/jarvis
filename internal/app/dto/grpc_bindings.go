@@ -869,16 +869,6 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
-	}
-
-	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
-	}
-
 	return &pb.Transaction{
 		Id:           pbID.Uint64(),
 		UserID:       pbUserID,
@@ -890,8 +880,6 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		Description:  pbDescription,
 		ReferenceID:  pbReferenceID,
 		CreatedAt:    pbCreatedAt,
-		UpdatedAt:    pbUpdatedAt,
-		DeletedAt:    pbDeletedAt,
 		CreditAmount: pbCreditAmount,
 		DebitAmount:  pbDebitAmount,
 	}

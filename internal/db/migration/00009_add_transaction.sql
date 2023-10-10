@@ -14,8 +14,6 @@ CREATE TABLE
     exchange_date varchar(32) NOT NULL,
     description varchar(255),
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at datetime DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users (id),
     KEY index_reference_id (reference_id),
     KEY index_order_type (order_type)
