@@ -21,19 +21,18 @@ import (
 	"gorm.io/gorm"
 )
 
+const snapshotEventThreshold = 3
+
 func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transaction) error {
-	var totalDebitAmount float32
-	var totalCreditAmount float32
-	var createdReferenceID uint64
-
-	balanceView := &entity.BalanceView{}
-	if err := i.db.First(balanceView, "user_id = ?", objs[0].UserID).Error; err != nil {
-		return err
-	}
-
+	transactionIDs := []uint64{}
 	err := i.db.Transaction(func(tx *gorm.DB) error {
-		totalDebitAmount = 0.0
-		totalCreditAmount = 0.0
+		// Get the current balance view for this user
+		var balanceView entity.BalanceView
+		if err := tx.First(&balanceView, "user_id = ? and deleted_at is null", objs[0].UserID).Error; err != nil {
+			return err
+		}
+		var createdReferenceID uint64
+
 		for _, obj := range objs {
 			if createdReferenceID != 0 {
 				obj.ReferenceID = createdReferenceID
@@ -44,22 +43,93 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 			if createdReferenceID == 0 {
 				createdReferenceID = uint64(obj.ID)
 			}
-			totalDebitAmount += obj.DebitAmount
-			totalCreditAmount += obj.CreditAmount
+			transactionIDs = append(transactionIDs, obj.ID.Uint64())
+
+			// As we are not relying on external system to update status
+			// can directly loop through to final completed status.
+			states := []string{
+				entity.EventTransactionPending,
+				entity.EventTransactionProcessing,
+				entity.EventTransactionCompleted,
+			}
+			for idx, state := range states {
+				event := &entity.Event{
+					AggregateID: obj.ID.Uint64(),
+					EventType:   state,
+					Payload: entity.TransactionPayload{
+						CreditAmount: obj.CreditAmount,
+						DebitAmount:  obj.DebitAmount,
+						Auditor:      "system",
+						Description:  "",
+					}.ToJSON(),
+					Version: idx + 1,
+				}
+
+				if err := tx.Create(event).Error; err != nil {
+					return err
+				}
+
+				applyEvent(event, obj, &balanceView)
+			}
 		}
 
-		balanceView.CurrentAmount = balanceView.CurrentAmount - totalDebitAmount + totalCreditAmount
-		err := tx.Model(&entity.BalanceView{}).
-			Where("user_id = ?", balanceView.UserID).
-			Updates(balanceView).Error
-		if err != nil {
+		if err := tx.Save(&balanceView).Error; err != nil {
 			return err
 		}
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
-	return err
+	// update snapshot in background
+	i.updateSnapshot(transactionIDs)
+
+	return nil
+}
+
+func (i *dalImpl) updateSnapshot(transactionIDs []uint64) {
+	for _, transactionID := range transactionIDs {
+		go func(transactionID uint64) {
+			// Get the count of events for this transaction
+			var eventCount int
+			if err := i.db.Raw(
+				"select count(*) from events where aggregate_id = ? and deleted_at is null", transactionID,
+			).Scan(&eventCount).Error; err != nil {
+				return
+			}
+			// If there are more than 3 events, create a new snapshot
+			if eventCount >= snapshotEventThreshold {
+				event := entity.Event{}
+				if err := i.db.Raw(
+					"select * from events where aggregate_id = ? and deleted_at is null order by version desc limit 1", transactionID,
+				).Scan(&event).Error; err != nil {
+					return
+				}
+				snapshot := entity.Snapshot{
+					AggregateID: transactionID,
+					Data:        event.Payload,
+					Version:     event.Version,
+				}
+
+				// Save the snapshot to the database
+				i.db.Create(&snapshot)
+			}
+		}(transactionID)
+	}
+}
+
+func applyEvent(event *entity.Event, transaction *entity.Transaction, balanceView *entity.BalanceView) {
+	switch event.EventType {
+	case entity.EventTransactionPending:
+		// Do nothing
+	case entity.EventTransactionProcessing:
+	case entity.EventTransactionCompleted:
+		balanceView.CurrentAmount += transaction.CreditAmount - transaction.DebitAmount
+	case entity.EventTransactionFailed:
+	case entity.EventTransactionCancelled:
+	}
 }
 
 func (i *dalImpl) GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error) {

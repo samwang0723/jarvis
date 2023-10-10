@@ -13,6 +13,8 @@
 // limitations under the License.
 package entity
 
+import jsoniter "github.com/json-iterator/go"
+
 const (
 	OrderTypeBid = iota
 	OrderTypeAsk
@@ -20,6 +22,23 @@ const (
 	OrderTypeTax
 	OrderTypeLending
 )
+
+type TransactionPayload struct {
+	CreditAmount float32 `json:"creditAmount"`
+	DebitAmount  float32 `json:"debitAmount"`
+	Auditor      string  `json:"auditor"`
+	Description  string  `json:"description"`
+}
+
+func (payload TransactionPayload) ToJSON() string {
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	jsonString, err := json.MarshalToString(payload)
+	if err != nil {
+		return ""
+	}
+
+	return jsonString
+}
 
 type Transaction struct {
 	Model
