@@ -869,7 +869,7 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	return &pb.Transaction{
+	transaction := &pb.Transaction{
 		Id:           pbID.Uint64(),
 		UserID:       pbUserID,
 		StockID:      pbStockID,
@@ -878,9 +878,16 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		Quantity:     pbQuantity,
 		ExchangeDate: pbExchangeDate,
 		Description:  pbDescription,
-		ReferenceID:  pbReferenceID,
 		CreatedAt:    pbCreatedAt,
 		CreditAmount: pbCreditAmount,
 		DebitAmount:  pbDebitAmount,
 	}
+
+	if pbReferenceID != nil {
+		transaction.OptionalReferenceID = &pb.Transaction_ReferenceID{
+			ReferenceID: *pbReferenceID,
+		}
+	}
+
+	return transaction
 }

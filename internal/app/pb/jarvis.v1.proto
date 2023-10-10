@@ -405,8 +405,6 @@ message CreateTransactionsResponse {
 message Transaction {
   uint64 id = 1;
   google.protobuf.Timestamp createdAt = 2;
-  google.protobuf.Timestamp updatedAt = 3;
-  google.protobuf.Timestamp deletedAt = 4;
   uint64 userID = 5;
   string stockID = 6;
   string exchangeDate = 7;
@@ -414,7 +412,9 @@ message Transaction {
   uint64 quantity = 9;
   int32 orderType = 10;
   string description = 11;
-  uint64 referenceID = 12;
+  oneof optional_referenceID {
+    uint64 referenceID = 12;
+  }
   float creditAmount = 13;
   float debitAmount = 14;
 }

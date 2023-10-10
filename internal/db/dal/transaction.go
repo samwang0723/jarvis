@@ -31,17 +31,18 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 		if err := tx.First(&balanceView, "user_id = ? and deleted_at is null", objs[0].UserID).Error; err != nil {
 			return err
 		}
-		var createdReferenceID uint64
+		var createdReferenceID *uint64
 
 		for _, obj := range objs {
-			if createdReferenceID != 0 {
+			if createdReferenceID != nil {
 				obj.ReferenceID = createdReferenceID
 			}
 			if err := tx.Create(obj).Error; err != nil {
 				return err
 			}
-			if createdReferenceID == 0 {
-				createdReferenceID = uint64(obj.ID)
+			if createdReferenceID == nil {
+				id := uint64(obj.ID)
+				createdReferenceID = &id
 			}
 			transactionIDs = append(transactionIDs, obj.ID.Uint64())
 

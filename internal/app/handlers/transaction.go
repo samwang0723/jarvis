@@ -67,7 +67,7 @@ func (h *handlerImpl) CreateTransactions(
 		Quantity:     req.Quantity,
 		ExchangeDate: req.ExchangeDate,
 		Description:  req.Description,
-		ReferenceID:  req.ReferenceID,
+		ReferenceID:  &req.ReferenceID,
 	}
 
 	transactions := h.chainTransactions(transaction, req.OriginalExchangeDate)
@@ -130,7 +130,7 @@ func (h *handlerImpl) taxCalculation(
 	source *entity.Transaction,
 	originalExchangeDate string,
 ) (output *entity.Transaction) {
-	if source.ReferenceID != 0 {
+	if source.ReferenceID != nil {
 		debitAmount := source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity * TaxRate
 		if source.ExchangeDate == originalExchangeDate {
 			debitAmount *= DayTradeTaxRate
