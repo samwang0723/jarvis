@@ -138,7 +138,37 @@ func applyEvent(event *entity.Event, transaction *entity.Transaction, balanceVie
 
 func (i *dalImpl) GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error) {
 	res := &entity.Transaction{}
-	if err := i.db.First(res, "id = ?", id).Error; err != nil {
+	if err := i.db.Raw(`
+                SELECT 
+                    t.*,
+                    COALESCE(
+                        JSON_UNQUOTE(JSON_EXTRACT(s.data, '$.type')),
+                        JSON_UNQUOTE(JSON_EXTRACT(e.payload, '$.type'))
+                    ) AS status
+                FROM 
+                    transactions t
+                LEFT JOIN 
+                    snapshots s ON t.id = s.aggregate_id
+                LEFT JOIN (
+                    SELECT 
+                        aggregate_id, 
+                        payload
+                    FROM 
+                        events
+                    WHERE 
+                        (aggregate_id, version) IN (
+                            SELECT 
+                                aggregate_id, 
+                                MAX(version) 
+                            FROM 
+                                events 
+                            GROUP BY 
+                                aggregate_id
+                        )
+                ) e ON t.id = e.aggregate_id
+                WHERE 
+                    t.id = ?;
+                `, id).Scan(res).Error; err != nil {
 		return nil, err
 	}
 
