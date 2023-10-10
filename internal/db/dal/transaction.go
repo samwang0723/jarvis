@@ -15,13 +15,15 @@ package dal
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"gorm.io/gorm"
 )
 
 const snapshotEventThreshold = 3
+
+var ErrInvalidDateRange = errors.New("invalid date range")
 
 func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transaction) error {
 	transactionIDs := []uint64{}
@@ -146,17 +148,56 @@ func (i *dalImpl) GetTransactionByID(ctx context.Context, id uint64) (*entity.Tr
 func (i *dalImpl) ListTransactions(
 	ctx context.Context,
 	userID uint64,
-	limit, offset int32,
+	startDate, endDate string,
 ) (objs []*entity.Transaction, totalCount int64, err error) {
-	sql := fmt.Sprintf(`select count(*) from transactions where user_id = %d`, userID)
-	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if len(startDate) < 8 || len(endDate) < 8 {
+		return nil, 0, ErrInvalidDateRange
+	}
+
+	err = i.db.Raw(`select count(*) from transactions 
+                where user_id = ? and created_at >= ? 
+                and created_at < ?`, userID, startDate, endDate).Scan(&totalCount).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	sql = fmt.Sprintf(`select * from transactions where user_id = %d 
-                order by created_at desc limit %d, %d`, userID, offset, limit)
-	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
+	if err := i.db.Raw(`
+                SELECT 
+                    t.*,
+                    COALESCE(
+                        JSON_UNQUOTE(JSON_EXTRACT(s.data, '$.type')),
+                        JSON_UNQUOTE(JSON_EXTRACT(e.payload, '$.type'))
+                    ) AS status
+                FROM 
+                    transactions t
+                LEFT JOIN 
+                    snapshots s ON t.id = s.aggregate_id
+                LEFT JOIN (
+                    SELECT 
+                        aggregate_id, 
+                        payload
+                    FROM 
+                        events
+                    WHERE 
+                        (aggregate_id, version) IN (
+                            SELECT 
+                                aggregate_id, 
+                                MAX(version) 
+                            FROM 
+                                events 
+                            GROUP BY 
+                                aggregate_id
+                        )
+                ) e ON t.id = e.aggregate_id
+                WHERE 
+                    t.user_id = ?
+                AND
+                    t.created_at >= ?
+                AND
+                    t.created_at < ?
+                ORDER BY 
+                    t.created_at DESC;
+                `, userID, startDate, endDate).Scan(&objs).Error; err != nil {
 		return nil, 0, err
 	}
 

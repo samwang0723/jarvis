@@ -822,9 +822,9 @@ func ListTransactionsRequestFromPB(in *pb.ListTransactionsRequest) *ListTransact
 	}
 
 	return &ListTransactionsRequest{
-		UserID: in.UserID,
-		Offset: in.Offset,
-		Limit:  in.Limit,
+		UserID:    in.UserID,
+		StartDate: in.StartDate,
+		EndDate:   in.EndDate,
 	}
 }
 
@@ -840,8 +840,6 @@ func ListTransactionsResponseToPB(in *ListTransactionsResponse) *pb.ListTransact
 	}
 
 	return &pb.ListTransactionsResponse{
-		Offset:     in.Offset,
-		Limit:      in.Limit,
 		TotalCount: in.TotalCount,
 		Entries:    entries,
 	}
@@ -863,6 +861,7 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 	pbReferenceID := in.ReferenceID
 	pbCreditAmount := in.CreditAmount
 	pbDebitAmount := in.DebitAmount
+	pbStatus := in.Status
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -881,6 +880,7 @@ func TransactionToPB(in *entity.Transaction) *pb.Transaction {
 		CreatedAt:    pbCreatedAt,
 		CreditAmount: pbCreditAmount,
 		DebitAmount:  pbDebitAmount,
+		Status:       pbStatus,
 	}
 
 	if pbReferenceID != nil {

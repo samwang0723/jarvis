@@ -29,6 +29,6 @@ type ITransactionDAL interface {
 	ListTransactions(
 		ctx context.Context,
 		userID uint64,
-		limit, offset int32,
+		startDate, endDate string,
 	) (objs []*entity.Transaction, totalCount int64, err error)
 }

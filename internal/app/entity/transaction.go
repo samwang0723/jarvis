@@ -54,6 +54,7 @@ type Transaction struct {
 	DebitAmount  float32 `gorm:"column:debit_amount" json:"debitAmount"`
 	Description  string  `gorm:"column:description" json:"description"`
 	ReferenceID  *uint64 `gorm:"column:reference_id" json:"referenceId"`
+	Status       string  `gorm:"column:status" json:"status,omitempty"`
 }
 
 func (Transaction) TableName() string {

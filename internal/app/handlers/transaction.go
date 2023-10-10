@@ -39,8 +39,6 @@ func (h *handlerImpl) ListTransactions(
 	}
 
 	return &dto.ListTransactionsResponse{
-		Offset:     req.Offset,
-		Limit:      req.Limit,
 		Entries:    entries,
 		TotalCount: totalCount,
 	}, nil

@@ -404,18 +404,16 @@
             "format": "uint64"
           },
           {
-            "name": "offset",
+            "name": "startDate",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int32"
+            "type": "string"
           },
           {
-            "name": "limit",
+            "name": "endDate",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int32"
+            "type": "string"
           }
         ],
         "tags": [
@@ -1002,14 +1000,6 @@
     "v1ListTransactionsResponse": {
       "type": "object",
       "properties": {
-        "offset": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "limit": {
-          "type": "integer",
-          "format": "int32"
-        },
         "totalCount": {
           "type": "string",
           "format": "int64"
@@ -1323,6 +1313,9 @@
         "debitAmount": {
           "type": "number",
           "format": "float"
+        },
+        "status": {
+          "type": "string"
         }
       }
     },

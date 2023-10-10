@@ -47,7 +47,7 @@ func (s *serviceImpl) ListTransactions(
 	ctx context.Context,
 	req *dto.ListTransactionsRequest,
 ) (objs []*entity.Transaction, totalCount int64, err error) {
-	transactions, totalCount, err := s.dal.ListTransactions(ctx, req.UserID, req.Limit, req.Offset)
+	transactions, totalCount, err := s.dal.ListTransactions(ctx, req.UserID, req.StartDate, req.EndDate)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to list transactions")
 
