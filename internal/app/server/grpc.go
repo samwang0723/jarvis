@@ -144,36 +144,3 @@ func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb
 
 	return dto.GetBalanceResponseToPB(res), nil
 }
-
-func (s *server) UpdateBalance(ctx context.Context, req *pb.UpdateBalanceRequest) (*pb.UpdateBalanceResponse, error) {
-	res, err := s.Handler().UpdateBalanceView(ctx, dto.UpdateBalanceRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return dto.UpdateBalanceResponseToPB(res), nil
-}
-
-func (s *server) CreateTransactions(
-	ctx context.Context,
-	req *pb.CreateTransactionsRequest,
-) (*pb.CreateTransactionsResponse, error) {
-	res, err := s.Handler().CreateTransactions(ctx, dto.CreateTransactionsRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return dto.CreateTransactionsResponseToPB(res), nil
-}
-
-func (s *server) ListTransactions(
-	ctx context.Context,
-	req *pb.ListTransactionsRequest,
-) (*pb.ListTransactionsResponse, error) {
-	res, err := s.Handler().ListTransactions(ctx, dto.ListTransactionsRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return dto.ListTransactionsResponseToPB(res), nil
-}

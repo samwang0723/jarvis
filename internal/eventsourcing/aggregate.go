@@ -1,15 +1,10 @@
 package eventsourcing
 
-import (
-	"github.com/samwang0723/jarvis/internal/app/entity"
-	"gorm.io/gorm"
-)
-
 type Aggregate interface {
 	Apply(event Event) error
 	GetChanges() []Event
 	AppendChange(events Event)
-	SetAggregateID(aggregateID entity.ID)
+	SetAggregateID(aggregateID uint64)
 	GetAggregateID() uint64
 	GetVersion() int
 	SetVersion(version int)
@@ -19,21 +14,9 @@ type Aggregate interface {
 }
 
 type BaseAggregate struct {
-	ID                entity.ID `gorm:"primaryKey" mapstructure:"id"`
-	Version           int       `gorm:"column:version"` // event version number, used for ordering events
+	ID                uint64 `gorm:"column:id"`
+	Version           int    `gorm:"column:version"` // event version number, used for ordering events
 	uncommittedEvents []Event
-}
-
-func (ba *BaseAggregate) BeforeCreate(tx *gorm.DB) (err error) {
-	if ba.ID == entity.ZeroID {
-		ba.ID, err = entity.GenID()
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (ba *BaseAggregate) AppendChange(event Event) {
@@ -53,10 +36,10 @@ func (ba *BaseAggregate) SetVersion(version int) {
 }
 
 func (ba *BaseAggregate) GetAggregateID() uint64 {
-	return ba.ID.Uint64()
+	return ba.ID
 }
 
-func (ba *BaseAggregate) SetAggregateID(aggregateID entity.ID) {
+func (ba *BaseAggregate) SetAggregateID(aggregateID uint64) {
 	ba.ID = aggregateID
 }
 

@@ -17,36 +17,8 @@ package handlers
 import (
 	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
-
-func (h *handlerImpl) UpdateBalanceView(
-	ctx context.Context,
-	req *dto.UpdateBalanceViewRequest,
-) (*dto.UpdateBalanceViewResponse, error) {
-	balanceView := &entity.BalanceView{
-		UserID:        req.UserID,
-		CurrentAmount: req.CurrentAmount,
-	}
-
-	err := h.dataService.UpdateBalanceView(ctx, balanceView)
-	if err != nil {
-		return &dto.UpdateBalanceViewResponse{
-			Status:       dto.StatusError,
-			ErrorCode:    "",
-			ErrorMessage: err.Error(),
-			Success:      false,
-		}, err
-	}
-
-	return &dto.UpdateBalanceViewResponse{
-		Status:       dto.StatusSuccess,
-		ErrorCode:    "",
-		ErrorMessage: "",
-		Success:      true,
-	}, nil
-}
 
 func (h *handlerImpl) GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error) {
 	balanceView, err := h.dataService.GetBalanceViewByUserID(ctx, userID)

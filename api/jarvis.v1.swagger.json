@@ -19,38 +19,6 @@
     "application/json"
   ],
   "paths": {
-    "/v1/balances": {
-      "post": {
-        "operationId": "JarvisV1_UpdateBalance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateBalanceResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpdateBalanceRequest"
-            }
-          }
-        ],
-        "tags": [
-          "JarvisV1"
-        ]
-      }
-    },
     "/v1/balances/{userID}": {
       "get": {
         "operationId": "JarvisV1_GetBalance",
@@ -346,81 +314,6 @@
         ]
       }
     },
-    "/v1/transactions": {
-      "post": {
-        "operationId": "JarvisV1_CreateTransactions",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateTransactionsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateTransactionsRequest"
-            }
-          }
-        ],
-        "tags": [
-          "JarvisV1"
-        ]
-      }
-    },
-    "/v1/transactions/{userID}": {
-      "get": {
-        "operationId": "JarvisV1_ListTransactions",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListTransactionsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "startDate",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "endDate",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "JarvisV1"
-        ]
-      }
-    },
     "/v1/users": {
       "get": {
         "operationId": "JarvisV1_ListUsers",
@@ -554,69 +447,17 @@
           "type": "string",
           "format": "date-time"
         },
-        "deletedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "amount": {
-          "type": "number",
-          "format": "float"
-        }
-      }
-    },
-    "v1CreateTransactionsRequest": {
-      "type": "object",
-      "properties": {
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "stockID": {
-          "type": "string"
-        },
-        "exchangeDate": {
-          "type": "string"
-        },
-        "tradePrice": {
+        "balance": {
           "type": "number",
           "format": "float"
         },
-        "quantity": {
-          "type": "string",
-          "format": "uint64"
+        "available": {
+          "type": "number",
+          "format": "float"
         },
-        "orderType": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "description": {
-          "type": "string"
-        },
-        "referenceID": {
-          "type": "string",
-          "format": "uint64"
-        }
-      }
-    },
-    "v1CreateTransactionsResponse": {
-      "type": "object",
-      "properties": {
-        "success": {
-          "type": "boolean"
-        },
-        "status": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "errorMessage": {
-          "type": "string"
-        },
-        "errorCode": {
-          "type": "string"
+        "pending": {
+          "type": "number",
+          "format": "float"
         }
       }
     },
@@ -997,21 +838,6 @@
         }
       }
     },
-    "v1ListTransactionsResponse": {
-      "type": "object",
-      "properties": {
-        "totalCount": {
-          "type": "string",
-          "format": "int64"
-        },
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Transaction"
-          }
-        }
-      }
-    },
     "v1ListUsersResponse": {
       "type": "object",
       "properties": {
@@ -1263,90 +1089,6 @@
         "hedgingTradeShares": {
           "type": "string",
           "format": "int64"
-        }
-      }
-    },
-    "v1Transaction": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "stockID": {
-          "type": "string"
-        },
-        "exchangeDate": {
-          "type": "string"
-        },
-        "tradePrice": {
-          "type": "number",
-          "format": "float"
-        },
-        "quantity": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "orderType": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "description": {
-          "type": "string"
-        },
-        "referenceID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "creditAmount": {
-          "type": "number",
-          "format": "float"
-        },
-        "debitAmount": {
-          "type": "number",
-          "format": "float"
-        },
-        "status": {
-          "type": "string"
-        }
-      }
-    },
-    "v1UpdateBalanceRequest": {
-      "type": "object",
-      "properties": {
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "amount": {
-          "type": "number",
-          "format": "float"
-        }
-      }
-    },
-    "v1UpdateBalanceResponse": {
-      "type": "object",
-      "properties": {
-        "success": {
-          "type": "boolean"
-        },
-        "status": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "errorMessage": {
-          "type": "string"
-        },
-        "errorCode": {
-          "type": "string"
         }
       }
     },

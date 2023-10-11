@@ -16,7 +16,7 @@ package convert
 
 import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 )
 
 func ListDailyCloseSearchParamsDTOToDAL(obj *dto.ListDailyCloseSearchParams) *idal.ListDailyCloseSearchParams {

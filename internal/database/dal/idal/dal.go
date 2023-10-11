@@ -11,23 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
+package idal
 
-import (
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-	"gorm.io/gorm"
+const (
+	MaxRow = 500
 )
 
-type dalImpl struct {
-	db *gorm.DB
-}
-
-// functional options design pattern
-func New(opts ...Option) idal.IDAL {
-	impl := &dalImpl{}
-	for _, opt := range opts {
-		opt(impl)
-	}
-
-	return impl
+type IDAL interface {
+	IStockDAL
+	IDailyCloseDAL
+	IStakeConcentrationDAL
+	IThreePrimaryDAL
+	ISelectionDAL
+	IPickedStockDAL
+	IUserDAL
+	IBalanceViewDAL
 }

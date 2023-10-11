@@ -41,6 +41,7 @@ func (er *EventRegistry) GetInstance(eventType EventType) (Event, error) {
 		return nil, err
 	}
 
+	//nolint: errcheck // only Event can be registered
 	event, _ := reflect.New(typ).Interface().(Event)
 
 	return event, nil

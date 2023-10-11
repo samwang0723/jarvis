@@ -108,3 +108,20 @@ func (m *Base) BeforeCreate(tx *gorm.DB) (err error) {
 
 	return nil
 }
+
+type BaseWithCreatedOnly struct {
+	ID        ID         `gorm:"primaryKey" mapstructure:"id"`
+	CreatedAt *time.Time `gorm:"column:created_at" mapstructure:"created_at"`
+}
+
+func (m *BaseWithCreatedOnly) BeforeCreate(tx *gorm.DB) (err error) {
+	if m.ID == ZeroID {
+		m.ID, err = GenID()
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -30,14 +30,6 @@ func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 			return err
 		}
 
-		balanceView := &entity.BalanceView{
-			UserID:        obj.ID.Uint64(),
-			CurrentAmount: 0,
-		}
-		if err := tx.Create(balanceView).Error; err != nil {
-			return err
-		}
-
 		return nil
 	})
 

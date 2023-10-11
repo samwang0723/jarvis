@@ -18,7 +18,7 @@ import (
 	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"gorm.io/gorm/clause"
 )

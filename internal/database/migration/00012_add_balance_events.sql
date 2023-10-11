@@ -1,21 +1,19 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE
-  events (
-    id bigint unsigned NOT NULL PRIMARY KEY,
+  balance_events (
     aggregate_id bigint unsigned NOT NULL,
     parent_id bigint unsigned NOT NULL,
     event_type varchar(50) NOT NULL,
-    payload json NOT NULL,
+    payload blob NOT NULL,
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (aggregate_id) REFERENCES transactions (id),
-    KEY index_aggregate_id (aggregate_id)
+    PRIMARY KEY (aggregate_id, version),
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS balance_events;
 
 -- +goose StatementEnd

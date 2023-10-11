@@ -2,14 +2,14 @@
 -- +goose StatementBegin
 CREATE TABLE
   balance_views (
-    id bigint unsigned NOT NULL PRIMARY KEY,
-    user_id bigint unsigned NOT NULL,
-    current_amount DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
+    id bigint unsigned NOT NULL,
+    balance DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
+    available DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
+    pending DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
+    version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at datetime DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id),
-    UNIQUE KEY index_users (user_id)
+    PRIMARY KEY (id)
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd

@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
+	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 

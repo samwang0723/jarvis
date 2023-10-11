@@ -2,8 +2,6 @@ package eventsourcing
 
 import (
 	"time"
-
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 const (
@@ -18,10 +16,10 @@ type EventType string
 
 type Event interface {
 	EventType() EventType
-	GetAggregateId() uint64
-	SetAggregateId(uint64)
-	GetParentId() uint64
-	SetParentId(uint64)
+	GetAggregateID() uint64
+	SetAggregateID(uint64)
+	GetParentID() uint64
+	SetParentID(uint64)
 	GetVersion() int
 	SetVersion(int)
 	GetCreatedAt() time.Time
@@ -29,18 +27,18 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	ID          entity.ID
+	ID          uint64
 	CreatedAt   time.Time
 	AggregateID uint64
 	ParentID    uint64
 	Version     int
 }
 
-func (be *BaseEvent) GetAggregateId() uint64 {
+func (be *BaseEvent) GetAggregateID() uint64 {
 	return be.AggregateID
 }
 
-func (be *BaseEvent) SetAggregateId(id uint64) {
+func (be *BaseEvent) SetAggregateID(id uint64) {
 	be.AggregateID = id
 }
 
@@ -58,4 +56,12 @@ func (be *BaseEvent) GetCreatedAt() time.Time {
 
 func (be *BaseEvent) SetCreatedAt(createdAt time.Time) {
 	be.CreatedAt = createdAt
+}
+
+func (be *BaseEvent) GetParentID() uint64 {
+	return be.ParentID
+}
+
+func (be *BaseEvent) SetParentID(parentID uint64) {
+	be.ParentID = parentID
 }
