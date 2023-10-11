@@ -39,7 +39,7 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 			if createdReferenceID != nil {
 				obj.ReferenceID = createdReferenceID
 			}
-			if err := tx.Create(obj).Error; err != nil {
+			if err := tx.Omit("Status").Create(obj).Error; err != nil {
 				return err
 			}
 			if createdReferenceID == nil {
