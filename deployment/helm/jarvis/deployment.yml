@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: application
-        image: samwang0723/jarvis-api:v1.3.0
+        image: samwang0723/jarvis-api:v1.3.1
         imagePullPolicy: Always
         ports:
         - name: rest-api-port

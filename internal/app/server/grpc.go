@@ -117,3 +117,63 @@ func (s *server) DeletePickedStocks(
 
 	return dto.DeletePickedStocksResponseToPB(res), nil
 }
+
+func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	res, err := s.Handler().CreateUser(ctx, dto.CreateUserRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.CreateUserResponseToPB(res), nil
+}
+
+func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.ListUsersResponse, error) {
+	res, err := s.Handler().ListUsers(ctx, dto.ListUsersRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListUsersResponseToPB(res), nil
+}
+
+func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb.GetBalanceResponse, error) {
+	res, err := s.Handler().GetBalanceViewByUserID(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.GetBalanceResponseToPB(res), nil
+}
+
+func (s *server) UpdateBalance(ctx context.Context, req *pb.UpdateBalanceRequest) (*pb.UpdateBalanceResponse, error) {
+	res, err := s.Handler().UpdateBalanceView(ctx, dto.UpdateBalanceRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.UpdateBalanceResponseToPB(res), nil
+}
+
+func (s *server) CreateTransactions(
+	ctx context.Context,
+	req *pb.CreateTransactionsRequest,
+) (*pb.CreateTransactionsResponse, error) {
+	res, err := s.Handler().CreateTransactions(ctx, dto.CreateTransactionsRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.CreateTransactionsResponseToPB(res), nil
+}
+
+func (s *server) ListTransactions(
+	ctx context.Context,
+	req *pb.ListTransactionsRequest,
+) (*pb.ListTransactionsResponse, error) {
+	res, err := s.Handler().ListTransactions(ctx, dto.ListTransactionsRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ListTransactionsResponseToPB(res), nil
+}

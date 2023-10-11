@@ -16,11 +16,10 @@ package services
 import (
 	"context"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
-
-	jsoniter "github.com/json-iterator/go"
 )
 
 //nolint:nolintlint, gochecknoglobals

@@ -20,7 +20,6 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-
 	"gorm.io/gorm/clause"
 )
 
@@ -38,7 +37,7 @@ func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.Th
 	return err
 }
 
-func (i *dalImpl) ListThreePrimary(ctx context.Context, offset int32, limit int32,
+func (i *dalImpl) ListThreePrimary(ctx context.Context, offset, limit int32,
 	searchParams *idal.ListThreePrimarySearchParams,
 ) (objs []*entity.ThreePrimary, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from three_primary where %s",

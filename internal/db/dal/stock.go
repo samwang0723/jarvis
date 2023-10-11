@@ -19,7 +19,6 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-
 	"gorm.io/gorm/clause"
 )
 
@@ -58,7 +57,7 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 	return res, nil
 }
 
-func (i *dalImpl) ListStock(ctx context.Context, offset int32, limit int32,
+func (i *dalImpl) ListStock(ctx context.Context, offset, limit int32,
 	searchParams *idal.ListStockSearchParams,
 ) (objs []*entity.Stock, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from stocks where %s", buildQueryFromListStockSearchParams(searchParams))

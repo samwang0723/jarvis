@@ -11,23 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
+package entity
 
-import (
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-	"gorm.io/gorm"
-)
+import "time"
 
-type dalImpl struct {
-	db *gorm.DB
+type User struct {
+	Model
+
+	Name             string     `gorm:"column:name" json:"name"`
+	Email            string     `gorm:"column:email" json:"email"`
+	Phone            string     `gorm:"column:phone" json:"phone"`
+	EmailConfirmedAt *time.Time `gorm:"column:email_confirmed_at" mapstructure:"email_confirmed_at"`
+	PhoneConfirmedAt *time.Time `gorm:"column:phone_confirmed_at" mapstructure:"phone_confirmed_at"`
 }
 
-// functional options design pattern
-func New(opts ...Option) idal.IDAL {
-	impl := &dalImpl{}
-	for _, opt := range opts {
-		opt(impl)
-	}
-
-	return impl
+func (User) TableName() string {
+	return "users"
 }

@@ -16,12 +16,11 @@ package dto
 import (
 	"encoding/json"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
-
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -183,8 +182,8 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt != nil {
-		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
 
 	return &pb.DailyClose{
@@ -248,8 +247,8 @@ func StockToPB(in *entity.Stock) *pb.Stock {
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt != nil {
-		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
 
 	return &pb.Stock{
@@ -318,8 +317,8 @@ func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetSta
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt != nil {
-		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
 
 	return &pb.GetStakeConcentrationResponse{
@@ -417,8 +416,8 @@ func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
 	}
 
 	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt != nil {
-		pbDeletedAt = timestamppb.New(*in.DeletedAt)
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
 
 	return &pb.ThreePrimary{
@@ -583,4 +582,312 @@ func DeletePickedStocksResponseToPB(in *DeletePickedStocksResponse) *pb.DeletePi
 		ErrorCode:    pbErrorCode,
 		ErrorMessage: pbErrorMessage,
 	}
+}
+
+func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbEmail := in.Email
+	pbPhone := in.Phone
+	pbName := in.Name
+
+	return &CreateUserRequest{
+		Email: pbEmail,
+		Phone: pbPhone,
+		Name:  pbName,
+	}
+}
+
+func CreateUserResponseToPB(in *CreateUserResponse) *pb.CreateUserResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateUserResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func ListUsersRequestFromPB(in *pb.ListUsersRequest) *ListUsersRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &ListUsersRequest{
+		Offset: in.Offset,
+		Limit:  in.Limit,
+	}
+}
+
+func ListUsersResponseToPB(in *ListUsersResponse) *pb.ListUsersResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.User, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, UserToPB(obj))
+	}
+
+	return &pb.ListUsersResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func UserToPB(in *entity.User) *pb.User {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbEmail := in.Email
+	pbPhone := in.Phone
+	pbName := in.Name
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	}
+
+	return &pb.User{
+		Id:        pbID.Uint64(),
+		Email:     pbEmail,
+		Phone:     pbPhone,
+		Name:      pbName,
+		CreatedAt: pbCreatedAt,
+		UpdatedAt: pbUpdatedAt,
+		DeletedAt: pbDeletedAt,
+	}
+}
+
+func UpdateBalanceRequestFromPB(in *pb.UpdateBalanceRequest) *UpdateBalanceViewRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+	pbBalance := in.Amount
+
+	return &UpdateBalanceViewRequest{
+		UserID:        pbUserID,
+		CurrentAmount: pbBalance,
+	}
+}
+
+func UpdateBalanceResponseToPB(in *UpdateBalanceViewResponse) *pb.UpdateBalanceResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.UpdateBalanceResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+
+	return &GetBalanceViewRequest{
+		UserID: pbUserID,
+	}
+}
+
+func BalanceToPB(in *entity.BalanceView) *pb.Balance {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbUserID := in.UserID
+	pbBalance := in.CurrentAmount
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	var pbUpdatedAt *timestamp.Timestamp
+	if in.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	}
+
+	var pbDeletedAt *timestamp.Timestamp
+	if in.DeletedAt.Valid {
+		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	}
+
+	return &pb.Balance{
+		Id:        pbID.Uint64(),
+		UserID:    pbUserID,
+		Amount:    pbBalance,
+		CreatedAt: pbCreatedAt,
+		UpdatedAt: pbUpdatedAt,
+		DeletedAt: pbDeletedAt,
+	}
+}
+
+func GetBalanceResponseToPB(in *entity.BalanceView) *pb.GetBalanceResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &pb.GetBalanceResponse{
+		Balance: BalanceToPB(in),
+	}
+}
+
+func CreateTransactionsRequestFromPB(in *pb.CreateTransactionsRequest) *CreateTransactionsRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbOrderType := in.OrderType
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+	pbExchangeDate := in.ExchangeDate
+	pbDescription := in.Description
+	pbReferenceID := in.ReferenceID
+
+	return &CreateTransactionsRequest{
+		UserID:       pbUserID,
+		StockID:      pbStockID,
+		OrderType:    pbOrderType,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+		ExchangeDate: pbExchangeDate,
+		Description:  pbDescription,
+		ReferenceID:  pbReferenceID,
+	}
+}
+
+func CreateTransactionsResponseToPB(in *CreateTransactionsResponse) *pb.CreateTransactionsResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateTransactionsResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func ListTransactionsRequestFromPB(in *pb.ListTransactionsRequest) *ListTransactionsRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &ListTransactionsRequest{
+		UserID:    in.UserID,
+		StartDate: in.StartDate,
+		EndDate:   in.EndDate,
+	}
+}
+
+func ListTransactionsResponseToPB(in *ListTransactionsResponse) *pb.ListTransactionsResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Transaction, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, TransactionToPB(obj))
+	}
+
+	return &pb.ListTransactionsResponse{
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func TransactionToPB(in *entity.Transaction) *pb.Transaction {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbOrderType := in.OrderType
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+	pbExchangeDate := in.ExchangeDate
+	pbDescription := in.Description
+	pbReferenceID := in.ReferenceID
+	pbCreditAmount := in.CreditAmount
+	pbDebitAmount := in.DebitAmount
+	pbStatus := in.Status
+
+	var pbCreatedAt *timestamp.Timestamp
+	if in.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	}
+
+	transaction := &pb.Transaction{
+		Id:           pbID.Uint64(),
+		UserID:       pbUserID,
+		StockID:      pbStockID,
+		OrderType:    pbOrderType,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+		ExchangeDate: pbExchangeDate,
+		Description:  pbDescription,
+		CreatedAt:    pbCreatedAt,
+		CreditAmount: pbCreditAmount,
+		DebitAmount:  pbDebitAmount,
+		Status:       pbStatus,
+	}
+
+	if pbReferenceID != nil {
+		transaction.OptionalReferenceID = &pb.Transaction_ReferenceID{
+			ReferenceID: *pbReferenceID,
+		}
+	}
+
+	return transaction
 }

@@ -19,7 +19,6 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-
 	"gorm.io/gorm/clause"
 )
 
@@ -49,7 +48,7 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
-func (i *dalImpl) ListDailyClose(ctx context.Context, offset int32, limit int32,
+func (i *dalImpl) ListDailyClose(ctx context.Context, offset, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams,
 ) (objs []*entity.DailyClose, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from daily_closes where %s",

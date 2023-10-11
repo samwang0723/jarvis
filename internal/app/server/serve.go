@@ -25,7 +25,11 @@ import (
 	"syscall"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
+	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
+	zl "github.com/rs/zerolog/log"
 	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
@@ -38,11 +42,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/kafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
 	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
-
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
-	zl "github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -201,7 +200,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.3.0", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.3.1", helper.GetCurrentEnv())
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
@@ -391,7 +390,7 @@ func cors(h http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers",
 			"Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, ResponseType")
-		if r.Method == "OPTIONS" {
+		if r.Method == http.MethodOptions {
 			return
 		}
 		h.ServeHTTP(w, r)

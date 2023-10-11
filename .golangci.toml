@@ -1,31 +1,25 @@
 [service]
-golangci-lint-version =  "1.46"
+golangci-lint-version =  "1.51.2"
 
 [linters]
 disable-all = true
-enable = [
-    "deadcode",
-    "errcheck",
-    "gosimple",
-    "govet",
-    "ineffassign",
-    "staticcheck",
-    "structcheck",
-    "typecheck",
-    "unused",
-    "varcheck",
 
+enable = [
+    # "asasalint", workaround
     "asciicheck",
     "bidichk",
     "bodyclose",
     "containedctx",
     "contextcheck",
     "cyclop",
-    # "decoder",
-    "depguard",
+    # "deadcode", deprecated
+    "decorder",
+    # "depguard",
     "dogsled",
     "dupl",
+    "dupword",
     "durationcheck",
+    "errcheck",
     "errchkjson",
     "errname",
     "errorlint",
@@ -37,7 +31,7 @@ enable = [
     "forbidigo",
     "forcetypeassert",
     # "funlen", the complexity is covering most of issues
-    # "gci", it's hard to make gofumpt play well with gci
+    "gci",
     "gochecknoglobals",
     "gochecknoinits",
     "gocognit",
@@ -45,10 +39,10 @@ enable = [
     "gocritic",
     "gocyclo",
     # "godot", the dot is not always easy to add (multiline for ex)
-    # "godox", we want to use TODO
+    # "godox", workaround
     "goerr113",
     "gofmt",
-    # "gofumpt", does not run properly: https://github.com/golangci/golangci-lint/issues/2711
+    "gofumpt",
     "goheader",
     "goimports",
     # "golint", deprecated
@@ -57,12 +51,17 @@ enable = [
     "gomodguard",
     "goprintffuncname",
     "gosec",
+    "gosimple",
+    "govet",
     "grouper",
     # "ifshort", deprecated
     "importas",
-    # "interfacer", deprecated
-    # "ireturn",
+    "ineffassign",
+    # "interfacebloat", workaround
+    # "interfacer" [deprecated]: Linter that suggests narrower interface types [fast: false, auto-fix: false]
+    # "ireturn", workaround
     "lll",
+    "loggercheck",
     "maintidx",
     "makezero",
     # "maligned", deprecated
@@ -74,29 +73,38 @@ enable = [
     "nlreturn",
     "noctx",
     "nolintlint",
-    # "nonamedreturns",
+    # "nonamedreturns", workaround
+    # "nosnakecase", deprecated
     "nosprintfhostport",
     "paralleltest",
     "prealloc",
     "predeclared",
     "promlinter",
+    "reassign",
     "revive",
     "rowserrcheck",
-    # "scopelint" , deprecated
+    # "scopelint", deprecated
     "sqlclosecheck",
-    "stylecheck",
-    # "tagliatelle", we don't want to force tags on all structs
+    "staticcheck",
+    # "structcheck", deprecated
+    # "stylecheck",
+    # "tagliatelle",
     "tenv",
-    # "testpackage", we don't want to force the use of a test package
+    "testableexamples",
+    # "testpackage",
     "thelper",
     "tparallel",
+    "typecheck",
     "unconvert",
     "unparam",
-    # "varnamelen",
+    "unused",
+    "usestdlibvars",
+    # "varcheck", deprecated
+    # "varnamelen", workaround
     "wastedassign",
     "whitespace",
-    # "wrapcheck",
-    # "wsl",
+    # "wrapcheck", workaround
+    # "wsl", workaround
 ]
 
 [linters-settings.errcheck]
@@ -123,7 +131,7 @@ enabled-tags = [
     "style",
 ]
 disabled-checks = [
-      "whyNoLint",
+    "whyNoLint",
 ]
 
 [linters-settings.errorlint]

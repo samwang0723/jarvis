@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package idal
+package services
 
 import (
 	"context"
@@ -20,9 +20,25 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IStakeConcentrationDAL interface {
-	GetStakeConcentrationByStockID(ctx context.Context, stockID, date string) (*entity.StakeConcentration, error)
-	GetStakeConcentrationsWithVolumes(ctx context.Context,
-		stockID, date string) (objs []*entity.CalculationBase, err error)
-	BatchUpsertStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error
+func (s *serviceImpl) UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error) {
+	err = s.dal.UpdateBalanceView(ctx, obj)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update balance view")
+
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceImpl) GetBalanceViewByUserID(
+	ctx context.Context,
+	userID uint64,
+) (obj *entity.BalanceView, err error) {
+	obj, err = s.dal.GetBalanceViewByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
 }

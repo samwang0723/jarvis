@@ -19,7 +19,6 @@ import (
 
 	config "github.com/samwang0723/jarvis/configs"
 	log "github.com/samwang0723/jarvis/internal/logger/gorm"
-
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"

@@ -5,7 +5,7 @@ help: ## show this help
 
 PROJECT_NAME?=core
 APP_NAME?=jarvis-api
-VERSION?=v1.3.0
+VERSION?=v1.3.1
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v /internal/app/pb)
@@ -31,16 +31,16 @@ test-coverage-report:
 ########
 
 lint: lint-check-deps ## lints the entire codebase
-	@golangci-lint run ./... --config=./.golangci.toml && \
-	if [ $$(gofumpt -e -l cmd/ | wc -l) = "0" ] && \
-		[ $$(gofumpt -e -l internal/ | wc -l) = "0" ] && \
-		[ $$(gofumpt -e -l configs/ | wc -l) = "0" ] ; \
+	@golangci-lint run ./... --config=./.golangci.toml --timeout=15m && \
+	if [ $$(gofumpt -e -l --extra cmd/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l --extra internal/ | wc -l) = "0" ] && \
+		[ $$(gofumpt -e -l --extra configs/ | wc -l) = "0" ] ; \
 		then exit 0; \
 	else \
 		echo "these files needs to be gofumpt-ed"; \
-		gofumpt -e -l cmd/; \
-		gofumpt -e -l internal/; \
-		gofumpt -e -l configs/; \
+		gofumpt -e -l --extra cmd/; \
+		gofumpt -e -l --extra internal/; \
+		gofumpt -e -l --extra configs/; \
 	fi
 
 lint-check-deps:

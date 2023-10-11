@@ -20,9 +20,15 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type IStakeConcentrationDAL interface {
-	GetStakeConcentrationByStockID(ctx context.Context, stockID, date string) (*entity.StakeConcentration, error)
-	GetStakeConcentrationsWithVolumes(ctx context.Context,
-		stockID, date string) (objs []*entity.CalculationBase, err error)
-	BatchUpsertStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error
+// ITransactionDAL defines the interface of transaction data access layer
+// Use double-entry accounting system can only add transaction, but not update or delete
+// Any adjustment should be done by adding a new transaction
+type ITransactionDAL interface {
+	CreateTransactions(ctx context.Context, obj []*entity.Transaction) error
+	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
+	ListTransactions(
+		ctx context.Context,
+		userID uint64,
+		startDate, endDate string,
+	) (objs []*entity.Transaction, totalCount int64, err error)
 }

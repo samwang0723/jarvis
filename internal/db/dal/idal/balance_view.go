@@ -4,30 +4,24 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
+
+package idal
 
 import (
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-	"gorm.io/gorm"
+	"context"
+
+	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-type dalImpl struct {
-	db *gorm.DB
-}
-
-// functional options design pattern
-func New(opts ...Option) idal.IDAL {
-	impl := &dalImpl{}
-	for _, opt := range opts {
-		opt(impl)
-	}
-
-	return impl
+type IBalanceViewDAL interface {
+	CreateBalanceView(ctx context.Context, obj *entity.BalanceView) error
+	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) error
+	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
 }

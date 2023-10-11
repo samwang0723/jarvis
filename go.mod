@@ -3,7 +3,7 @@ module github.com/samwang0723/jarvis
 go 1.16
 
 require (
-	github.com/getsentry/sentry-go v0.16.0
+	github.com/getsentry/sentry-go v0.16.0 // indirect
 	github.com/sirupsen/logrus v1.9.0
 	github.com/sony/sonyflake v1.1.0
 	golang.org/x/net v0.7.0 // indirect

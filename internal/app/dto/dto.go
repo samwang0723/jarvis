@@ -123,3 +123,78 @@ type DeletePickedStocksResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type ListUsersRequest struct {
+	Offset int32 `json:"offset"`
+	Limit  int32 `json:"limit"`
+}
+
+type ListUsersResponse struct {
+	Entries    []*entity.User `json:"entries"`
+	Offset     int32          `json:"offset"`
+	Limit      int32          `json:"limit"`
+	TotalCount int64          `json:"totalCount"`
+}
+
+type CreateUserRequest struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
+}
+
+type CreateUserResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}
+
+type UpdateBalanceViewRequest struct {
+	UserID        uint64  `json:"userID"`
+	CurrentAmount float32 `json:"amount"`
+}
+
+type UpdateBalanceViewResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}
+
+type GetBalanceViewRequest struct {
+	UserID uint64 `json:"userID"`
+}
+
+type GetBalanceViewResponse struct {
+	Balance *entity.BalanceView `json:"balance"`
+}
+
+type CreateTransactionsRequest struct {
+	StockID              string  `json:"stockID"`
+	UserID               uint64  `json:"userID"`
+	OrderType            int32   `json:"orderType"`
+	TradePrice           float32 `json:"tradePrice"`
+	Quantity             uint64  `json:"quantity"`
+	ExchangeDate         string  `json:"exchangeDate"`
+	Description          string  `json:"description,omitempty"`
+	ReferenceID          uint64  `json:"referenceId,omitempty"`
+	OriginalExchangeDate string  `json:"originalExchangeDate,omitempty"`
+}
+
+type CreateTransactionsResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}
+
+type ListTransactionsRequest struct {
+	UserID    uint64 `json:"userID"`
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+}
+
+type ListTransactionsResponse struct {
+	Entries    []*entity.Transaction `json:"entries"`
+	TotalCount int64                 `json:"totalCount"`
+}

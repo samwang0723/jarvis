@@ -19,7 +19,6 @@ import (
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
-
 	"google.golang.org/grpc"
 )
 

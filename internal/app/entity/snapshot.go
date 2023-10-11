@@ -11,23 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
+package entity
 
-import (
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-	"gorm.io/gorm"
-)
+type Snapshot struct {
+	EventSourcingModel
 
-type dalImpl struct {
-	db *gorm.DB
-}
-
-// functional options design pattern
-func New(opts ...Option) idal.IDAL {
-	impl := &dalImpl{}
-	for _, opt := range opts {
-		opt(impl)
-	}
-
-	return impl
+	AggregateID uint64 `gorm:"column:aggregate_id"` // foreign key to the Transaction table
+	Data        string `gorm:"column:data"`         // JSON-encoded snapshot data
+	Version     int    `gorm:"column:version"`      // version number of the last event included in the snapshot
 }

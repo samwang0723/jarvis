@@ -52,6 +52,18 @@ type IService interface {
 	DeletePickedStockByID(ctx context.Context, stockID string) error
 	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)
 	ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock
+	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (objs []*entity.User, totalCount int64, err error)
+	GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error)
+	CreateUser(ctx context.Context, obj *entity.User) (err error)
+	UpdateUser(ctx context.Context, obj *entity.User) (err error)
+	DeleteUserByID(ctx context.Context, id uint64) (err error)
+	GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error)
+	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
+	GetBalanceViewByUserID(ctx context.Context, userID uint64) (obj *entity.BalanceView, err error)
+	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error)
+	CreateTransactions(ctx context.Context, obj *entity.Transaction) error
+	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
+	ListTransactions(ctx context.Context, req *dto.ListTransactionsRequest) ([]*entity.Transaction, int64, error)
 }
 
 type serviceImpl struct {

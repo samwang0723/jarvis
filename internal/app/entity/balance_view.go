@@ -11,23 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package dal
+package entity
 
-import (
-	"github.com/samwang0723/jarvis/internal/db/dal/idal"
-	"gorm.io/gorm"
-)
+type BalanceView struct {
+	Model
 
-type dalImpl struct {
-	db *gorm.DB
+	UserID        uint64  `gorm:"column:user_id" json:"userId"`
+	CurrentAmount float32 `gorm:"column:current_amount" json:"currentAmount"`
 }
 
-// functional options design pattern
-func New(opts ...Option) idal.IDAL {
-	impl := &dalImpl{}
-	for _, opt := range opts {
-		opt(impl)
-	}
-
-	return impl
+func (BalanceView) TableName() string {
+	return "balance_views"
 }
