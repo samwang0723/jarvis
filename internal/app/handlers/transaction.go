@@ -65,7 +65,12 @@ func (h *handlerImpl) CreateTransactions(
 		Quantity:     req.Quantity,
 		ExchangeDate: req.ExchangeDate,
 		Description:  req.Description,
-		ReferenceID:  &req.ReferenceID,
+	}
+
+	if req.ReferenceID == 0 {
+		transaction.ReferenceID = nil
+	} else {
+		transaction.ReferenceID = &req.ReferenceID
 	}
 
 	transactions := h.chainTransactions(transaction, req.OriginalExchangeDate)
