@@ -4,7 +4,8 @@ CREATE TABLE
   events (
     id bigint unsigned NOT NULL PRIMARY KEY,
     aggregate_id bigint unsigned NOT NULL,
-    event_type varchar(255) NOT NULL,
+    parent_id bigint unsigned NOT NULL,
+    event_type varchar(50) NOT NULL,
     payload json NOT NULL,
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

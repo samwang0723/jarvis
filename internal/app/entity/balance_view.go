@@ -14,7 +14,7 @@
 package entity
 
 type BalanceView struct {
-	Model
+	Base
 
 	UserID        uint64  `gorm:"column:user_id" json:"userId"`
 	CurrentAmount float32 `gorm:"column:current_amount" json:"currentAmount"`
