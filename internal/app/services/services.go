@@ -61,7 +61,7 @@ type IService interface {
 	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
 	GetBalanceViewByUserID(ctx context.Context, userID uint64) (obj *entity.BalanceView, err error)
 	UpdateBalanceView(ctx context.Context, obj *entity.BalanceView) (err error)
-	CreateTransactions(ctx context.Context, objs []*entity.Transaction) error
+	CreateTransactions(ctx context.Context, obj *entity.Transaction) error
 	GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error)
 	ListTransactions(ctx context.Context, req *dto.ListTransactionsRequest) ([]*entity.Transaction, int64, error)
 }

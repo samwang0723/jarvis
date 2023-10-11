@@ -16,13 +16,29 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (s *serviceImpl) CreateTransactions(ctx context.Context, objs []*entity.Transaction) error {
-	err := s.dal.CreateTransactions(ctx, objs)
+const (
+	TaiwanStockQuantity = 1000
+	DayTradeTaxRate     = 0.5
+	TaxRate             = 0.003
+	FeeRate             = 0.001425
+	BrokerFeeDiscount   = 0.25
+)
+
+var ErrNoTransactionToCreate = errors.New("no transaction to create")
+
+func (s *serviceImpl) CreateTransactions(ctx context.Context, obj *entity.Transaction) error {
+	transactions := s.chainTransactions(obj, obj.OriginalExchangeDate)
+	if len(transactions) == 0 {
+		return ErrNoTransactionToCreate
+	}
+
+	err := s.dal.CreateTransactions(ctx, transactions)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create transaction")
 
@@ -55,4 +71,75 @@ func (s *serviceImpl) ListTransactions(
 	}
 
 	return transactions, totalCount, nil
+}
+
+func (s *serviceImpl) chainTransactions(
+	source *entity.Transaction,
+	originalExchangeDate string,
+) (output []*entity.Transaction) {
+	switch source.OrderType {
+	case entity.OrderTypeBid:
+		source.DebitAmount = source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity
+		output = append(output, source)
+	case entity.OrderTypeAsk:
+		source.CreditAmount = source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity
+		output = append(output, source)
+	}
+
+	tax := s.taxCalculation(source, originalExchangeDate)
+	if tax != nil {
+		output = append(output, tax)
+	}
+
+	fee := s.feeCalculation(source)
+	if fee != nil {
+		output = append(output, fee)
+	}
+
+	return output
+}
+
+func (s *serviceImpl) taxCalculation(
+	source *entity.Transaction,
+	originalExchangeDate string,
+) (output *entity.Transaction) {
+	if source.ReferenceID != nil {
+		debitAmount := source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity * TaxRate
+		if source.ExchangeDate == originalExchangeDate {
+			debitAmount *= DayTradeTaxRate
+		}
+
+		output = &entity.Transaction{
+			StockID:      source.StockID,
+			UserID:       source.UserID,
+			OrderType:    entity.OrderTypeTax,
+			TradePrice:   source.TradePrice,
+			Quantity:     source.Quantity,
+			ExchangeDate: source.ExchangeDate,
+			Description:  source.Description,
+			ReferenceID:  source.ReferenceID,
+			DebitAmount:  debitAmount,
+		}
+
+		return output
+	}
+
+	return nil
+}
+
+func (s *serviceImpl) feeCalculation(source *entity.Transaction) (output *entity.Transaction) {
+	debitAmount := source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity * FeeRate * BrokerFeeDiscount
+	output = &entity.Transaction{
+		StockID:      source.StockID,
+		UserID:       source.UserID,
+		OrderType:    entity.OrderTypeFee,
+		TradePrice:   source.TradePrice,
+		Quantity:     source.Quantity,
+		ExchangeDate: source.ExchangeDate,
+		Description:  source.Description,
+		ReferenceID:  source.ReferenceID,
+		DebitAmount:  debitAmount,
+	}
+
+	return output
 }

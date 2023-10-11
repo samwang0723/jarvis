@@ -39,7 +39,7 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 			if createdReferenceID != nil {
 				obj.ReferenceID = createdReferenceID
 			}
-			if err := tx.Omit("Status").Create(obj).Error; err != nil {
+			if err := tx.Omit("Status", "OriginalExchangeDate").Create(obj).Error; err != nil {
 				return err
 			}
 			if createdReferenceID == nil {
@@ -50,6 +50,8 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, objs []*entity.Transac
 
 			// As we are not relying on external system to update status
 			// can directly loop through to final completed status.
+			// If relying on external system, need to update status through webhook
+			// and applyEvent() accordingly and update balance.
 			states := []string{
 				entity.EventTransactionPending,
 				entity.EventTransactionProcessing,
