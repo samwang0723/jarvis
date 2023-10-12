@@ -128,7 +128,16 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, transactions []*entity
 				createdReferenceID = &transaction.ID
 			}
 
-			if transaction.CreditAmount > 0 {
+			switch transaction.OrderType {
+			case entity.OrderTypeBid, entity.OrderTypeFee, entity.OrderTypeTax, entity.OrderTypeWithdraw:
+				if err := balanceView.MoveAvailableToPending(transaction.DebitAmount); err != nil {
+					return err
+				}
+
+				if err := balanceView.DebitPending(transaction.DebitAmount); err != nil {
+					return err
+				}
+			case entity.OrderTypeAsk, entity.OrderTypeDeposit:
 				if err := balanceView.CreditPending(transaction.CreditAmount); err != nil {
 					return err
 				}
@@ -136,9 +145,8 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, transactions []*entity
 				if err := balanceView.MovePendingToAvailable(transaction.CreditAmount); err != nil {
 					return err
 				}
-			} else if transaction.DebitAmount > 0 {
-			} else {
-				return fmt.Errorf("invalid transaction: %+v", transaction)
+			default:
+				return fmt.Errorf("unknown order type: %s", transaction.OrderType)
 			}
 		}
 
