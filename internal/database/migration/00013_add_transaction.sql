@@ -13,6 +13,7 @@ CREATE TABLE
     debit_amount DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
     exchange_date varchar(32) NOT NULL,
     description varchar(255),
+    version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id),
     KEY index_reference_id (reference_id),

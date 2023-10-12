@@ -79,7 +79,10 @@ func Serve() {
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
 	dbPool := database.GormFactory(cfg)
-	dalService := dal.New(dal.WithDB(dbPool))
+	dalService := dal.New(
+		dal.WithDB(dbPool),
+		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
+	)
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
@@ -200,7 +203,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.3.1", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.4.0", helper.GetCurrentEnv())
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 

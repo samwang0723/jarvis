@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/database"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	"github.com/samwang0723/jarvis/internal/eventsourcing/db"
 	"gorm.io/gorm"
@@ -14,16 +15,23 @@ import (
 type BalanceRepository struct {
 	repo  *db.AggregateRepository
 	dbRef *gorm.DB
+	query *database.Query
 }
 
 type BalanceLoaderSaver struct {
 	dbRef *gorm.DB
+	query *database.Query
 }
 
 func (bls *BalanceLoaderSaver) Load(ctx context.Context, id uint64) (eventsourcing.Aggregate, error) {
-	balanceView := &entity.BalanceView{}
+	queries := bls.query
 
-	if err := bls.dbRef.Where("id = ?", id).First(balanceView).Error; err != nil {
+	if trans, ok := database.GetTx(ctx); ok {
+		queries = bls.query.WithTx(trans)
+	}
+
+	balanceView := &entity.BalanceView{}
+	if err := queries.Where("id = ?", id).First(balanceView).Error; err != nil {
 		return nil, err
 	}
 
@@ -31,6 +39,12 @@ func (bls *BalanceLoaderSaver) Load(ctx context.Context, id uint64) (eventsourci
 }
 
 func (bls *BalanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
+	queries := bls.query
+
+	if trans, ok := database.GetTx(ctx); ok {
+		queries = bls.query.WithTx(trans)
+	}
+
 	balanceView, ok := aggregate.(*entity.BalanceView)
 	if !ok {
 		return &TypeMismatchError{
@@ -39,7 +53,7 @@ func (bls *BalanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 		}
 	}
 
-	if err := bls.dbRef.Save(balanceView).Error; err != nil {
+	if err := queries.Save(balanceView).Error; err != nil {
 		return err
 	}
 
@@ -49,6 +63,7 @@ func (bls *BalanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 func NewBalanceRepository(dbPool *gorm.DB) *BalanceRepository {
 	loaderSaver := &BalanceLoaderSaver{
 		dbRef: dbPool,
+		query: database.NewQuery(dbPool),
 	}
 
 	return &BalanceRepository{
@@ -56,6 +71,7 @@ func NewBalanceRepository(dbPool *gorm.DB) *BalanceRepository {
 			db.WithAggregateLoader(loaderSaver), db.WithAggregateSaver(loaderSaver),
 		),
 		dbRef: dbPool,
+		query: database.NewQuery(dbPool),
 	}
 }
 
@@ -88,7 +104,13 @@ func (br *BalanceRepository) Save(ctx context.Context, balanceView *entity.Balan
 func (br *BalanceRepository) LoadForUpdate(ctx context.Context, id uint64) (*entity.BalanceView, error) {
 	balanceView := &entity.BalanceView{}
 
-	if err := br.dbRef.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
+	queries := br.query
+
+	if trans, ok := database.GetTx(ctx); ok {
+		queries = br.query.WithTx(trans)
+	}
+
+	if err := queries.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("id = ?", id).First(balanceView).Error; err != nil {
 		return nil, err
 	}
@@ -97,8 +119,8 @@ func (br *BalanceRepository) LoadForUpdate(ctx context.Context, id uint64) (*ent
 }
 
 func (i *dalImpl) GetBalanceViewByUserID(ctx context.Context, id uint64) (*entity.BalanceView, error) {
-	res := &entity.BalanceView{}
-	if err := i.db.First(res, "id = ?", id).Error; err != nil {
+	res, err := i.balanceRepository.Load(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 

@@ -14,6 +14,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -80,4 +81,46 @@ func generateDSN(cfg *config.Config) map[string]string {
 	}
 
 	return resp
+}
+
+type contextTxKey struct{}
+
+func GetTx(ctx context.Context) (*gorm.DB, bool) {
+	tx, ok := ctx.Value(contextTxKey{}).(*gorm.DB)
+
+	return tx, ok
+}
+
+func WithTx(ctx context.Context, tx *gorm.DB) context.Context {
+	return context.WithValue(ctx, contextTxKey{}, tx)
+}
+
+type DBTX interface {
+	Save(value interface{}) (tx *gorm.DB)
+	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
+	WithContext(ctx context.Context) *gorm.DB
+}
+
+type Query struct {
+	txdb DBTX
+}
+
+func NewQuery(db *gorm.DB) *Query {
+	return &Query{txdb: db}
+}
+
+func (q *Query) WithTx(tx *gorm.DB) *Query {
+	return &Query{txdb: tx}
+}
+
+func (q *Query) Save(value interface{}) *gorm.DB {
+	return q.txdb.Save(value)
+}
+
+func (q *Query) Where(query interface{}, args ...interface{}) *gorm.DB {
+	return q.txdb.Where(query, args...)
+}
+
+func (q *Query) WithContext(ctx context.Context) *gorm.DB {
+	return q.txdb.WithContext(ctx)
 }

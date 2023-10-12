@@ -22,3 +22,9 @@ func WithDB(db *gorm.DB) Option {
 		s.db = db
 	}
 }
+
+func WithBalanceRepository(balanceRepository *BalanceRepository) Option {
+	return func(s *dalImpl) {
+		s.balanceRepository = balanceRepository
+	}
+}

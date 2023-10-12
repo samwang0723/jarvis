@@ -8,7 +8,7 @@ CREATE TABLE
     payload blob NOT NULL,
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (aggregate_id, version),
+    PRIMARY KEY (aggregate_id, version)
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd

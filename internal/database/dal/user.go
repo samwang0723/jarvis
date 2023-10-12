@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/database"
 	"gorm.io/gorm"
 )
 
@@ -27,6 +28,16 @@ var ErrNoUserID = errors.New("no user id used in update method")
 func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 	err := i.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(obj).Error; err != nil {
+			return err
+		}
+
+		ctx = database.WithTx(ctx, tx)
+		balance, err := entity.NewBalanceView(obj.ID.Uint64(), 0.0)
+		if err != nil {
+			return err
+		}
+
+		if err := i.balanceRepository.Save(ctx, balance); err != nil {
 			return err
 		}
 
