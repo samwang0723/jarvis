@@ -28,3 +28,9 @@ func WithBalanceRepository(balanceRepository *BalanceRepository) Option {
 		s.balanceRepository = balanceRepository
 	}
 }
+
+func WithTransactionRepository(transactionRepository *TransactionRepository) Option {
+	return func(s *dalImpl) {
+		s.transactionRepository = transactionRepository
+	}
+}

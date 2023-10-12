@@ -19,8 +19,9 @@ import (
 )
 
 type dalImpl struct {
-	db                *gorm.DB
-	balanceRepository *BalanceRepository
+	db                    *gorm.DB
+	balanceRepository     *BalanceRepository
+	transactionRepository *TransactionRepository
 }
 
 // functional options design pattern

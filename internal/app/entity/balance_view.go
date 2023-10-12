@@ -132,3 +132,69 @@ func (bv *BalanceView) MoveAvailableToPending(amount float32) error {
 
 	return nil
 }
+
+func (bv *BalanceView) MovePendingToAvailable(amount float32) error {
+	pendingDelta := float32(0.0)
+	availableDelta := float32(0.0)
+
+	event := &BalanceChanged{
+		AvailableDelta: availableDelta + amount,
+		PendingDelta:   pendingDelta - amount,
+	}
+
+	event.SetAggregateID(bv.GetAggregateID())
+	event.SetVersion(bv.Version + 1)
+	event.SetCreatedAt(time.Now())
+
+	if err := bv.Apply(event); err != nil {
+		return err
+	}
+
+	bv.AppendChange(event)
+
+	return nil
+}
+
+func (bv *BalanceView) CreditPending(amount float32) error {
+	pendingDelta := float32(0.0)
+	availableDelta := float32(0.0)
+
+	event := &BalanceChanged{
+		AvailableDelta: availableDelta,
+		PendingDelta:   pendingDelta + amount,
+	}
+
+	event.SetAggregateID(bv.GetAggregateID())
+	event.SetVersion(bv.Version + 1)
+	event.SetCreatedAt(time.Now())
+
+	if err := bv.Apply(event); err != nil {
+		return err
+	}
+
+	bv.AppendChange(event)
+
+	return nil
+}
+
+func (bv *BalanceView) DebitPending(amount float32) error {
+	pendingDelta := float32(0.0)
+	availableDelta := float32(0.0)
+
+	event := &BalanceChanged{
+		AvailableDelta: availableDelta,
+		PendingDelta:   pendingDelta - amount,
+	}
+
+	event.SetAggregateID(bv.GetAggregateID())
+	event.SetVersion(bv.Version + 1)
+	event.SetCreatedAt(time.Now())
+
+	if err := bv.Apply(event); err != nil {
+		return err
+	}
+
+	bv.AppendChange(event)
+
+	return nil
+}
