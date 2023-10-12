@@ -8,12 +8,10 @@ import (
 )
 
 const (
-	OrderTypeBid      = "Bid"
-	OrderTypeAsk      = "Ask"
-	OrderTypeFee      = "Fee"
-	OrderTypeTax      = "Tax"
-	OrderTypeDeposit  = "Deposit"
-	OrderTypeWithdraw = "Withdraw"
+	OrderTypeBid = "Bid"
+	OrderTypeAsk = "Ask"
+	OrderTypeFee = "Fee"
+	OrderTypeTax = "Tax"
 )
 
 // Define state machine

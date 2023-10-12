@@ -100,7 +100,7 @@ func (tr *TransactionRepository) Save(ctx context.Context, transactionRequest *e
 	return nil
 }
 
-func (i *dalImpl) CreateTransactions(ctx context.Context, transactions []*entity.Transaction) error {
+func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*entity.Transaction) error {
 	err := i.db.Transaction(func(tx *gorm.DB) error {
 		ctx = database.WithTx(ctx, tx)
 		balanceView, err := i.balanceRepository.LoadForUpdate(ctx, transactions[0].UserID)
@@ -128,25 +128,8 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, transactions []*entity
 				createdReferenceID = &transaction.ID
 			}
 
-			switch transaction.OrderType {
-			case entity.OrderTypeBid, entity.OrderTypeFee, entity.OrderTypeTax, entity.OrderTypeWithdraw:
-				if err := balanceView.MoveAvailableToPending(transaction.DebitAmount); err != nil {
-					return err
-				}
-
-				if err := balanceView.DebitPending(transaction.DebitAmount); err != nil {
-					return err
-				}
-			case entity.OrderTypeAsk, entity.OrderTypeDeposit:
-				if err := balanceView.CreditPending(transaction.CreditAmount); err != nil {
-					return err
-				}
-
-				if err := balanceView.MovePendingToAvailable(transaction.CreditAmount); err != nil {
-					return err
-				}
-			default:
-				return fmt.Errorf("unknown order type: %s", transaction.OrderType)
+			if err := moveFund(balanceView, transaction); err != nil {
+				return err
 			}
 		}
 
@@ -158,4 +141,29 @@ func (i *dalImpl) CreateTransactions(ctx context.Context, transactions []*entity
 	})
 
 	return err
+}
+
+func moveFund(balanceView *entity.BalanceView, transaction *entity.Transaction) error {
+	switch transaction.OrderType {
+	case entity.OrderTypeBid, entity.OrderTypeFee, entity.OrderTypeTax:
+		if err := balanceView.MoveAvailableToPending(transaction.DebitAmount); err != nil {
+			return err
+		}
+
+		if err := balanceView.DebitPending(transaction.DebitAmount); err != nil {
+			return err
+		}
+	case entity.OrderTypeAsk:
+		if err := balanceView.CreditPending(transaction.CreditAmount); err != nil {
+			return err
+		}
+
+		if err := balanceView.MovePendingToAvailable(transaction.CreditAmount); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("%w: %s", ErrUnknownOrderType, transaction.OrderType)
+	}
+
+	return nil
 }

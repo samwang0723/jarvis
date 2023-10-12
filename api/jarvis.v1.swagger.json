@@ -314,6 +314,38 @@
         ]
       }
     },
+    "/v1/transactions": {
+      "post": {
+        "operationId": "JarvisV1_CreateTransaction",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateTransactionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateTransactionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/users": {
       "get": {
         "operationId": "JarvisV1_ListUsers",
@@ -458,6 +490,57 @@
         "pending": {
           "type": "number",
           "format": "float"
+        }
+      }
+    },
+    "v1CreateTransactionRequest": {
+      "type": "object",
+      "properties": {
+        "userID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "exchangeDate": {
+          "type": "string"
+        },
+        "tradePrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "quantity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orderType": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "referenceID": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "v1CreateTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
         }
       }
     },

@@ -168,3 +168,22 @@ type GetBalanceViewRequest struct {
 type GetBalanceViewResponse struct {
 	Balance *entity.BalanceView `json:"balance"`
 }
+
+type CreateTransactionRequest struct {
+	UserID               uint64  `json:"userID"`
+	StockID              string  `json:"stockID"`
+	OrderType            string  `json:"orderType"`
+	TradePrice           float32 `json:"tradePrice"`
+	Quantity             uint64  `json:"quantity"`
+	ExchangeDate         string  `json:"exchangeDate"`
+	Description          string  `json:"description,omitempty"`
+	ReferenceID          uint64  `json:"referenceId,omitempty"`
+	OriginalExchangeDate string  `json:"originalExchangeDate,omitempty"`
+}
+
+type CreateTransactionResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}

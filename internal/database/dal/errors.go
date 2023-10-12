@@ -1,6 +1,9 @@
 package dal
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type NotEnoughBalanceError struct{}
 
@@ -16,3 +19,5 @@ type TypeMismatchError struct {
 func (tme *TypeMismatchError) Error() string {
 	return fmt.Sprintf("type mismatch, expect %t, got %t", tme.expect, tme.got)
 }
+
+var ErrUnknownOrderType = errors.New("unknown order type")

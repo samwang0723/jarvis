@@ -38,6 +38,7 @@ type IHandler interface {
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
 	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
+	CreateTransaction(ctx context.Context, req *dto.CreateTransactionRequest) (*dto.CreateTransactionResponse, error)
 }
 
 type handlerImpl struct {

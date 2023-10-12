@@ -144,3 +144,15 @@ func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb
 
 	return dto.GetBalanceResponseToPB(res), nil
 }
+
+func (s *server) CreateTransaction(
+	ctx context.Context,
+	req *pb.CreateTransactionRequest,
+) (*pb.CreateTransactionResponse, error) {
+	res, err := s.Handler().CreateTransaction(ctx, dto.CreateTransactionRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.CreateTransactionResponseToPB(res), nil
+}

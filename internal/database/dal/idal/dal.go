@@ -26,4 +26,5 @@ type IDAL interface {
 	IPickedStockDAL
 	IUserDAL
 	IBalanceViewDAL
+	ITransactionDAL
 }
