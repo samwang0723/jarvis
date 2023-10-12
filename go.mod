@@ -6,7 +6,7 @@ require (
 	github.com/getsentry/sentry-go v0.16.0 // indirect
 	github.com/sirupsen/logrus v1.9.0
 	github.com/sony/sonyflake v1.1.0
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.3
 )
@@ -34,7 +34,6 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/segmentio/kafka-go v0.4.38
 	go.uber.org/goleak v1.2.0
-	golang.org/x/tools v0.2.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/genproto v0.0.0-20230104163317-caabf589fcbf
 	google.golang.org/grpc v1.51.0
