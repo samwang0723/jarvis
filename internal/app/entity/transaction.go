@@ -8,10 +8,12 @@ import (
 )
 
 const (
-	OrderTypeBid = "Bid"
-	OrderTypeAsk = "Ask"
-	OrderTypeFee = "Fee"
-	OrderTypeTax = "Tax"
+	OrderTypeBid      = "Bid"
+	OrderTypeAsk      = "Ask"
+	OrderTypeFee      = "Fee"
+	OrderTypeTax      = "Tax"
+	OrderTypeDeposit  = "Deposit"
+	OrderTypeWithdraw = "Withdraw"
 )
 
 // Define state machine
@@ -131,7 +133,10 @@ func NewTransaction(
 		Quantity:     quantity,
 		ExchangeDate: exchangeDate,
 		Description:  description,
-		ReferenceID:  referenceID,
+	}
+
+	if referenceID != nil {
+		tran.ReferenceID = referenceID
 	}
 
 	tran.ID = id.Uint64()
@@ -139,10 +144,12 @@ func NewTransaction(
 	event := &TransactionCreated{
 		CreditAmount: creditAmount,
 		DebitAmount:  debitAmount,
+		OrderType:    tran.OrderType,
 	}
 
 	// fill base event data
 	event.SetAggregateID(tran.ID)
+	event.SetParentID(tran.UserID)
 	event.SetVersion(1)
 	event.SetCreatedAt(time.Now())
 
@@ -161,6 +168,7 @@ func (tran *Transaction) Complete() error {
 
 	// fill base event data
 	event.SetAggregateID(tran.ID)
+	event.SetParentID(tran.UserID)
 	event.SetVersion(tran.Version + 1)
 	event.SetCreatedAt(time.Now())
 
@@ -179,6 +187,7 @@ func (tran *Transaction) Fail() error {
 
 	// fill base event data
 	event.SetAggregateID(tran.ID)
+	event.SetParentID(tran.UserID)
 	event.SetVersion(tran.Version + 1)
 	event.SetCreatedAt(time.Now())
 

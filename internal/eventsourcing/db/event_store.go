@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/database"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	"gorm.io/gorm"
 )
@@ -47,7 +48,13 @@ func (es *EventStore) Load(
 	ctx context.Context, aggregateID uint64, startVersion int,
 ) ([]eventsourcing.Event, error) {
 	events := []eventsourcing.Event{}
-	err := es.db.Transaction(func(tx *gorm.DB) error {
+
+	dbPool := es.db
+	if tx, ok := database.GetTx(ctx); ok {
+		dbPool = tx
+	}
+
+	err := dbPool.Transaction(func(tx *gorm.DB) error {
 		sql := fmt.Sprintf(listEventsByAggregateIDAndVersion, es.eventTable)
 		rows, err := tx.Raw(sql, aggregateID, startVersion).Rows()
 		if err != nil {
@@ -94,7 +101,12 @@ func (es *EventStore) Load(
 }
 
 func (es *EventStore) Append(ctx context.Context, events []eventsourcing.Event) error {
-	return es.db.Transaction(func(tx *gorm.DB) error {
+	dbPool := es.db
+	if tx, ok := database.GetTx(ctx); ok {
+		dbPool = tx
+	}
+
+	return dbPool.Transaction(func(tx *gorm.DB) error {
 		for _, event := range events {
 			evModel, err := NewEventModelFromEvent(event)
 			if err != nil {

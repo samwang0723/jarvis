@@ -11,6 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// SQL query for debugging
+// SELECT aggregate_id, parent_id, event_type, version, CONVERT(payload USING utf8) as pstr FROM transaction_events;
+
 type TransactionRepository struct {
 	repo  *db.AggregateRepository
 	dbRef *gorm.DB
@@ -52,7 +55,7 @@ func (tls *TransactionLoaderSaver) Save(ctx context.Context, aggregate eventsour
 		}
 	}
 
-	if err := queries.Save(transaction).Error; err != nil {
+	if err := queries.Omit("OriginalExchangeDate").Save(transaction).Error; err != nil {
 		return err
 	}
 

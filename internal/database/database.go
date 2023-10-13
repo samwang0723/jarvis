@@ -16,12 +16,14 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	config "github.com/samwang0723/jarvis/configs"
-	log "github.com/samwang0723/jarvis/internal/logger/gorm"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
 )
 
@@ -29,8 +31,16 @@ const dsnCount = 2
 
 func GormFactory(cfg *config.Config) *gorm.DB {
 	dsns := generateDSN(cfg)
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level (Info level logs SQL statements)
+			Colorful:      false,       // Enable color
+		},
+	)
 	session, err := gorm.Open(mysql.Open(dsns["master"]), &gorm.Config{
-		Logger: log.Logger(),
+		Logger: newLogger,
 	})
 	if err != nil {
 		panic("connect database error: " + err.Error())
@@ -96,6 +106,7 @@ func WithTx(ctx context.Context, tx *gorm.DB) context.Context {
 }
 
 type DBTX interface {
+	Omit(columns ...string) (tx *gorm.DB)
 	Save(value interface{}) (tx *gorm.DB)
 	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
 	WithContext(ctx context.Context) *gorm.DB
@@ -123,4 +134,8 @@ func (q *Query) Where(query interface{}, args ...interface{}) *gorm.DB {
 
 func (q *Query) WithContext(ctx context.Context) *gorm.DB {
 	return q.txdb.WithContext(ctx)
+}
+
+func (q *Query) Omit(columns ...string) *gorm.DB {
+	return q.txdb.Omit(columns...)
 }

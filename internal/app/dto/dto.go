@@ -177,7 +177,7 @@ type CreateTransactionRequest struct {
 	Quantity             uint64  `json:"quantity"`
 	ExchangeDate         string  `json:"exchangeDate"`
 	Description          string  `json:"description,omitempty"`
-	ReferenceID          uint64  `json:"referenceId,omitempty"`
+	ReferenceID          *uint64 `json:"referenceId,omitempty"`
 	OriginalExchangeDate string  `json:"originalExchangeDate,omitempty"`
 }
 

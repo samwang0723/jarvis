@@ -16,7 +16,7 @@ CREATE TABLE
     status VARCHAR(32) NOT NULL,
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id),
+    updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY index_reference_id (reference_id)
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 

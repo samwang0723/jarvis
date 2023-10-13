@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/samwang0723/jarvis/internal/database"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	"gorm.io/gorm"
 )
@@ -122,7 +123,12 @@ func (ar *AggregateRepository) loadFromEventStore(
 // If a AggregateSaver is provided, it also save the aggregate with the AggregateSaver.
 // If any errors happened, all changes will be rollbacked.
 func (ar *AggregateRepository) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
-	return ar.eventStore.db.Transaction(func(_ *gorm.DB) error {
+	dbPool := ar.eventStore.db
+	if tx, ok := database.GetTx(ctx); ok {
+		dbPool = tx
+	}
+
+	return dbPool.Transaction(func(_ *gorm.DB) error {
 		changes := aggregate.GetChanges()
 
 		if err := ar.eventStore.Append(ctx, changes); err != nil {

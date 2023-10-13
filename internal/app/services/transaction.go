@@ -18,7 +18,7 @@ const (
 var errUnableToChainTransactions = errors.New("unable to create chain transactions")
 
 func (s *serviceImpl) CreateTransaction(ctx context.Context, obj *entity.Transaction) error {
-	transactions := s.chainTransactions(obj, obj.OriginalExchangeDate)
+	transactions := s.chainTransactions(obj)
 	if len(transactions) == 0 {
 		return errUnableToChainTransactions
 	}
@@ -33,20 +33,10 @@ func (s *serviceImpl) CreateTransaction(ctx context.Context, obj *entity.Transac
 	return nil
 }
 
-func (s *serviceImpl) chainTransactions(
-	source *entity.Transaction,
-	originalExchangeDate string,
-) (output []*entity.Transaction) {
-	switch source.OrderType {
-	case entity.OrderTypeBid:
-		source.DebitAmount = source.TradePrice * float32(source.Quantity) * taiwanStockQuantity
-		output = append(output, source)
-	case entity.OrderTypeAsk:
-		source.CreditAmount = source.TradePrice * float32(source.Quantity) * taiwanStockQuantity
-		output = append(output, source)
-	}
+func (s *serviceImpl) chainTransactions(source *entity.Transaction) (output []*entity.Transaction) {
+	output = append(output, source)
 
-	tax := s.taxCalculation(source, originalExchangeDate)
+	tax := s.taxCalculation(source, source.OriginalExchangeDate)
 	if tax != nil {
 		output = append(output, tax)
 	}

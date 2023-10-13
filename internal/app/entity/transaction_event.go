@@ -5,6 +5,7 @@ import "github.com/samwang0723/jarvis/internal/eventsourcing"
 type TransactionCreated struct {
 	DebitAmount  float32
 	CreditAmount float32
+	OrderType    string
 
 	eventsourcing.BaseEvent
 }
@@ -15,9 +16,6 @@ func (*TransactionCreated) EventType() eventsourcing.EventType {
 }
 
 type TransactionCompleted struct {
-	DebitAmount  float32
-	CreditAmount float32
-
 	eventsourcing.BaseEvent
 }
 
@@ -27,9 +25,6 @@ func (*TransactionCompleted) EventType() eventsourcing.EventType {
 }
 
 type TransactionFailed struct {
-	DebitAmount  float32
-	CreditAmount float32
-
 	eventsourcing.BaseEvent
 }
 

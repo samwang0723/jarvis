@@ -82,6 +82,7 @@ func Serve() {
 	dalService := dal.New(
 		dal.WithDB(dbPool),
 		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
+		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
 	)
 	// bind DAL layer with service
 	dataService := services.New(

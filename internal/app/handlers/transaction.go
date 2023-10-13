@@ -7,10 +7,22 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
+const (
+	taiwanStockQuantity = 1000
+)
+
 func (h *handlerImpl) CreateTransaction(
 	ctx context.Context,
 	req *dto.CreateTransactionRequest,
 ) (*dto.CreateTransactionResponse, error) {
+	debitAmount, creditAmount := float32(0.0), float32(0.0)
+	switch req.OrderType {
+	case entity.OrderTypeBid:
+		debitAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
+	case entity.OrderTypeAsk:
+		creditAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
+	}
+
 	transaction, err := entity.NewTransaction(
 		req.StockID,
 		req.UserID,
@@ -18,10 +30,10 @@ func (h *handlerImpl) CreateTransaction(
 		req.TradePrice,
 		req.Quantity,
 		req.ExchangeDate,
-		0.0,
-		0.0,
+		creditAmount,
+		debitAmount,
 		req.Description,
-		&req.ReferenceID,
+		req.ReferenceID,
 	)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
