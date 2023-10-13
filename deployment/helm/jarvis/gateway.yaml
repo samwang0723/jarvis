@@ -28,6 +28,14 @@ spec:
         prefix: /analysis
     - uri:
         prefix: /v1
+    - uri:
+        prefix: /live
+    - uri:
+        prefix: /ready
+    - uri:
+        prefix: /swagger
+    - uri:
+        prefix: /swagger-ui
     route:
     - destination:
         host: jarvis-service
