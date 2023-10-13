@@ -5,7 +5,7 @@ help: ## show this help
 
 PROJECT_NAME?=core
 APP_NAME?=jarvis-api
-VERSION?=v1.3.1
+VERSION?=v1.4.0
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v /internal/app/pb)

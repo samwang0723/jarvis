@@ -14,7 +14,7 @@
 package entity
 
 type ThreePrimary struct {
-	Model
+	Base
 
 	StockID            string `gorm:"column:stock_id" json:"stockId"`
 	Date               string `gorm:"column:exchange_date" json:"exchangeDate"`

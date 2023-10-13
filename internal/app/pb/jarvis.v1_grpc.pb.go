@@ -35,9 +35,7 @@ type JarvisV1Client interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
-	UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error)
-	CreateTransactions(ctx context.Context, in *CreateTransactionsRequest, opts ...grpc.CallOption) (*CreateTransactionsResponse, error)
-	ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error)
+	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionResponse, error)
 }
 
 type jarvisV1Client struct {
@@ -156,27 +154,9 @@ func (c *jarvisV1Client) GetBalance(ctx context.Context, in *GetBalanceRequest, 
 	return out, nil
 }
 
-func (c *jarvisV1Client) UpdateBalance(ctx context.Context, in *UpdateBalanceRequest, opts ...grpc.CallOption) (*UpdateBalanceResponse, error) {
-	out := new(UpdateBalanceResponse)
-	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/UpdateBalance", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *jarvisV1Client) CreateTransactions(ctx context.Context, in *CreateTransactionsRequest, opts ...grpc.CallOption) (*CreateTransactionsResponse, error) {
-	out := new(CreateTransactionsResponse)
-	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/CreateTransactions", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *jarvisV1Client) ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error) {
-	out := new(ListTransactionsResponse)
-	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/ListTransactions", in, out, opts...)
+func (c *jarvisV1Client) CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionResponse, error) {
+	out := new(CreateTransactionResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/CreateTransaction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -199,9 +179,7 @@ type JarvisV1Server interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
-	UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error)
-	CreateTransactions(context.Context, *CreateTransactionsRequest) (*CreateTransactionsResponse, error)
-	ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error)
+	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error)
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
@@ -244,14 +222,8 @@ func (UnimplementedJarvisV1Server) ListUsers(context.Context, *ListUsersRequest)
 func (UnimplementedJarvisV1Server) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
 }
-func (UnimplementedJarvisV1Server) UpdateBalance(context.Context, *UpdateBalanceRequest) (*UpdateBalanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateBalance not implemented")
-}
-func (UnimplementedJarvisV1Server) CreateTransactions(context.Context, *CreateTransactionsRequest) (*CreateTransactionsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTransactions not implemented")
-}
-func (UnimplementedJarvisV1Server) ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListTransactions not implemented")
+func (UnimplementedJarvisV1Server) CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTransaction not implemented")
 }
 
 // UnsafeJarvisV1Server may be embedded to opt out of forward compatibility for this service.
@@ -481,56 +453,20 @@ func _JarvisV1_GetBalance_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JarvisV1_UpdateBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateBalanceRequest)
+func _JarvisV1_CreateTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTransactionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(JarvisV1Server).UpdateBalance(ctx, in)
+		return srv.(JarvisV1Server).CreateTransaction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/jarvis.v1.JarvisV1/UpdateBalance",
+		FullMethod: "/jarvis.v1.JarvisV1/CreateTransaction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JarvisV1Server).UpdateBalance(ctx, req.(*UpdateBalanceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _JarvisV1_CreateTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTransactionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JarvisV1Server).CreateTransactions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/jarvis.v1.JarvisV1/CreateTransactions",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JarvisV1Server).CreateTransactions(ctx, req.(*CreateTransactionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _JarvisV1_ListTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListTransactionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JarvisV1Server).ListTransactions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/jarvis.v1.JarvisV1/ListTransactions",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JarvisV1Server).ListTransactions(ctx, req.(*ListTransactionsRequest))
+		return srv.(JarvisV1Server).CreateTransaction(ctx, req.(*CreateTransactionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -591,16 +527,8 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _JarvisV1_GetBalance_Handler,
 		},
 		{
-			MethodName: "UpdateBalance",
-			Handler:    _JarvisV1_UpdateBalance_Handler,
-		},
-		{
-			MethodName: "CreateTransactions",
-			Handler:    _JarvisV1_CreateTransactions_Handler,
-		},
-		{
-			MethodName: "ListTransactions",
-			Handler:    _JarvisV1_ListTransactions_Handler,
+			MethodName: "CreateTransaction",
+			Handler:    _JarvisV1_CreateTransaction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

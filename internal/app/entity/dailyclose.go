@@ -16,7 +16,7 @@ package entity
 import "github.com/samwang0723/jarvis/internal/app/businessmodel"
 
 type DailyClose struct {
-	Model
+	Base
 
 	StockID string `gorm:"column:stock_id" json:"stockId"`
 	Date    string `gorm:"column:exchange_date" json:"date"`

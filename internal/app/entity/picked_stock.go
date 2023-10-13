@@ -14,7 +14,7 @@
 package entity
 
 type PickedStock struct {
-	Model
+	Base
 
 	StockID string `gorm:"column:stock_id" json:"stockId"`
 }

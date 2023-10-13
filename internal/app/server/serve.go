@@ -36,8 +36,8 @@ import (
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
-	"github.com/samwang0723/jarvis/internal/db"
-	"github.com/samwang0723/jarvis/internal/db/dal"
+	"github.com/samwang0723/jarvis/internal/database"
+	"github.com/samwang0723/jarvis/internal/database/dal"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"github.com/samwang0723/jarvis/internal/kafka"
 	log "github.com/samwang0723/jarvis/internal/logger"
@@ -76,10 +76,14 @@ func Serve() {
 	cfg := config.GetCurrentConfig()
 	logger := structuredlog.Logger(cfg)
 	newLogger := zl.With().Str("app", appName).Logger()
-	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> database
+	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
-	database := db.GormFactory(cfg)
-	dalService := dal.New(dal.WithDB(database))
+	dbPool := database.GormFactory(cfg)
+	dalService := dal.New(
+		dal.WithDB(dbPool),
+		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
+		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
+	)
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
@@ -121,7 +125,7 @@ func Serve() {
 	)
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
-	genericDB, dbErr := database.DB()
+	genericDB, dbErr := dbPool.DB()
 	if dbErr != nil {
 		log.Fatal("failed to get db", dbErr)
 	}
@@ -151,7 +155,7 @@ func Serve() {
 			if err != nil {
 				log.Errorf("StopKafka error: %s", err.Error())
 			}
-			sqlDB, err := database.DB()
+			sqlDB, err := dbPool.DB()
 			if err != nil {
 				return err
 			}
@@ -200,7 +204,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.3.1", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.4.0", helper.GetCurrentEnv())
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 

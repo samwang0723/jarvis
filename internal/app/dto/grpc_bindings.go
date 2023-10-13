@@ -684,38 +684,6 @@ func UserToPB(in *entity.User) *pb.User {
 	}
 }
 
-func UpdateBalanceRequestFromPB(in *pb.UpdateBalanceRequest) *UpdateBalanceViewRequest {
-	if in == nil {
-		return nil
-	}
-
-	pbUserID := in.UserID
-	pbBalance := in.Amount
-
-	return &UpdateBalanceViewRequest{
-		UserID:        pbUserID,
-		CurrentAmount: pbBalance,
-	}
-}
-
-func UpdateBalanceResponseToPB(in *UpdateBalanceViewResponse) *pb.UpdateBalanceResponse {
-	if in == nil {
-		return nil
-	}
-
-	pbSuccess := in.Success
-	pbStatus := int32(in.Status)
-	pbErrorCode := in.ErrorCode
-	pbErrorMessage := in.ErrorMessage
-
-	return &pb.UpdateBalanceResponse{
-		Success:      pbSuccess,
-		Status:       pbStatus,
-		ErrorCode:    pbErrorCode,
-		ErrorMessage: pbErrorMessage,
-	}
-}
-
 func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
 	if in == nil {
 		return nil
@@ -734,31 +702,19 @@ func BalanceToPB(in *entity.BalanceView) *pb.Balance {
 	}
 
 	pbID := in.ID
-	pbUserID := in.UserID
-	pbBalance := in.CurrentAmount
-
-	var pbCreatedAt *timestamp.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
-	}
-
-	var pbUpdatedAt *timestamp.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
-	}
-
-	var pbDeletedAt *timestamp.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
-	}
+	pbBalance := in.Balance
+	pbAvailable := in.Available
+	pbPending := in.Pending
+	pbCreatedAt := timestamppb.New(in.CreatedAt)
+	pbUpdatedAt := timestamppb.New(in.UpdatedAt)
 
 	return &pb.Balance{
-		Id:        pbID.Uint64(),
-		UserID:    pbUserID,
-		Amount:    pbBalance,
+		Id:        pbID,
+		Balance:   pbBalance,
+		Available: pbAvailable,
+		Pending:   pbPending,
 		CreatedAt: pbCreatedAt,
 		UpdatedAt: pbUpdatedAt,
-		DeletedAt: pbDeletedAt,
 	}
 }
 
@@ -772,7 +728,7 @@ func GetBalanceResponseToPB(in *entity.BalanceView) *pb.GetBalanceResponse {
 	}
 }
 
-func CreateTransactionsRequestFromPB(in *pb.CreateTransactionsRequest) *CreateTransactionsRequest {
+func CreateTransactionRequestFromPB(in *pb.CreateTransactionRequest) *CreateTransactionRequest {
 	if in == nil {
 		return nil
 	}
@@ -784,9 +740,9 @@ func CreateTransactionsRequestFromPB(in *pb.CreateTransactionsRequest) *CreateTr
 	pbQuantity := in.Quantity
 	pbExchangeDate := in.ExchangeDate
 	pbDescription := in.Description
-	pbReferenceID := in.ReferenceID
+	pbReferenceID := in.GetReferenceID()
 
-	return &CreateTransactionsRequest{
+	request := &CreateTransactionRequest{
 		UserID:       pbUserID,
 		StockID:      pbStockID,
 		OrderType:    pbOrderType,
@@ -794,11 +750,16 @@ func CreateTransactionsRequestFromPB(in *pb.CreateTransactionsRequest) *CreateTr
 		Quantity:     pbQuantity,
 		ExchangeDate: pbExchangeDate,
 		Description:  pbDescription,
-		ReferenceID:  pbReferenceID,
 	}
+
+	if pbReferenceID > 0 {
+		request.ReferenceID = &pbReferenceID
+	}
+
+	return request
 }
 
-func CreateTransactionsResponseToPB(in *CreateTransactionsResponse) *pb.CreateTransactionsResponse {
+func CreateTransactionResponseToPB(in *CreateTransactionResponse) *pb.CreateTransactionResponse {
 	if in == nil {
 		return nil
 	}
@@ -808,86 +769,10 @@ func CreateTransactionsResponseToPB(in *CreateTransactionsResponse) *pb.CreateTr
 	pbErrorCode := in.ErrorCode
 	pbErrorMessage := in.ErrorMessage
 
-	return &pb.CreateTransactionsResponse{
+	return &pb.CreateTransactionResponse{
 		Success:      pbSuccess,
 		Status:       pbStatus,
 		ErrorCode:    pbErrorCode,
 		ErrorMessage: pbErrorMessage,
 	}
-}
-
-func ListTransactionsRequestFromPB(in *pb.ListTransactionsRequest) *ListTransactionsRequest {
-	if in == nil {
-		return nil
-	}
-
-	return &ListTransactionsRequest{
-		UserID:    in.UserID,
-		StartDate: in.StartDate,
-		EndDate:   in.EndDate,
-	}
-}
-
-func ListTransactionsResponseToPB(in *ListTransactionsResponse) *pb.ListTransactionsResponse {
-	if in == nil {
-		return nil
-	}
-
-	entries := make([]*pb.Transaction, 0, len(in.Entries))
-
-	for _, obj := range in.Entries {
-		entries = append(entries, TransactionToPB(obj))
-	}
-
-	return &pb.ListTransactionsResponse{
-		TotalCount: in.TotalCount,
-		Entries:    entries,
-	}
-}
-
-func TransactionToPB(in *entity.Transaction) *pb.Transaction {
-	if in == nil {
-		return nil
-	}
-
-	pbID := in.ID
-	pbUserID := in.UserID
-	pbStockID := in.StockID
-	pbOrderType := in.OrderType
-	pbTradePrice := in.TradePrice
-	pbQuantity := in.Quantity
-	pbExchangeDate := in.ExchangeDate
-	pbDescription := in.Description
-	pbReferenceID := in.ReferenceID
-	pbCreditAmount := in.CreditAmount
-	pbDebitAmount := in.DebitAmount
-	pbStatus := in.Status
-
-	var pbCreatedAt *timestamp.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
-	}
-
-	transaction := &pb.Transaction{
-		Id:           pbID.Uint64(),
-		UserID:       pbUserID,
-		StockID:      pbStockID,
-		OrderType:    pbOrderType,
-		TradePrice:   pbTradePrice,
-		Quantity:     pbQuantity,
-		ExchangeDate: pbExchangeDate,
-		Description:  pbDescription,
-		CreatedAt:    pbCreatedAt,
-		CreditAmount: pbCreditAmount,
-		DebitAmount:  pbDebitAmount,
-		Status:       pbStatus,
-	}
-
-	if pbReferenceID != nil {
-		transaction.OptionalReferenceID = &pb.Transaction_ReferenceID{
-			ReferenceID: *pbReferenceID,
-		}
-	}
-
-	return transaction
 }

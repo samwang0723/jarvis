@@ -1,44 +1,29 @@
-// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package services
 
 import (
 	"context"
 	"errors"
 
-	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 const (
-	TaiwanStockQuantity = 1000
-	DayTradeTaxRate     = 0.5
-	TaxRate             = 0.003
-	FeeRate             = 0.001425
-	BrokerFeeDiscount   = 0.25
+	taiwanStockQuantity = 1000
+	dayTradeTaxRate     = 0.5
+	taxRate             = 0.003
+	feeRate             = 0.001425
+	brokerFeeDiscount   = 0.25
 )
 
-var ErrNoTransactionToCreate = errors.New("no transaction to create")
+var errUnableToChainTransactions = errors.New("unable to create chain transactions")
 
-func (s *serviceImpl) CreateTransactions(ctx context.Context, obj *entity.Transaction) error {
-	transactions := s.chainTransactions(obj, obj.OriginalExchangeDate)
+func (s *serviceImpl) CreateTransaction(ctx context.Context, obj *entity.Transaction) error {
+	transactions := s.chainTransactions(obj)
 	if len(transactions) == 0 {
-		return ErrNoTransactionToCreate
+		return errUnableToChainTransactions
 	}
 
-	err := s.dal.CreateTransactions(ctx, transactions)
+	err := s.dal.CreateChainTransactions(ctx, transactions)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create transaction")
 
@@ -48,45 +33,10 @@ func (s *serviceImpl) CreateTransactions(ctx context.Context, obj *entity.Transa
 	return nil
 }
 
-func (s *serviceImpl) GetTransactionByID(ctx context.Context, id uint64) (*entity.Transaction, error) {
-	transaction, err := s.dal.GetTransactionByID(ctx, id)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to get transaction by id")
+func (s *serviceImpl) chainTransactions(source *entity.Transaction) (output []*entity.Transaction) {
+	output = append(output, source)
 
-		return nil, err
-	}
-
-	return transaction, nil
-}
-
-func (s *serviceImpl) ListTransactions(
-	ctx context.Context,
-	req *dto.ListTransactionsRequest,
-) (objs []*entity.Transaction, totalCount int64, err error) {
-	transactions, totalCount, err := s.dal.ListTransactions(ctx, req.UserID, req.StartDate, req.EndDate)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to list transactions")
-
-		return nil, 0, err
-	}
-
-	return transactions, totalCount, nil
-}
-
-func (s *serviceImpl) chainTransactions(
-	source *entity.Transaction,
-	originalExchangeDate string,
-) (output []*entity.Transaction) {
-	switch source.OrderType {
-	case entity.OrderTypeBid:
-		source.DebitAmount = source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity
-		output = append(output, source)
-	case entity.OrderTypeAsk:
-		source.CreditAmount = source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity
-		output = append(output, source)
-	}
-
-	tax := s.taxCalculation(source, originalExchangeDate)
+	tax := s.taxCalculation(source, source.OriginalExchangeDate)
 	if tax != nil {
 		output = append(output, tax)
 	}
@@ -102,24 +52,25 @@ func (s *serviceImpl) chainTransactions(
 func (s *serviceImpl) taxCalculation(
 	source *entity.Transaction,
 	originalExchangeDate string,
-) (output *entity.Transaction) {
+) *entity.Transaction {
 	if source.ReferenceID != nil {
-		debitAmount := source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity * TaxRate
+		debitAmount := source.TradePrice * float32(source.Quantity) * taiwanStockQuantity * taxRate
 		if source.ExchangeDate == originalExchangeDate {
-			debitAmount *= DayTradeTaxRate
+			debitAmount *= dayTradeTaxRate
 		}
 
-		output = &entity.Transaction{
-			StockID:      source.StockID,
-			UserID:       source.UserID,
-			OrderType:    entity.OrderTypeTax,
-			TradePrice:   source.TradePrice,
-			Quantity:     source.Quantity,
-			ExchangeDate: source.ExchangeDate,
-			Description:  source.Description,
-			ReferenceID:  source.ReferenceID,
-			DebitAmount:  debitAmount,
-		}
+		//nolint: errcheck // return nil transaction
+		output, _ := entity.NewTransaction(
+			source.StockID,
+			source.UserID,
+			entity.OrderTypeTax,
+			source.TradePrice,
+			source.Quantity,
+			source.ExchangeDate,
+			0, debitAmount,
+			source.Description,
+			source.ReferenceID,
+		)
 
 		return output
 	}
@@ -127,19 +78,20 @@ func (s *serviceImpl) taxCalculation(
 	return nil
 }
 
-func (s *serviceImpl) feeCalculation(source *entity.Transaction) (output *entity.Transaction) {
-	debitAmount := source.TradePrice * float32(source.Quantity) * TaiwanStockQuantity * FeeRate * BrokerFeeDiscount
-	output = &entity.Transaction{
-		StockID:      source.StockID,
-		UserID:       source.UserID,
-		OrderType:    entity.OrderTypeFee,
-		TradePrice:   source.TradePrice,
-		Quantity:     source.Quantity,
-		ExchangeDate: source.ExchangeDate,
-		Description:  source.Description,
-		ReferenceID:  source.ReferenceID,
-		DebitAmount:  debitAmount,
-	}
+func (s *serviceImpl) feeCalculation(source *entity.Transaction) *entity.Transaction {
+	debitAmount := source.TradePrice * float32(source.Quantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount
+	//nolint: errcheck // return nil transaction
+	output, _ := entity.NewTransaction(
+		source.StockID,
+		source.UserID,
+		entity.OrderTypeFee,
+		source.TradePrice,
+		source.Quantity,
+		source.ExchangeDate,
+		0, debitAmount,
+		source.Description,
+		source.ReferenceID,
+	)
 
 	return output
 }

@@ -16,7 +16,7 @@ package entity
 import "time"
 
 type User struct {
-	Model
+	Base
 
 	Name             string     `gorm:"column:name" json:"name"`
 	Email            string     `gorm:"column:email" json:"email"`
