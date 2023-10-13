@@ -13,7 +13,6 @@ require (
 
 require (
 	github.com/bsm/redislock v0.7.2
-	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redis/redismock/v8 v8.11.5
 	github.com/golang/glog v1.0.0

@@ -34,8 +34,6 @@ spec:
         prefix: /ready
     - uri:
         prefix: /swagger
-    - uri:
-        prefix: /swagger-ui
     route:
     - destination:
         host: jarvis-service
