@@ -35,6 +35,8 @@ func GetCurrentEnv() string {
 	output := "dev"
 
 	switch env {
+	case "local":
+		output = "local"
 	case "development":
 		output = "dev"
 	case "staging":

@@ -1,0 +1,36 @@
+# Server configurations
+server:
+  name: "jarvis"
+  host: "0.0.0.0"
+  port: 8080
+  grpcPort: 8081
+
+# Database credentials
+database:
+  host: "mysql-primary-headless"
+  port: 3306
+  database: "jarvis"
+  maxLifetime:  10
+  maxIdleConns: 20
+  maxOpenConns: 200
+
+replica:
+  host: "mysql-secondary-headless"
+  port: 3306
+  database: "jarvis"
+  maxLifetime:  10
+  maxIdleConns: 40
+  maxOpenConns: 800
+
+kafka:
+  brokers: ["kafka-headless:9092"]
+  topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
+  groupId: "jarvis"
+
+redis:
+  sentinelAddrs: ["redis-sentinel-headless:26379"]
+  master: "mymaster"
+
+# Logging
+log:
+  level: "DEBUG"

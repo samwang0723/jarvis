@@ -32,7 +32,6 @@
 ### Configure MySQL Istio gateway and load balancer
 
     $ helm apply -f mysql/gateway.yaml
-    $ helm apply -f mysql/virtualservice.yaml
     $ helm apply -f istio/istio-ingressgateway.yaml
 
 ### Expose MySQL port to local for testing
@@ -62,10 +61,6 @@
 ### Configure Redis Istio gateway and load balancer
 
     $ helm apply -f redis/gateway.yaml
-    $ helm apply -f redis/virtualservice.yaml
-
-    # Add port exposure into loadbalancer
-    $ helm apply -f istio/istio-ingressgateway.yaml
 
 ### Expose Redis port to local for testing
 
@@ -73,3 +68,11 @@
 
     $ yarn global add redis-cli
     $ rdcli -h 127.0.0.1 -p 6379 -a "{password}"
+
+## Install Kafka kraft cluster
+
+    $ helm install kafka oci://registry-1.docker.io/bitnamicharts/kafka --version 23.0.0 -f kafka/values.yaml
+    $ kubectl exec -it kafka-0 -- bash
+
+## Add port exposure into loadbalancer
+    $ helm apply -f istio/istio-ingressgateway.yaml

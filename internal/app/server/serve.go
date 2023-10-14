@@ -267,27 +267,29 @@ func (s *server) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
+	if helper.GetCurrentEnv() != "local" {
+		// schedule to preset the stocks met expectation condition yesterday for realtime tracking
+		var waitGroup sync.WaitGroup
+		waitGroup.Add(1)
 
-	go func(ctx context.Context, svc *server) {
-		defer waitGroup.Done()
+		go func(ctx context.Context, svc *server) {
+			defer waitGroup.Done()
 
-		err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
-		if err != nil {
-			log.Errorf("PresetRealTimeKeys error: %s", err.Error())
-		}
+			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
+			if err != nil {
+				log.Errorf("PresetRealTimeKeys error: %s", err.Error())
+			}
 
-		err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
-		if err != nil {
-			log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
-		}
+			err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
+			if err != nil {
+				log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
+			}
 
-		<-ctx.Done()
-	}(childCtx, s)
+			<-ctx.Done()
+		}(childCtx, s)
 
-	waitGroup.Wait()
+		waitGroup.Wait()
+	}
 
 	select {
 	case <-quit:
