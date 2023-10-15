@@ -17,9 +17,10 @@ import (
 	"context"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
-	log "github.com/samwang0723/jarvis/internal/logger"
+	"golang.org/x/xerrors"
 )
 
 //nolint:nolintlint, gochecknoglobals
@@ -30,6 +31,31 @@ type data struct {
 	topic  string
 }
 
+// Config encapsulates the settings for configuring the redis service.
+type KafkaConfig struct {
+	Logger *zerolog.Logger
+
+	GroupID string
+	Brokers []string
+	Topics  []string
+}
+
+func (cfg *KafkaConfig) validate() error {
+	if cfg.GroupID == "" {
+		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid groupId")
+	}
+
+	if len(cfg.Brokers) == 0 {
+		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid brokers")
+	}
+
+	if len(cfg.Topics) == 0 {
+		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid topics")
+	}
+
+	return nil
+}
+
 //nolint:nolintlint, cyclop
 func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
@@ -37,14 +63,14 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 		for {
 			msg, err := s.consumer.ReadMessage(ctx)
 			if err != nil {
-				log.Errorf("Kafka:ReadMessage error: %s", err.Error())
+				s.logger.Error().Msgf("Kafka:ReadMessage error: %s", err.Error())
 
 				continue
 			}
 
 			ent, err := unmarshalMessageToEntity(msg)
 			if err != nil {
-				log.Errorf("Unmarshal (%s) failed: %s", msg.Topic, err.Error())
+				s.logger.Error().Msgf("Kafka:unmarshalMessageToEntity error: %s", err.Error())
 
 				continue
 			}
@@ -55,7 +81,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 
 			select {
 			case <-ctx.Done():
-				log.Warn("ListeningKafkaInput: context cancel")
+				s.logger.Warn().Msg("ListeningKafkaInput: context cancel")
 
 				return
 			default:
@@ -68,7 +94,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Warn("ListeningKafkaInput(respChan): context cancel")
+				s.logger.Warn().Msg("ListeningKafkaInput(respChan): context cancel")
 
 				return
 			case obj, ok := <-respChan:
@@ -86,7 +112,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					}
 
 					if err != nil {
-						log.Errorf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
+						s.logger.Error().Msgf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
 					}
 				}
 			}

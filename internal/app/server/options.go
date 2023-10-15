@@ -16,15 +16,15 @@ package server
 
 import (
 	"github.com/heptiolabs/healthcheck"
+	"github.com/rs/zerolog"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
-	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 	"google.golang.org/grpc"
 )
 
 type Options struct {
 	Name    string
-	Logger  structuredlog.ILogger
+	Logger  *zerolog.Logger
 	Handler handlers.IHandler
 
 	Config      *config.Config
@@ -58,7 +58,7 @@ func Handler(handler handlers.IHandler) Option {
 	}
 }
 
-func Logger(logger structuredlog.ILogger) Option {
+func Logger(logger *zerolog.Logger) Option {
 	return func(o *Options) {
 		o.Logger = logger
 	}

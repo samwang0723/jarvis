@@ -19,7 +19,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/database/dal/idal"
-	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
+	"github.com/samwang0723/jarvis/internal/kafka"
 )
 
 type Option func(o *serviceImpl)
@@ -30,9 +30,18 @@ func WithDAL(dal idal.IDAL) Option {
 	}
 }
 
-func WithKafka(consumer ikafka.IKafka) Option {
+func WithKafka(cfg KafkaConfig) Option {
 	return func(i *serviceImpl) {
-		i.consumer = consumer
+		if err := cfg.validate(); err != nil {
+			return
+		}
+
+		i.consumer = kafka.New(kafka.Config{
+			Brokers: cfg.Brokers,
+			Topics:  cfg.Topics,
+			GroupID: cfg.GroupID, // having consumer group id to prevent duplication of message consumption
+			Logger:  cfg.Logger,
+		})
 	}
 }
 

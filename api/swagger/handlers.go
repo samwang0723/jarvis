@@ -5,12 +5,12 @@ import (
 	"path"
 	"strings"
 
-	log "github.com/samwang0723/jarvis/internal/logger"
+	"github.com/rs/zerolog"
 )
 
 func ServeSwaggerFile(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(r.URL.Path, "swagger.json") {
-		log.Errorf("Not Found: %s", r.URL.Path)
+		zerolog.Ctx(r.Context()).Error().Msgf("Not Found: %s", r.URL.Path)
 		http.NotFound(w, r)
 
 		return
@@ -19,7 +19,7 @@ func ServeSwaggerFile(w http.ResponseWriter, r *http.Request) {
 	p := strings.TrimPrefix(r.URL.Path, "/swagger/")
 	p = path.Join("api/", p)
 
-	log.Infof("Serving swagger-file: %s", p)
+	zerolog.Ctx(r.Context()).Info().Msgf("Serving swagger-file: %s", p)
 
 	http.ServeFile(w, r, p)
 }

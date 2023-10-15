@@ -15,20 +15,25 @@
 package main
 
 import (
-	"log"
 	"time"
 
+	zl "github.com/rs/zerolog/log"
 	"github.com/samwang0723/jarvis/internal/app/server"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
+const (
+	appName = "jarvis"
+)
+
 func main() {
+	logger := zl.With().Str("app", appName).Logger()
 	// manually set time zone, docker image may not have preset timezone
 	var err error
 	time.Local, err = time.LoadLocation(helper.TimeZone)
 	if err != nil {
-		log.Printf("error loading location '%s': %v\n", helper.TimeZone, err)
+		logger.Error().Msgf("error loading location '%s': %v\n", helper.TimeZone, err)
 	}
 
-	server.Serve()
+	server.Serve(&logger)
 }
