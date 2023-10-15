@@ -21,6 +21,7 @@ import (
 	"time"
 
 	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/helper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -31,11 +32,22 @@ const dsnCount = 2
 
 func GormFactory(cfg *config.Config) *gorm.DB {
 	dsns := generateDSN(cfg)
+	logLevel := logger.Error
+	switch helper.GetCurrentEnv() {
+	case "local":
+		logLevel = logger.Info
+	case "development":
+		logLevel = logger.Info
+	case "staging":
+		logLevel = logger.Warn
+	case "production":
+		logLevel = logger.Error
+	}
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold: time.Second, // Slow SQL threshold
-			LogLevel:      logger.Info, // Log level (Info level logs SQL statements)
+			LogLevel:      logLevel,    // Log level (Info level logs SQL statements)
 			Colorful:      false,       // Enable color
 		},
 	)

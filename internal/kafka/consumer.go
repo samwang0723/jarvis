@@ -17,15 +17,26 @@ import (
 	"context"
 	"time"
 
-	config "github.com/samwang0723/jarvis/configs"
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
-	log "github.com/samwang0723/jarvis/internal/logger"
 	"github.com/segmentio/kafka-go"
 )
 
+// Config encapsulates the settings for configuring the redis service.
+type Config struct {
+	// The logger to use. If not defined an output-discarding logger will
+	// be used instead.
+	Logger *zerolog.Logger
+
+	GroupID string
+	Brokers []string
+	Topics  []string
+}
+
 type kafkaImpl struct {
 	instance *kafka.Reader
+	cfg      Config
 }
 
 const (
@@ -38,12 +49,12 @@ const (
 )
 
 //nolint:nolintlint, gomnd
-func New(cfg *config.Config) ikafka.IKafka {
+func New(cfg Config) ikafka.IKafka {
 	return &kafkaImpl{
 		instance: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:          cfg.Kafka.Brokers,
-			GroupTopics:      cfg.Kafka.Topics,
-			GroupID:          cfg.Kafka.GroupID, // having consumer group id to prevent duplication of message consumption
+			Brokers:          cfg.Brokers,
+			GroupTopics:      cfg.Topics,
+			GroupID:          cfg.GroupID, // having consumer group id to prevent duplication of message consumption
 			QueueCapacity:    queueCapacity,
 			SessionTimeout:   sessionTimeout,
 			RebalanceTimeout: rebalanceTimeout,
@@ -57,12 +68,14 @@ func New(cfg *config.Config) ikafka.IKafka {
 				FallbackDelay: 10 * time.Millisecond,
 			},
 		}),
+		cfg: cfg,
 	}
 }
 
 func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, error) {
 	msg, err := k.instance.ReadMessage(ctx)
-	log.Infof("Kafka:ReadMessage: read data: %s, err: %s", helper.Bytes2String(msg.Value), err)
+
+	k.cfg.Logger.Info().Msgf("Kafka:ReadMessage: read data: %s, err: %s", helper.Bytes2String(msg.Value), err)
 
 	return ikafka.ReceivedMessage{
 		Topic:   msg.Topic,
@@ -71,11 +84,11 @@ func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, er
 }
 
 func (k *kafkaImpl) Close() error {
-	log.Info("Kafka:Close")
+	k.cfg.Logger.Info().Msg("Kafka:Close")
 
 	err := k.instance.Close()
 	if err != nil {
-		log.Errorf("Close failed: %s", err)
+		k.cfg.Logger.Error().Msgf("Kafka:Close: Close failed: %s", err)
 	}
 
 	return err

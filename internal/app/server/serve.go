@@ -29,7 +29,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
-	zl "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
@@ -39,9 +39,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/database"
 	"github.com/samwang0723/jarvis/internal/database/dal"
 	"github.com/samwang0723/jarvis/internal/helper"
-	"github.com/samwang0723/jarvis/internal/kafka"
-	log "github.com/samwang0723/jarvis/internal/logger"
-	structuredlog "github.com/samwang0723/jarvis/internal/logger/structured"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -51,14 +48,13 @@ const (
 	maxGoRoutines          = 10000
 	dnsResolveTimeout      = 200 * time.Millisecond
 	databasePingTimeout    = 1 * time.Second
-	appName                = "jarvis"
 	readTimeout            = 5 * time.Second
 	writeTimeout           = 10 * time.Second
 )
 
 type IServer interface {
 	Name() string
-	Logger() structuredlog.ILogger
+	Logger() *zerolog.Logger
 	Handler() handlers.IHandler
 	Config() *config.Config
 	GRPCServer() *grpc.Server
@@ -71,11 +67,10 @@ type server struct {
 	opts Options
 }
 
-func Serve() {
+func Serve(logger *zerolog.Logger) {
 	config.Load()
 	cfg := config.GetCurrentConfig()
-	logger := structuredlog.Logger(cfg)
-	newLogger := zl.With().Str("app", appName).Logger()
+
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
 	dbPool := database.GormFactory(cfg)
@@ -87,20 +82,25 @@ func Serve() {
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
-		services.WithKafka(kafka.New(cfg)),
+		services.WithKafka(services.KafkaConfig{
+			GroupID: cfg.Kafka.GroupID,
+			Brokers: cfg.Kafka.Brokers,
+			Topics:  cfg.Kafka.Topics,
+			Logger:  logger,
+		}),
 		services.WithRedis(services.RedisConfig{
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
-			Logger:        &newLogger,
+			Logger:        logger,
 			Password:      cfg.RedisCache.Password,
 		}),
 		services.WithCronJob(services.CronjobConfig{
-			Logger: &newLogger,
+			Logger: logger,
 		}),
-		services.WithLogger(&newLogger),
+		services.WithLogger(logger),
 	)
 	// associate service with handler
-	handler := handlers.New(dataService, &newLogger)
+	handler := handlers.New(dataService, logger)
 	gRPCServer := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_sentry.StreamServerInterceptor(),
@@ -127,7 +127,7 @@ func Serve() {
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	genericDB, dbErr := dbPool.DB()
 	if dbErr != nil {
-		log.Fatal("failed to get db", dbErr)
+		logger.Fatal().Err(dbErr).Msg("failed to get db")
 	}
 
 	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(genericDB, databasePingTimeout))
@@ -153,7 +153,7 @@ func Serve() {
 
 			err = dataService.StopKafka()
 			if err != nil {
-				log.Errorf("StopKafka error: %s", err.Error())
+				logger.Error().Err(err).Msg("StopKafka error")
 			}
 			sqlDB, err := dbPool.DB()
 			if err != nil {
@@ -165,11 +165,9 @@ func Serve() {
 		}),
 	)
 
-	log.Initialize(s.Logger())
-
 	err := s.Run(context.Background())
-	if err != nil && s.Logger() != nil {
-		log.Errorf("error returned by service.Run(): %s", err.Error())
+	if err != nil {
+		s.Logger().Error().Err(err).Msg("server run failed")
 	}
 }
 
@@ -219,13 +217,13 @@ _______________________________________________
 		return err
 	}
 
-	log.Info("gRPC server running.")
+	s.Logger().Info().Msgf("gRPC server listening on %s", addr)
 
 	pb.RegisterJarvisV1Server(s.GRPCServer(), s)
 
 	go func() {
 		if err = s.GRPCServer().Serve(lis); err != nil {
-			log.Fatalf("gRPC server serve failed: %s", err.Error())
+			s.Logger().Fatal().Msgf("gRPC server serve failed: %s", err.Error())
 		}
 	}()
 
@@ -246,7 +244,7 @@ func (s *server) Stop() error {
 	s.GRPCServer().GracefulStop()
 
 	<-time.After(gracefulShutdownPeriod)
-	log.Warn("server being gracefully shuted down")
+	s.Logger().Warn().Msg("server being gracefully shuted down")
 
 	return err
 }
@@ -255,11 +253,6 @@ func (s *server) Stop() error {
 func (s *server) Run(ctx context.Context) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
-
-	if s.Logger() != nil {
-		defer s.Logger().Flush()
-	}
-
 	if err := s.Start(childCtx); err != nil {
 		return err
 	}
@@ -277,12 +270,12 @@ func (s *server) Run(ctx context.Context) error {
 
 			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
 			if err != nil {
-				log.Errorf("PresetRealTimeKeys error: %s", err.Error())
+				svc.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
 			}
 
 			err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
 			if err != nil {
-				log.Errorf("RetrieveRealTimePrice error: %s", err.Error())
+				svc.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
 			}
 
 			<-ctx.Done()
@@ -293,16 +286,16 @@ func (s *server) Run(ctx context.Context) error {
 
 	select {
 	case <-quit:
-		log.Warn("signal interrupt")
+		s.Logger().Warn().Msg("signal interrupt")
 		cancel()
 	case <-childCtx.Done():
-		log.Warn("main context being cancelled")
+		s.Logger().Warn().Msg("main context being cancelled")
 	}
 
 	return s.Stop()
 }
 
-func (s *server) Logger() structuredlog.ILogger {
+func (s *server) Logger() *zerolog.Logger {
 	return s.opts.Logger
 }
 
@@ -339,7 +332,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	)
 	if err != nil {
-		log.Errorf("cannot start grpc gateway: %s", err.Error())
+		s.Logger().Error().Err(err).Msg("cannot register grpc gateway")
 
 		return
 	}
@@ -349,7 +342,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		s.HealthCheck().LiveEndpoint(w, r)
 	})
 	if err != nil {
-		log.Errorf("cannot handle /live path: %s", err.Error())
+		s.Logger().Error().Err(err).Msg("cannot handle /live path")
 
 		return
 	}
@@ -358,7 +351,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		s.HealthCheck().ReadyEndpoint(w, r)
 	})
 	if err != nil {
-		log.Errorf("cannot handle /ready path: %s", err.Error())
+		s.Logger().Error().Err(err).Msg("cannot handle /ready path")
 
 		return
 	}
@@ -383,9 +376,10 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		Handler:           httpMux,
 	}
 
+	s.Logger().Info().Msgf("http server start listening on %s", host)
 	err = srv.ListenAndServe()
 	if err != nil {
-		log.Errorf("cannot listen and server: %s", err.Error())
+		s.Logger().Error().Err(err).Msgf("cannot listen and serve http server on %s", host)
 
 		return
 	}
