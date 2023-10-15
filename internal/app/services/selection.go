@@ -24,7 +24,7 @@ import (
 	"time"
 
 	// this is to autoload the .env file
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -71,6 +71,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	if req.Date != today || latestDate != "" {
 		objs, err = s.dal.ListSelections(ctx, req.Date, req.Strict)
 		if err != nil {
+			sentry.CaptureException(err)
 			s.logger.Error().Err(err).Msg("list selections")
 
 			return nil, err
@@ -78,6 +79,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	} else {
 		redisRes, err := s.getRealtimeParsedData(ctx, req.Date)
 		if err != nil {
+			sentry.CaptureException(err)
 			s.logger.Error().Err(err).Msg("get redis cache failed")
 
 			return nil, err
@@ -92,6 +94,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			realtime := &businessmodel.Realtime{}
 			e := realtime.UnmarshalJSON([]byte(raw))
 			if e != nil || realtime.Close == 0.0 {
+				sentry.CaptureException(e)
 				s.logger.Error().Err(e).Msg("unmarshal realtime error")
 
 				continue
@@ -102,6 +105,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 
 		chips, err := s.getLatestChip(ctx)
 		if err != nil {
+			sentry.CaptureException(err)
 			s.logger.Error().Err(err).Msg("get latest chip failed")
 
 			return nil, err
@@ -143,6 +147,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 
 		objs, err = s.dal.AdvancedFiltering(ctx, res, req.Strict, req.Date)
 		if err != nil {
+			sentry.CaptureException(err)
 			s.logger.Error().Err(err).Msg("advanced filtering failed")
 
 			return nil, err
@@ -155,17 +160,23 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 func (s *serviceImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error {
 	keys, err := s.dal.GetRealTimeMonitoringKeys(ctx)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
 	redisKey := fmt.Sprintf("%s:%s", realTimeMonitoringKey, helper.Today())
 	err = s.cache.SAdd(ctx, redisKey, keys)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
 	err = s.cache.SetExpire(ctx, redisKey, time.Now().Add(defaultCacheExpire))
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
@@ -176,11 +187,15 @@ func (s *serviceImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context) e
 func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
 	err = s.checkHoliday(ctx)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
@@ -249,6 +264,8 @@ func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
 func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {
 	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, err
 	}
 
@@ -259,6 +276,8 @@ func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([
 
 	res, err := s.cache.MGet(ctx, mgetKeys...)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, err
 	}
 
@@ -270,6 +289,8 @@ func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Sel
 	// get latest chip from yesterday
 	chip, err := s.dal.GetLatestChip(ctx)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, err
 	}
 
@@ -283,6 +304,8 @@ func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Sel
 func (s *serviceImpl) checkHoliday(ctx context.Context) error {
 	skipDates, err := s.cache.SMembers(ctx, skipHeader)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 

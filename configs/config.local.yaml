@@ -31,6 +31,9 @@ redis:
   sentinelAddrs: ["redis-sentinel-headless:26379"]
   master: "mymaster"
 
+sentry:
+  debug: true
+
 # Logging
 log:
   level: "DEBUG"

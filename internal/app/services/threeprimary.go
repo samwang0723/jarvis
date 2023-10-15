@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
@@ -50,6 +51,8 @@ func (s *serviceImpl) ListThreePrimary(
 		convert.ListThreePrimarySearchParamsDTOToDAL(req.SearchParams),
 	)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, 0, err
 	}
 

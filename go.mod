@@ -3,7 +3,7 @@ module github.com/samwang0723/jarvis
 go 1.19
 
 require (
-	github.com/getsentry/sentry-go v0.16.0 // indirect
+	github.com/getsentry/sentry-go v0.16.0
 	github.com/sony/sonyflake v1.1.0
 	golang.org/x/net v0.17.0 // indirect
 	gorm.io/driver/mysql v1.4.5

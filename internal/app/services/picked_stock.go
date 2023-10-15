@@ -17,6 +17,7 @@ package services
 import (
 	"context"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -38,12 +39,16 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string)
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {
 	objs, err := s.dal.ListPickedStocks(ctx)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, err
 	}
 
 	today := helper.Today()
 	latestDate, err := s.dal.DataCompletionDate(ctx, today)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, err
 	}
 
@@ -67,6 +72,8 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection,
 		realtime := &businessmodel.Realtime{}
 		e := realtime.UnmarshalJSON([]byte(raw))
 		if e != nil || realtime.Close == 0.0 {
+			sentry.CaptureException(e)
+
 			s.logger.Error().Err(e).Msg("unmarshal realtime error")
 
 			continue

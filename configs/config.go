@@ -25,6 +25,7 @@ const (
 	SecretUsername = "SECRET_USERNAME"
 	SecretPassword = "SECRET_PASSWORD"
 	RedisPassword  = "REDIS_PASSWD"
+	SentryDSN      = "SENTRY_DSN"
 )
 
 type Config struct {
@@ -72,13 +73,19 @@ type Config struct {
 		SentinelAddrs []string `yaml:"sentinelAddrs"`
 		Password      string   `yaml:"password"`
 	} `yaml:"redis"`
+	Sentry struct {
+		DSN   string `yaml:"dsn"`
+		Debug bool   `yaml:"debug"`
+	} `yaml:"sentry"`
+	Environment string
 }
 
 //nolint:nolintlint, gochecknoglobals
 var instance Config
 
 func Load() {
-	yamlFile := fmt.Sprintf("./configs/config.%s.yaml", helper.GetCurrentEnv())
+	env := helper.GetCurrentEnv()
+	yamlFile := fmt.Sprintf("./configs/config.%s.yaml", env)
 
 	configFile, err := os.Open(yamlFile)
 	if err != nil {
@@ -107,6 +114,12 @@ func Load() {
 	if redisPasswd := os.Getenv(RedisPassword); len(redisPasswd) > 0 {
 		instance.RedisCache.Password = redisPasswd
 	}
+
+	if dsn := os.Getenv(SentryDSN); len(dsn) > 0 {
+		instance.Sentry.DSN = dsn
+	}
+
+	instance.Environment = env
 }
 
 func GetCurrentConfig() *Config {

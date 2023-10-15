@@ -77,3 +77,8 @@ spec:
             secretKeyRef:
               name: redis-secret
               key: redis-password
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: sentry-dsn
+              key: dsn

@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"errors"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
@@ -15,16 +15,17 @@ const (
 	brokerFeeDiscount   = 0.25
 )
 
-var errUnableToChainTransactions = errors.New("unable to create chain transactions")
-
 func (s *serviceImpl) CreateTransaction(ctx context.Context, obj *entity.Transaction) error {
 	transactions := s.chainTransactions(obj)
 	if len(transactions) == 0 {
+		sentry.CaptureException(errUnableToChainTransactions)
+
 		return errUnableToChainTransactions
 	}
 
 	err := s.dal.CreateChainTransactions(ctx, transactions)
 	if err != nil {
+		sentry.CaptureException(err)
 		s.logger.Error().Err(err).Msg("failed to create transaction")
 
 		return err
