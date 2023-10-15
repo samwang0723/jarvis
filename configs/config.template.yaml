@@ -27,6 +27,9 @@ kafka:
   topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
   groupId: "jarvis"
 
+sentry:
+  debug: true
+
 # Logging
 log:
   level: "DEBUG"

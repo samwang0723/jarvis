@@ -16,8 +16,8 @@ package services
 
 import (
 	"context"
-	"errors"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
@@ -34,8 +34,6 @@ const (
 	volumeMV34 = 34
 )
 
-var errCannotCastDailyClose = errors.New("cannot cast interface to *dto.DailyClose")
-
 func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error {
 	// Replicate the value from interface to *entity.DailyClose
 	dailyCloses := []*entity.DailyClose{}
@@ -43,12 +41,16 @@ func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interfa
 		if val, ok := v.(*entity.DailyClose); ok {
 			dailyCloses = append(dailyCloses, val)
 		} else {
+			sentry.CaptureException(errCannotCastDailyClose)
+
 			return errCannotCastDailyClose
 		}
 	}
 
 	err := s.dal.BatchUpsertDailyClose(ctx, dailyCloses)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return err
 	}
 
@@ -66,6 +68,8 @@ func (s *serviceImpl) ListDailyClose(
 		convert.ListDailyCloseSearchParamsDTOToDAL(req.SearchParams),
 	)
 	if err != nil {
+		sentry.CaptureException(err)
+
 		return nil, 0, err
 	}
 

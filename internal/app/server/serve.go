@@ -38,7 +38,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/services"
 	"github.com/samwang0723/jarvis/internal/database"
 	"github.com/samwang0723/jarvis/internal/database/dal"
-	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -67,10 +66,7 @@ type server struct {
 	opts Options
 }
 
-func Serve(logger *zerolog.Logger) {
-	config.Load()
-	cfg := config.GetCurrentConfig()
-
+func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
 	dbPool := database.GormFactory(cfg)
@@ -202,7 +198,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.4.0", helper.GetCurrentEnv())
+	signatureOut := fmt.Sprintf(signature, "v1.4.0", s.Config().Environment)
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
@@ -260,7 +256,7 @@ func (s *server) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	if helper.GetCurrentEnv() != "local" {
+	if s.Config().Environment != "local" {
 		// schedule to preset the stocks met expectation condition yesterday for realtime tracking
 		var waitGroup sync.WaitGroup
 		waitGroup.Add(1)
