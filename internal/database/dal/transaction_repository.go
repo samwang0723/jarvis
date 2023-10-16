@@ -111,13 +111,7 @@ func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*e
 			return err
 		}
 
-		var createdReferenceID *uint64
-
 		for _, transaction := range transactions {
-			if createdReferenceID != nil {
-				transaction.ReferenceID = createdReferenceID
-			}
-
 			// immediately completed the transaction as no external vendor dependency
 			if err := transaction.Complete(); err != nil {
 				return err
@@ -125,10 +119,6 @@ func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*e
 
 			if err := i.transactionRepository.Save(ctx, transaction); err != nil {
 				return err
-			}
-
-			if createdReferenceID == nil {
-				createdReferenceID = &transaction.ID
 			}
 
 			if err := moveFund(balanceView, transaction); err != nil {
@@ -148,7 +138,7 @@ func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*e
 
 func moveFund(balanceView *entity.BalanceView, transaction *entity.Transaction) error {
 	switch transaction.OrderType {
-	case entity.OrderTypeBuy, entity.OrderTypeFee, entity.OrderTypeTax:
+	case entity.OrderTypeBuy, entity.OrderTypeFee, entity.OrderTypeTax, entity.OrderTypeWithdraw:
 		if err := balanceView.MoveAvailableToPending(transaction); err != nil {
 			return err
 		}
@@ -156,7 +146,7 @@ func moveFund(balanceView *entity.BalanceView, transaction *entity.Transaction) 
 		if err := balanceView.DebitPending(transaction); err != nil {
 			return err
 		}
-	case entity.OrderTypeSell:
+	case entity.OrderTypeSell, entity.OrderTypeDeposit:
 		if err := balanceView.CreditPending(transaction); err != nil {
 			return err
 		}

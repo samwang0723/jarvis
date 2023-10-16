@@ -18,22 +18,16 @@ func (h *handlerImpl) CreateTransaction(
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
 	case entity.OrderTypeBuy:
-		debitAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
+		debitAmount = req.Amount
 	case entity.OrderTypeSell:
-		creditAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
+		creditAmount = req.Amount
 	}
 
 	transaction, err := entity.NewTransaction(
-		req.StockID,
 		req.UserID,
 		req.OrderType,
-		req.TradePrice,
-		req.Quantity,
-		req.ExchangeDate,
 		creditAmount,
 		debitAmount,
-		req.Description,
-		req.ReferenceID,
 	)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
@@ -44,10 +38,6 @@ func (h *handlerImpl) CreateTransaction(
 			ErrorMessage: err.Error(),
 			Success:      false,
 		}, err
-	}
-
-	if req.OriginalExchangeDate != "" {
-		transaction.OriginalExchangeDate = req.OriginalExchangeDate
 	}
 
 	err = h.dataService.CreateTransaction(ctx, transaction)

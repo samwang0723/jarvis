@@ -361,15 +361,8 @@ message Balance {
 
 message CreateTransactionRequest {
   uint64 userID = 1;
-  string stockID = 2;
-  string exchangeDate = 3;
-  float tradePrice = 4;
-  uint64 quantity = 5;
-  string orderType = 6;
-  string description = 7;
-  oneof optional_referenceID {
-    uint64 referenceID = 8;
-  }
+  string orderType = 2;
+  float amount = 3;
 }
 
 message CreateTransactionResponse {
@@ -385,15 +378,8 @@ message Transaction {
   google.protobuf.Timestamp updatedAt = 3;
   string status = 4;
   uint64 userID = 5;
-  string stockID = 6;
-  string exchangeDate = 7;
-  float tradePrice = 8;
-  uint64 quantity = 9;
-  string orderType = 10;
-  string description = 11;
-  oneof optional_referenceID {
-    uint64 referenceID = 12;
-  }
-  float creditAmount = 13;
-  float debitAmount = 14;
+  string orderType = 6;
+  float creditAmount = 7;
+  float debitAmount = 8;
+  uint64 orderID = 9;
 }

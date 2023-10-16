@@ -500,29 +500,12 @@
           "type": "string",
           "format": "uint64"
         },
-        "stockID": {
-          "type": "string"
-        },
-        "exchangeDate": {
-          "type": "string"
-        },
-        "tradePrice": {
-          "type": "number",
-          "format": "float"
-        },
-        "quantity": {
-          "type": "string",
-          "format": "uint64"
-        },
         "orderType": {
           "type": "string"
         },
-        "description": {
-          "type": "string"
-        },
-        "referenceID": {
-          "type": "string",
-          "format": "uint64"
+        "amount": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

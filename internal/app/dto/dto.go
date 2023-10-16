@@ -170,15 +170,9 @@ type GetBalanceViewResponse struct {
 }
 
 type CreateTransactionRequest struct {
-	UserID               uint64  `json:"userID"`
-	StockID              string  `json:"stockID"`
-	OrderType            string  `json:"orderType"`
-	TradePrice           float32 `json:"tradePrice"`
-	Quantity             uint64  `json:"quantity"`
-	ExchangeDate         string  `json:"exchangeDate"`
-	Description          string  `json:"description,omitempty"`
-	ReferenceID          *uint64 `json:"referenceId,omitempty"`
-	OriginalExchangeDate string  `json:"originalExchangeDate,omitempty"`
+	UserID    uint64  `json:"userID"`
+	OrderType string  `json:"orderType"`
+	Amount    float32 `json:"amount"`
 }
 
 type CreateTransactionResponse struct {

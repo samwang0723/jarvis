@@ -734,26 +734,13 @@ func CreateTransactionRequestFromPB(in *pb.CreateTransactionRequest) *CreateTran
 	}
 
 	pbUserID := in.UserID
-	pbStockID := in.StockID
 	pbOrderType := in.OrderType
-	pbTradePrice := in.TradePrice
-	pbQuantity := in.Quantity
-	pbExchangeDate := in.ExchangeDate
-	pbDescription := in.Description
-	pbReferenceID := in.GetReferenceID()
+	pbAmount := in.Amount
 
 	request := &CreateTransactionRequest{
-		UserID:       pbUserID,
-		StockID:      pbStockID,
-		OrderType:    pbOrderType,
-		TradePrice:   pbTradePrice,
-		Quantity:     pbQuantity,
-		ExchangeDate: pbExchangeDate,
-		Description:  pbDescription,
-	}
-
-	if pbReferenceID > 0 {
-		request.ReferenceID = &pbReferenceID
+		UserID:    pbUserID,
+		OrderType: pbOrderType,
+		Amount:    pbAmount,
 	}
 
 	return request

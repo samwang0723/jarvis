@@ -1,13 +1,20 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE
-  transactions (
+  orders (
     id bigint unsigned NOT NULL PRIMARY KEY,
     user_id bigint unsigned NOT NULL,
     order_id bigint unsigned NOT NULL,
     order_type VARCHAR(32) NOT NULL,
-    credit_amount DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
-    debit_amount DECIMAL(8, 2) NOT NULL DEFAULT 0.0,
+    stock_id varchar(8) NOT NULL,
+    buy_price DECIMAL(8, 2) NOT NULL,
+    buy_quantity bigint unsigned NOT NULL DEFAULT 0,
+    buy_exchange_date varchar(32) NOT NULL,
+    sell_price DECIMAL(8, 2) NOT NULL,
+    sell_quantity bigint unsigned NOT NULL DEFAULT 0,
+    sell_exchange_date varchar(32) NOT NULL,
+    profit_loss DECIMAL(8, 2) NOT NULL,
+    profitable_price DECIMAL(8, 2) NOT NULL,
     status VARCHAR(32) NOT NULL,
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -18,6 +25,6 @@ CREATE TABLE
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS orders;
 
 -- +goose StatementEnd
