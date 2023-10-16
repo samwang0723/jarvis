@@ -148,20 +148,20 @@ func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*e
 
 func moveFund(balanceView *entity.BalanceView, transaction *entity.Transaction) error {
 	switch transaction.OrderType {
-	case entity.OrderTypeBid, entity.OrderTypeFee, entity.OrderTypeTax:
-		if err := balanceView.MoveAvailableToPending(transaction.DebitAmount); err != nil {
+	case entity.OrderTypeBuy, entity.OrderTypeFee, entity.OrderTypeTax:
+		if err := balanceView.MoveAvailableToPending(transaction); err != nil {
 			return err
 		}
 
-		if err := balanceView.DebitPending(transaction.DebitAmount); err != nil {
+		if err := balanceView.DebitPending(transaction); err != nil {
 			return err
 		}
-	case entity.OrderTypeAsk:
-		if err := balanceView.CreditPending(transaction.CreditAmount); err != nil {
+	case entity.OrderTypeSell:
+		if err := balanceView.CreditPending(transaction); err != nil {
 			return err
 		}
 
-		if err := balanceView.MovePendingToAvailable(transaction.CreditAmount); err != nil {
+		if err := balanceView.MovePendingToAvailable(transaction); err != nil {
 			return err
 		}
 	default:

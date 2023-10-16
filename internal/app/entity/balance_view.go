@@ -109,14 +109,19 @@ func NewBalanceView(userID uint64, initBalance float32) (*BalanceView, error) {
 
 // MoveAvailableToPending moves balance from available state to pending state.
 // It doesn't change total balance.
-func (bv *BalanceView) MoveAvailableToPending(amount float32) error {
+func (bv *BalanceView) MoveAvailableToPending(transaction *Transaction) error {
 	// create a event
 	pendingDelta := float32(0.0)
 	availableDelta := float32(0.0)
+	amount := transaction.CreditAmount - transaction.DebitAmount
 
 	event := &BalanceChanged{
-		AvailableDelta: availableDelta - amount,
-		PendingDelta:   pendingDelta + amount,
+		AvailableDelta: availableDelta - abs(amount),
+		PendingDelta:   pendingDelta + abs(amount),
+		Amount:         amount,
+		Currency:       "TWD",
+		TransactionID:  transaction.ID,
+		OrderType:      transaction.OrderType,
 	}
 	// fill base event data
 	event.SetAggregateID(bv.GetAggregateID())
@@ -133,13 +138,18 @@ func (bv *BalanceView) MoveAvailableToPending(amount float32) error {
 	return nil
 }
 
-func (bv *BalanceView) MovePendingToAvailable(amount float32) error {
+func (bv *BalanceView) MovePendingToAvailable(transaction *Transaction) error {
 	pendingDelta := float32(0.0)
 	availableDelta := float32(0.0)
+	amount := transaction.CreditAmount - transaction.DebitAmount
 
 	event := &BalanceChanged{
-		AvailableDelta: availableDelta + amount,
-		PendingDelta:   pendingDelta - amount,
+		AvailableDelta: availableDelta + abs(amount),
+		PendingDelta:   pendingDelta - abs(amount),
+		Amount:         amount,
+		Currency:       "TWD",
+		TransactionID:  transaction.ID,
+		OrderType:      transaction.OrderType,
 	}
 
 	event.SetAggregateID(bv.GetAggregateID())
@@ -155,13 +165,18 @@ func (bv *BalanceView) MovePendingToAvailable(amount float32) error {
 	return nil
 }
 
-func (bv *BalanceView) CreditPending(amount float32) error {
+func (bv *BalanceView) CreditPending(transaction *Transaction) error {
 	pendingDelta := float32(0.0)
 	availableDelta := float32(0.0)
+	amount := transaction.CreditAmount - transaction.DebitAmount
 
 	event := &BalanceChanged{
 		AvailableDelta: availableDelta,
-		PendingDelta:   pendingDelta + amount,
+		PendingDelta:   pendingDelta + abs(amount),
+		Amount:         amount,
+		Currency:       "TWD",
+		TransactionID:  transaction.ID,
+		OrderType:      transaction.OrderType,
 	}
 
 	event.SetAggregateID(bv.GetAggregateID())
@@ -177,13 +192,18 @@ func (bv *BalanceView) CreditPending(amount float32) error {
 	return nil
 }
 
-func (bv *BalanceView) DebitPending(amount float32) error {
+func (bv *BalanceView) DebitPending(transaction *Transaction) error {
 	pendingDelta := float32(0.0)
 	availableDelta := float32(0.0)
+	amount := transaction.CreditAmount - transaction.DebitAmount
 
 	event := &BalanceChanged{
 		AvailableDelta: availableDelta,
-		PendingDelta:   pendingDelta - amount,
+		PendingDelta:   pendingDelta - abs(amount),
+		Amount:         amount,
+		Currency:       "TWD",
+		TransactionID:  transaction.ID,
+		OrderType:      transaction.OrderType,
 	}
 
 	event.SetAggregateID(bv.GetAggregateID())
@@ -197,4 +217,12 @@ func (bv *BalanceView) DebitPending(amount float32) error {
 	bv.AppendChange(event)
 
 	return nil
+}
+
+func abs(x float32) float32 {
+	if x < 0 {
+		return -x
+	}
+
+	return x
 }

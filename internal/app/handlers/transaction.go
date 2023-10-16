@@ -17,9 +17,9 @@ func (h *handlerImpl) CreateTransaction(
 ) (*dto.CreateTransactionResponse, error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
-	case entity.OrderTypeBid:
+	case entity.OrderTypeBuy:
 		debitAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
-	case entity.OrderTypeAsk:
+	case entity.OrderTypeSell:
 		creditAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
 	}
 

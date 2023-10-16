@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	OrderTypeBid      = "Bid"
-	OrderTypeAsk      = "Ask"
+	OrderTypeBuy      = "Buy"
+	OrderTypeSell     = "Sell"
 	OrderTypeFee      = "Fee"
 	OrderTypeTax      = "Tax"
 	OrderTypeDeposit  = "Deposit"
@@ -145,6 +145,11 @@ func NewTransaction(
 		CreditAmount: creditAmount,
 		DebitAmount:  debitAmount,
 		OrderType:    tran.OrderType,
+		StockID:      tran.StockID,
+		ExchangeDate: tran.ExchangeDate,
+		TradePrice:   tran.TradePrice,
+		Quantity:     tran.Quantity,
+		Description:  tran.Description,
 	}
 
 	// fill base event data

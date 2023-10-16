@@ -6,6 +6,11 @@ type TransactionCreated struct {
 	DebitAmount  float32
 	CreditAmount float32
 	OrderType    string
+	StockID      string
+	ExchangeDate string
+	TradePrice   float32
+	Quantity     uint64
+	Description  string
 
 	eventsourcing.BaseEvent
 }

@@ -16,6 +16,10 @@ func (*BalanceCreated) EventType() eventsourcing.EventType {
 type BalanceChanged struct {
 	AvailableDelta float32
 	PendingDelta   float32
+	Amount         float32
+	Currency       string
+	TransactionID  uint64
+	OrderType      string
 
 	eventsourcing.BaseEvent
 }
