@@ -270,7 +270,7 @@ func (s *server) Run(ctx context.Context) error {
 				svc.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
 			}
 
-			err = svc.Handler().RetrieveRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
+			err = svc.Handler().CrawlingRealTimePrice(childCtx, "*/1 9-13 * * 1-5")
 			if err != nil {
 				svc.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
 			}

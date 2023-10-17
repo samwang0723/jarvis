@@ -184,7 +184,7 @@ func (s *serviceImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context) e
 }
 
 //nolint:nolintlint,cyclop
-func (s *serviceImpl) RetrieveRealTimePrice(ctx context.Context) error {
+func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
 	if err != nil {
 		sentry.CaptureException(err)
