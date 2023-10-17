@@ -11,7 +11,6 @@ CREATE TABLE
     sell_price DECIMAL(8, 2) NOT NULL,
     sell_quantity bigint unsigned NOT NULL DEFAULT 0,
     sell_exchange_date varchar(32) NOT NULL,
-    profit_loss DECIMAL(8, 2) NOT NULL,
     profitable_price DECIMAL(8, 2) NOT NULL,
     status VARCHAR(32) NOT NULL,
     version int NOT NULL,

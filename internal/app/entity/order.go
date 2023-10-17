@@ -13,6 +13,13 @@ const (
 	orderCreatedState eventsourcing.State = "created"
 	orderChangedState eventsourcing.State = "changed"
 	orderClosedState  eventsourcing.State = "closed"
+
+	taiwanStockQuantity = 1000
+	dayTradeTaxRate     = 0.5
+	taxRate             = 0.003
+	feeRate             = 0.001425
+	brokerFeeDiscount   = 0.25
+	buySellTime         = 2
 )
 
 type Order struct {
@@ -24,7 +31,6 @@ type Order struct {
 	SellPrice        float32   `gorm:"column:sell_price" json:"sellPrice"`
 	SellQuantity     uint64    `gorm:"column:sell_quantity" json:"sellQuantity"`
 	SellExchangeDate string    `gorm:"column:sell_exchange_date" json:"sellExchangeDate"`
-	ProfitLoss       float32   `gorm:"column:profit_loss" json:"profitLoss"`
 	ProfitablePrice  float32   `gorm:"column:profitable_price" json:"profitablePrice"`
 	Status           string    `gorm:"column:status" json:"status,omitempty"`
 	CreatedAt        time.Time `gorm:"column:created_at" mapstructure:"created_at"`
@@ -53,6 +59,8 @@ func (order *Order) QuantityMatched() bool {
 }
 
 // Apply updates the aggregate according to a event.
+//
+//nolint:lll // ignore long line length and magic number
 func (order *Order) Apply(event eventsourcing.Event) error {
 	newState, err := eventsourcing.TransistOnEvent(order, event)
 	if err != nil {
@@ -65,19 +73,25 @@ func (order *Order) Apply(event eventsourcing.Event) error {
 	case *OrderCreated:
 		order.UserID = event.GetParentID()
 		order.StockID = event.StockID
+		feeAmount := event.TradePrice * float32(event.Quantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount * buySellTime
+		taxAmount := event.TradePrice * float32(event.Quantity) * taiwanStockQuantity * taxRate
+		originalAmount := event.TradePrice * float32(event.Quantity) * taiwanStockQuantity
+
 		if event.OrderType == OrderTypeBuy {
 			order.BuyPrice = event.TradePrice
 			order.BuyQuantity = event.Quantity
 			order.BuyExchangeDate = event.ExchangeDate
+			order.ProfitablePrice = ((originalAmount + feeAmount + taxAmount) / float32(event.Quantity)) / taiwanStockQuantity
 		} else {
 			order.SellPrice = event.TradePrice
 			order.SellQuantity = event.Quantity
 			order.SellExchangeDate = event.ExchangeDate
+			order.ProfitablePrice = ((originalAmount - feeAmount - taxAmount) / float32(event.Quantity)) / taiwanStockQuantity
 		}
+
 		order.CreatedAt = event.CreatedAt
 		order.UpdatedAt = event.CreatedAt
 		order.SetAggregateID(event.AggregateID)
-		// TODO: calculate profit loss
 	case *OrderChanged:
 		if event.OrderType == OrderTypeBuy {
 			order.BuyPrice = event.TradePrice
@@ -89,7 +103,6 @@ func (order *Order) Apply(event eventsourcing.Event) error {
 			order.SellExchangeDate = event.ExchangeDate
 		}
 		order.UpdatedAt = event.CreatedAt
-		// TODO: calculate profit loss
 	case *OrderClosed:
 		order.UpdatedAt = event.CreatedAt
 	default:
