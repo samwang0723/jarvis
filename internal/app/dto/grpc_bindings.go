@@ -763,3 +763,45 @@ func CreateTransactionResponseToPB(in *CreateTransactionResponse) *pb.CreateTran
 		ErrorMessage: pbErrorMessage,
 	}
 }
+
+func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+	pbOrderType := in.OrderType
+	pbStockID := in.StockID
+	pbExchangeDate := in.ExchangeDate
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+
+	request := &CreateOrderRequest{
+		UserID:       pbUserID,
+		OrderType:    pbOrderType,
+		StockID:      pbStockID,
+		ExchangeDate: pbExchangeDate,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+	}
+
+	return request
+}
+
+func CreateOrderResponseToPB(in *CreateOrderResponse) *pb.CreateOrderResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateOrderResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}

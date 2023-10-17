@@ -22,6 +22,7 @@ type dalImpl struct {
 	db                    *gorm.DB
 	balanceRepository     *BalanceRepository
 	transactionRepository *TransactionRepository
+	orderRepository       *OrderRepository
 }
 
 // functional options design pattern

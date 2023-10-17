@@ -4,8 +4,6 @@ CREATE TABLE
   orders (
     id bigint unsigned NOT NULL PRIMARY KEY,
     user_id bigint unsigned NOT NULL,
-    order_id bigint unsigned NOT NULL,
-    order_type VARCHAR(32) NOT NULL,
     stock_id varchar(8) NOT NULL,
     buy_price DECIMAL(8, 2) NOT NULL,
     buy_quantity bigint unsigned NOT NULL DEFAULT 0,
@@ -19,7 +17,8 @@ CREATE TABLE
     version int NOT NULL,
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    KEY index_order_id (order_id),
+    KEY index_user_id (user_id),
+    KEY index_user_stock_id (user_id, stock_id)
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd

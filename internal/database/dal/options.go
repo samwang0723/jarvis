@@ -34,3 +34,9 @@ func WithTransactionRepository(transactionRepository *TransactionRepository) Opt
 		s.transactionRepository = transactionRepository
 	}
 }
+
+func WithOrderRepository(orderRepository *OrderRepository) Option {
+	return func(s *dalImpl) {
+		s.orderRepository = orderRepository
+	}
+}

@@ -7,20 +7,23 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-const (
-	taiwanStockQuantity = 1000
-)
-
 func (h *handlerImpl) CreateTransaction(
 	ctx context.Context,
 	req *dto.CreateTransactionRequest,
 ) (*dto.CreateTransactionResponse, error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
-	case entity.OrderTypeBuy:
-		debitAmount = req.Amount
-	case entity.OrderTypeSell:
+	case entity.OrderTypeDeposit:
 		creditAmount = req.Amount
+	case entity.OrderTypeWithdraw:
+		debitAmount = req.Amount
+	default:
+		return &dto.CreateTransactionResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: "invalid order type",
+			Success:      false,
+		}, errOrderTypeNotAllowed
 	}
 
 	transaction, err := entity.NewTransaction(

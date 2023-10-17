@@ -63,6 +63,9 @@ func (tran *Transaction) Apply(event eventsourcing.Event) error {
 
 	switch event := event.(type) {
 	case *TransactionCreated:
+		tran.UserID = event.GetParentID()
+		tran.OrderType = event.OrderType
+		tran.OrderID = event.OrderID
 		tran.CreditAmount = event.CreditAmount
 		tran.DebitAmount = event.DebitAmount
 		tran.CreatedAt = event.CreatedAt
@@ -114,27 +117,20 @@ func NewTransaction(
 		return nil, fmt.Errorf("failed to generate id: %w", err)
 	}
 
-	tran := &Transaction{
-		UserID:    userID,
-		OrderType: orderType,
-	}
-
-	tran.ID = id.Uint64()
-
+	tran := &Transaction{}
 	event := &TransactionCreated{
 		CreditAmount: creditAmount,
 		DebitAmount:  debitAmount,
-		OrderType:    tran.OrderType,
+		OrderType:    orderType,
 	}
 
 	if len(orderID) > 0 {
-		tran.OrderID = orderID[0]
-		event.OrderID = tran.OrderID
+		event.OrderID = orderID[0]
 	}
 
 	// fill base event data
-	event.SetAggregateID(tran.ID)
-	event.SetParentID(tran.UserID)
+	event.SetAggregateID(id.Uint64())
+	event.SetParentID(userID)
 	event.SetVersion(1)
 	event.SetCreatedAt(time.Now())
 

@@ -6,16 +6,27 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (s *serviceImpl) CreateOrder(ctx context.Context, source *entity.Order, orderType string) error {
-	transactions := s.chainTransactions(source, orderType)
+const (
+	taiwanStockQuantity = 1000
+	dayTradeTaxRate     = 0.5
+	taxRate             = 0.003
+	feeRate             = 0.001425
+	brokerFeeDiscount   = 0.25
+)
 
-	return s.dal.CreateChainTransactions(ctx, transactions)
+func (s *serviceImpl) CreateOrder(ctx context.Context, source *entity.Order, orderType string) error {
+	transactions, err := s.chainTransactions(source, orderType)
+	if err != nil {
+		return errUnableToChainTransactions
+	}
+
+	return s.dal.CreateOrder(ctx, source, transactions)
 }
 
 func (s *serviceImpl) chainTransactions(
 	req *entity.Order,
 	orderType string,
-) (chainedTransactions []*entity.Transaction) {
+) (chainedTransactions []*entity.Transaction, err error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch orderType {
 	case entity.OrderTypeBuy:
@@ -32,25 +43,29 @@ func (s *serviceImpl) chainTransactions(
 		req.ID,
 	)
 	if err != nil {
-		return nil
+		return chainedTransactions, err
 	}
 
 	chainedTransactions = append(chainedTransactions, transaction)
 
-	tax := s.genTaxTransaction(req, orderType)
-	if tax != nil {
+	tax, err := s.genTaxTransaction(req, orderType)
+	if err != nil {
+		return chainedTransactions, err
+	} else if tax != nil {
 		chainedTransactions = append(chainedTransactions, tax)
 	}
 
-	fee := s.genFeeTransaction(req, orderType)
-	if fee != nil {
+	fee, err := s.genFeeTransaction(req, orderType)
+	if err != nil {
+		return chainedTransactions, err
+	} else if fee != nil {
 		chainedTransactions = append(chainedTransactions, fee)
 	}
 
-	return chainedTransactions
+	return chainedTransactions, nil
 }
 
-func (s *serviceImpl) genTaxTransaction(req *entity.Order, orderType string) *entity.Transaction {
+func (s *serviceImpl) genTaxTransaction(req *entity.Order, orderType string) (*entity.Transaction, error) {
 	// only charge tax on partial order close or complete order close
 	if req.BuyPrice > 0 && req.SellPrice > 0 {
 		debitAmount := float32(0.0)
@@ -63,8 +78,7 @@ func (s *serviceImpl) genTaxTransaction(req *entity.Order, orderType string) *en
 			debitAmount *= dayTradeTaxRate
 		}
 
-		//nolint: errcheck // return nil transaction
-		output, _ := entity.NewTransaction(
+		output, err := entity.NewTransaction(
 			req.UserID,
 			entity.OrderTypeTax,
 			0,
@@ -72,21 +86,22 @@ func (s *serviceImpl) genTaxTransaction(req *entity.Order, orderType string) *en
 			req.ID,
 		)
 
-		return output
+		return output, err
 	}
 
-	return nil
+	//nolint:nilnil // this is a special case
+	return nil, nil
 }
 
-func (s *serviceImpl) genFeeTransaction(req *entity.Order, orderType string) *entity.Transaction {
+func (s *serviceImpl) genFeeTransaction(req *entity.Order, orderType string) (*entity.Transaction, error) {
 	debitAmount := float32(0.0)
 	if orderType == entity.OrderTypeBuy {
 		debitAmount = req.BuyPrice * float32(req.BuyQuantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount
 	} else if orderType == entity.OrderTypeSell {
 		debitAmount = req.SellPrice * float32(req.SellQuantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount
 	}
-	//nolint: errcheck // return nil transaction
-	output, _ := entity.NewTransaction(
+
+	output, err := entity.NewTransaction(
 		req.UserID,
 		entity.OrderTypeFee,
 		0,
@@ -94,5 +109,5 @@ func (s *serviceImpl) genFeeTransaction(req *entity.Order, orderType string) *en
 		req.ID,
 	)
 
-	return output
+	return output, err
 }

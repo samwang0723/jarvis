@@ -27,4 +27,5 @@ type IDAL interface {
 	IUserDAL
 	IBalanceViewDAL
 	ITransactionDAL
+	IOrderDAL
 }

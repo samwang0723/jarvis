@@ -59,6 +59,7 @@ func (order *Order) Apply(event eventsourcing.Event) error {
 
 	switch event := event.(type) {
 	case *OrderCreated:
+		order.UserID = event.GetParentID()
 		order.StockID = event.StockID
 		if event.OrderType == OrderTypeBuy {
 			order.BuyPrice = event.TradePrice
@@ -136,12 +137,7 @@ func NewOrder(
 		return nil, fmt.Errorf("failed to generate id: %w", err)
 	}
 
-	order := &Order{
-		UserID:  userID,
-		StockID: stockID,
-	}
-	order.ID = id.Uint64()
-
+	order := &Order{}
 	event := &OrderCreated{
 		OrderType:    orderType,
 		StockID:      stockID,
@@ -151,8 +147,8 @@ func NewOrder(
 	}
 
 	// fill base event data
-	event.SetAggregateID(order.ID)
-	event.SetParentID(order.UserID)
+	event.SetAggregateID(id.Uint64())
+	event.SetParentID(userID)
 	event.SetVersion(1)
 	event.SetCreatedAt(time.Now())
 

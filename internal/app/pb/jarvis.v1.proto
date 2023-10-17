@@ -105,6 +105,14 @@ service JarvisV1 {
       body: "*"
     };
   }
+
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/orders"
+      body: "*"
+    };
+  }
 }
 
 message ListDailyCloseRequest {
@@ -382,4 +390,38 @@ message Transaction {
   float creditAmount = 7;
   float debitAmount = 8;
   uint64 orderID = 9;
+}
+
+message CreateOrderRequest {
+  uint64 userID = 1;
+  string orderType = 2;
+  string stockID = 3;
+  float tradePrice = 4;
+  uint64 quantity = 5;
+  string exchangeDate = 6;
+}
+
+message CreateOrderResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
+}
+
+message Order {
+  uint64 id = 1;
+  google.protobuf.Timestamp createdAt = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+  string status = 4;
+  uint64 userID = 5;
+  string orderType = 6;
+  string stockID = 7;
+  float buyPrice = 8;
+  float sellPrice = 9;
+  uint64 buyQuantity = 10;
+  uint64 sellQuantity = 11;
+  string buyExchangeDate = 12;
+  string sellExchangeDate = 13;
+  float profitLoss = 14;
+  float profitablePrice = 15;
 }

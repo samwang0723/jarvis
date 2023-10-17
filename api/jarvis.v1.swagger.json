@@ -104,6 +104,38 @@
         ]
       }
     },
+    "/v1/orders": {
+      "post": {
+        "operationId": "JarvisV1_CreateOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/pickedstocks": {
       "get": {
         "operationId": "JarvisV1_ListPickedStocks",
@@ -490,6 +522,50 @@
         "pending": {
           "type": "number",
           "format": "float"
+        }
+      }
+    },
+    "v1CreateOrderRequest": {
+      "type": "object",
+      "properties": {
+        "userID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "orderType": {
+          "type": "string"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "tradePrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "quantity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "exchangeDate": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateOrderResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
         }
       }
     },

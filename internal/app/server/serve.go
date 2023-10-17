@@ -74,6 +74,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		dal.WithDB(dbPool),
 		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
 		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
+		dal.WithOrderRepository(dal.NewOrderRepository(dbPool)),
 	)
 	// bind DAL layer with service
 	dataService := services.New(

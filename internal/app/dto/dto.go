@@ -181,3 +181,19 @@ type CreateTransactionResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 }
+
+type CreateOrderRequest struct {
+	UserID       uint64  `json:"userID"`
+	OrderType    string  `json:"orderType"`
+	StockID      string  `json:"stockID"`
+	ExchangeDate string  `json:"exchangeDate"`
+	TradePrice   float32 `json:"tradePrice"`
+	Quantity     uint64  `json:"quantity"`
+}
+
+type CreateOrderResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+}

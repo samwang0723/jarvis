@@ -156,3 +156,12 @@ func (s *server) CreateTransaction(
 
 	return dto.CreateTransactionResponseToPB(res), nil
 }
+
+func (s *server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+	res, err := s.Handler().CreateOrder(ctx, dto.CreateOrderRequestFromPB(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.CreateOrderResponseToPB(res), nil
+}

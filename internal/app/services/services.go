@@ -61,6 +61,7 @@ type IService interface {
 	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
 	GetBalanceViewByUserID(ctx context.Context, userID uint64) (obj *entity.BalanceView, err error)
 	CreateTransaction(ctx context.Context, trans *entity.Transaction) error
+	CreateOrder(ctx context.Context, source *entity.Order, orderType string) error
 }
 
 type serviceImpl struct {
