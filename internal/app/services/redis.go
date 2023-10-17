@@ -24,18 +24,15 @@ import (
 
 // Config encapsulates the settings for configuring the redis service.
 type RedisConfig struct {
-	// Redis master node DNS hostname
-	Master string
-
-	// Redis sentinel addresses
-	SentinelAddrs []string
-
 	// The logger to use. If not defined an output-discarding logger will
 	// be used instead.
 	Logger *zerolog.Logger
-
+	// Redis master node DNS hostname
+	Master string
 	// Redis password
 	Password string
+	// Redis sentinel addresses
+	SentinelAddrs []string
 }
 
 func (cfg *RedisConfig) validate() error {

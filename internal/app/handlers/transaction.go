@@ -7,33 +7,30 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-const (
-	taiwanStockQuantity = 1000
-)
-
 func (h *handlerImpl) CreateTransaction(
 	ctx context.Context,
 	req *dto.CreateTransactionRequest,
 ) (*dto.CreateTransactionResponse, error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
-	case entity.OrderTypeBuy:
-		debitAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
-	case entity.OrderTypeSell:
-		creditAmount = req.TradePrice * float32(req.Quantity) * taiwanStockQuantity
+	case entity.OrderTypeDeposit:
+		creditAmount = req.Amount
+	case entity.OrderTypeWithdraw:
+		debitAmount = req.Amount
+	default:
+		return &dto.CreateTransactionResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: "invalid order type",
+			Success:      false,
+		}, errOrderTypeNotAllowed
 	}
 
 	transaction, err := entity.NewTransaction(
-		req.StockID,
 		req.UserID,
 		req.OrderType,
-		req.TradePrice,
-		req.Quantity,
-		req.ExchangeDate,
 		creditAmount,
 		debitAmount,
-		req.Description,
-		req.ReferenceID,
 	)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
@@ -44,10 +41,6 @@ func (h *handlerImpl) CreateTransaction(
 			ErrorMessage: err.Error(),
 			Success:      false,
 		}, err
-	}
-
-	if req.OriginalExchangeDate != "" {
-		transaction.OriginalExchangeDate = req.OriginalExchangeDate
 	}
 
 	err = h.dataService.CreateTransaction(ctx, transaction)

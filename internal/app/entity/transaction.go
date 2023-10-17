@@ -25,20 +25,14 @@ const (
 )
 
 type Transaction struct {
-	StockID              string  `gorm:"column:stock_id" json:"stockId"`
-	UserID               uint64  `gorm:"column:user_id" json:"userId"`
-	OrderType            string  `gorm:"column:order_type" json:"orderType"`
-	TradePrice           float32 `gorm:"column:trade_price" json:"tradePrice"`
-	Quantity             uint64  `gorm:"column:quantity" json:"quantity"`
-	ExchangeDate         string  `gorm:"column:exchange_date" json:"exchangeDate"`
-	CreditAmount         float32 `gorm:"column:credit_amount" json:"creditAmount"`
-	DebitAmount          float32 `gorm:"column:debit_amount" json:"debitAmount"`
-	Description          string  `gorm:"column:description" json:"description"`
-	ReferenceID          *uint64 `gorm:"column:reference_id" json:"referenceId"`
-	Status               string  `gorm:"column:status" json:"status,omitempty"`
-	OriginalExchangeDate string
-	CreatedAt            time.Time `gorm:"column:created_at" mapstructure:"created_at"`
-	UpdatedAt            time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
+	UserID       uint64    `gorm:"column:user_id" json:"userId"`
+	OrderType    string    `gorm:"column:order_type" json:"orderType"`
+	CreditAmount float32   `gorm:"column:credit_amount" json:"creditAmount"`
+	DebitAmount  float32   `gorm:"column:debit_amount" json:"debitAmount"`
+	OrderID      uint64    `gorm:"column:order_id" json:"orderId"`
+	Status       string    `gorm:"column:status" json:"status,omitempty"`
+	CreatedAt    time.Time `gorm:"column:created_at" mapstructure:"created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
 
 	eventsourcing.BaseAggregate
 }
@@ -69,6 +63,9 @@ func (tran *Transaction) Apply(event eventsourcing.Event) error {
 
 	switch event := event.(type) {
 	case *TransactionCreated:
+		tran.UserID = event.GetParentID()
+		tran.OrderType = event.OrderType
+		tran.OrderID = event.OrderID
 		tran.CreditAmount = event.CreditAmount
 		tran.DebitAmount = event.DebitAmount
 		tran.CreatedAt = event.CreatedAt
@@ -109,52 +106,31 @@ func (tran *Transaction) GetTransitions() []eventsourcing.Transition {
 }
 
 func NewTransaction(
-	stockID string,
 	userID uint64,
 	orderType string,
-	tradePrice float32,
-	quantity uint64,
-	exchangeDate string,
 	creditAmount float32,
 	debitAmount float32,
-	description string,
-	referenceID *uint64,
+	orderID ...uint64,
 ) (*Transaction, error) {
 	id, err := GenID()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate id: %w", err)
 	}
 
-	tran := &Transaction{
-		StockID:      stockID,
-		UserID:       userID,
-		OrderType:    orderType,
-		TradePrice:   tradePrice,
-		Quantity:     quantity,
-		ExchangeDate: exchangeDate,
-		Description:  description,
-	}
-
-	if referenceID != nil {
-		tran.ReferenceID = referenceID
-	}
-
-	tran.ID = id.Uint64()
-
+	tran := &Transaction{}
 	event := &TransactionCreated{
 		CreditAmount: creditAmount,
 		DebitAmount:  debitAmount,
-		OrderType:    tran.OrderType,
-		StockID:      tran.StockID,
-		ExchangeDate: tran.ExchangeDate,
-		TradePrice:   tran.TradePrice,
-		Quantity:     tran.Quantity,
-		Description:  tran.Description,
+		OrderType:    orderType,
+	}
+
+	if len(orderID) > 0 {
+		event.OrderID = orderID[0]
 	}
 
 	// fill base event data
-	event.SetAggregateID(tran.ID)
-	event.SetParentID(tran.UserID)
+	event.SetAggregateID(id.Uint64())
+	event.SetParentID(userID)
 	event.SetVersion(1)
 	event.SetCreatedAt(time.Now())
 

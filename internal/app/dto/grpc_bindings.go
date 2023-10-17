@@ -734,26 +734,13 @@ func CreateTransactionRequestFromPB(in *pb.CreateTransactionRequest) *CreateTran
 	}
 
 	pbUserID := in.UserID
-	pbStockID := in.StockID
 	pbOrderType := in.OrderType
-	pbTradePrice := in.TradePrice
-	pbQuantity := in.Quantity
-	pbExchangeDate := in.ExchangeDate
-	pbDescription := in.Description
-	pbReferenceID := in.GetReferenceID()
+	pbAmount := in.Amount
 
 	request := &CreateTransactionRequest{
-		UserID:       pbUserID,
-		StockID:      pbStockID,
-		OrderType:    pbOrderType,
-		TradePrice:   pbTradePrice,
-		Quantity:     pbQuantity,
-		ExchangeDate: pbExchangeDate,
-		Description:  pbDescription,
-	}
-
-	if pbReferenceID > 0 {
-		request.ReferenceID = &pbReferenceID
+		UserID:    pbUserID,
+		OrderType: pbOrderType,
+		Amount:    pbAmount,
 	}
 
 	return request
@@ -774,5 +761,138 @@ func CreateTransactionResponseToPB(in *CreateTransactionResponse) *pb.CreateTran
 		Status:       pbStatus,
 		ErrorCode:    pbErrorCode,
 		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbUserID := in.UserID
+	pbOrderType := in.OrderType
+	pbStockID := in.StockID
+	pbExchangeDate := in.ExchangeDate
+	pbTradePrice := in.TradePrice
+	pbQuantity := in.Quantity
+
+	request := &CreateOrderRequest{
+		UserID:       pbUserID,
+		OrderType:    pbOrderType,
+		StockID:      pbStockID,
+		ExchangeDate: pbExchangeDate,
+		TradePrice:   pbTradePrice,
+		Quantity:     pbQuantity,
+	}
+
+	return request
+}
+
+func CreateOrderResponseToPB(in *CreateOrderResponse) *pb.CreateOrderResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.CreateOrderResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}
+
+func ListOrderRequestFromPB(in *pb.ListOrderRequest) *ListOrderRequest {
+	if in == nil {
+		return nil
+	}
+	out := &ListOrderRequest{
+		Offset:       in.Offset,
+		Limit:        in.Limit,
+		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams, in.UserID),
+	}
+
+	return out
+}
+
+func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams, userID uint64) *ListOrderSearchParams {
+	if in == nil {
+		return nil
+	}
+
+	out := &ListOrderSearchParams{
+		UserID: userID,
+	}
+
+	stockIDs := in.StockIDs
+	if stockIDs != nil {
+		out.StockIDs = &stockIDs
+	}
+	status := in.Status
+	if len(status) > 0 {
+		out.Status = &status
+	}
+	exchangeMonth := in.ExchangeMonth
+	if len(exchangeMonth) > 0 {
+		out.ExchangeMonth = &exchangeMonth
+	}
+
+	return out
+}
+
+func ListOrderResponseToPB(in *ListOrderResponse) *pb.ListOrderResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Order, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, OrderToPB(obj))
+	}
+
+	return &pb.ListOrderResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func OrderToPB(in *entity.Order) *pb.Order {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbBuyPrice := in.BuyPrice
+	pbBuyQuantity := in.BuyQuantity
+	pbBuyExchangeDate := in.BuyExchangeDate
+	pbSellPrice := in.SellPrice
+	pbSellQuantity := in.SellQuantity
+	pbSellExchangeDate := in.SellExchangeDate
+	pbProfitablePrice := in.ProfitablePrice
+	pbStatus := in.Status
+
+	return &pb.Order{
+		Id:               pbID,
+		UserID:           pbUserID,
+		StockID:          pbStockID,
+		BuyPrice:         pbBuyPrice,
+		BuyQuantity:      pbBuyQuantity,
+		BuyExchangeDate:  pbBuyExchangeDate,
+		SellPrice:        pbSellPrice,
+		SellQuantity:     pbSellQuantity,
+		SellExchangeDate: pbSellExchangeDate,
+		ProfitablePrice:  pbProfitablePrice,
+		Status:           pbStatus,
+		CreatedAt:        timestamppb.New(in.CreatedAt),
+		UpdatedAt:        timestamppb.New(in.UpdatedAt),
 	}
 }
