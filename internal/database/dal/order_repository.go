@@ -6,6 +6,7 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/database"
+	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	"github.com/samwang0723/jarvis/internal/eventsourcing/db"
 	"gorm.io/gorm"
@@ -101,6 +102,64 @@ func (tr *OrderRepository) Save(ctx context.Context, orderRequest *entity.Order)
 	}
 
 	return nil
+}
+
+func (i *dalImpl) ListOrders(
+	ctx context.Context,
+	offset, limit int32,
+	searchParams *idal.ListOrderSearchParams,
+) (objs []*entity.Order, totalCount int64, err error) {
+	sql := fmt.Sprintf("select count(*) from orders where %s", buildQueryFromListOrderSearchParams(searchParams))
+
+	err = i.db.Raw(sql).Scan(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	sql = fmt.Sprintf(`select * from orders where %s limit %d, %d`,
+		buildQueryFromListOrderSearchParams(searchParams),
+		offset,
+		limit,
+	)
+	err = i.db.Raw(sql).Find(&objs).Error
+	if err != nil {
+		return objs, 0, err
+	}
+
+	return objs, totalCount, nil
+}
+
+func buildQueryFromListOrderSearchParams(params *idal.ListOrderSearchParams) string {
+	query := ""
+	if params == nil {
+		return query
+	}
+
+	query = fmt.Sprintf("user_id = %d", params.UserID)
+
+	if params.StockIDs != nil {
+		idList := ""
+		stockIDs := *params.StockIDs
+		for i := 0; i < len(stockIDs); i++ {
+			if i > 0 {
+				idList += ","
+			}
+			idList += "'" + stockIDs[i] + "'"
+		}
+		query = fmt.Sprintf("%s and stock_id IN (%s)", query, idList)
+	}
+
+	if params.Status != nil {
+		query = query + " and status = '" + *params.Status + "'"
+	}
+
+	if params.ExchangeMonth != nil {
+		query = query +
+			" and (sell_exchange_date like '" + *params.ExchangeMonth +
+			"%' or buy_exchange_date like '" + *params.ExchangeMonth + "%')"
+	}
+
+	return query
 }
 
 func (i *dalImpl) ListOpenOrders(

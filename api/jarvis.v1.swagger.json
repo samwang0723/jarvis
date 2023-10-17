@@ -136,6 +136,58 @@
         ]
       }
     },
+    "/v1/orders/{userID}": {
+      "post": {
+        "operationId": "JarvisV1_ListOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "offset": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "limit": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "searchParams": {
+                  "$ref": "#/definitions/v1ListOrderSearchParams"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/pickedstocks": {
       "get": {
         "operationId": "JarvisV1_ListPickedStocks",
@@ -835,6 +887,46 @@
         }
       }
     },
+    "v1ListOrderResponse": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCount": {
+          "type": "string",
+          "format": "int64"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Order"
+          }
+        }
+      }
+    },
+    "v1ListOrderSearchParams": {
+      "type": "object",
+      "properties": {
+        "stockIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exchangeMonth": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1ListPickedStocksResponse": {
       "type": "object",
       "properties": {
@@ -1000,6 +1092,59 @@
           "items": {
             "$ref": "#/definitions/v1User"
           }
+        }
+      }
+    },
+    "v1Order": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string"
+        },
+        "userID": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "stockID": {
+          "type": "string"
+        },
+        "buyPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "sellPrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "buyQuantity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "sellQuantity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "buyExchangeDate": {
+          "type": "string"
+        },
+        "sellExchangeDate": {
+          "type": "string"
+        },
+        "profitablePrice": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

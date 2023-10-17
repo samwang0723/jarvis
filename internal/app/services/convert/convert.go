@@ -64,3 +64,23 @@ func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListSto
 
 	return res
 }
+
+func ListOrderSearchParamsDTOToDAL(obj *dto.ListOrderSearchParams) *idal.ListOrderSearchParams {
+	res := &idal.ListOrderSearchParams{
+		UserID: obj.UserID,
+	}
+
+	if obj.StockIDs != nil {
+		res.StockIDs = obj.StockIDs
+	}
+
+	if obj.ExchangeMonth != nil {
+		res.ExchangeMonth = obj.ExchangeMonth
+	}
+
+	if obj.Status != nil {
+		res.Status = obj.Status
+	}
+
+	return res
+}

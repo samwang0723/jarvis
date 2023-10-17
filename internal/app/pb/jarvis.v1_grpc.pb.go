@@ -8,6 +8,7 @@ package pb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -36,6 +37,7 @@ type JarvisV1Client interface {
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
 	CreateTransaction(ctx context.Context, in *CreateTransactionRequest, opts ...grpc.CallOption) (*CreateTransactionResponse, error)
 	CreateOrder(ctx context.Context, in *CreateOrderRequest, opts ...grpc.CallOption) (*CreateOrderResponse, error)
+	ListOrders(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error)
 }
 
 type jarvisV1Client struct {
@@ -172,6 +174,15 @@ func (c *jarvisV1Client) CreateOrder(ctx context.Context, in *CreateOrderRequest
 	return out, nil
 }
 
+func (c *jarvisV1Client) ListOrders(ctx context.Context, in *ListOrderRequest, opts ...grpc.CallOption) (*ListOrderResponse, error) {
+	out := new(ListOrderResponse)
+	err := c.cc.Invoke(ctx, "/jarvis.v1.JarvisV1/ListOrders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JarvisV1Server is the server API for JarvisV1 service.
 // All implementations should embed UnimplementedJarvisV1Server
 // for forward compatibility
@@ -190,6 +201,7 @@ type JarvisV1Server interface {
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
 	CreateTransaction(context.Context, *CreateTransactionRequest) (*CreateTransactionResponse, error)
 	CreateOrder(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error)
+	ListOrders(context.Context, *ListOrderRequest) (*ListOrderResponse, error)
 }
 
 // UnimplementedJarvisV1Server should be embedded to have forward compatible implementations.
@@ -237,6 +249,9 @@ func (UnimplementedJarvisV1Server) CreateTransaction(context.Context, *CreateTra
 }
 func (UnimplementedJarvisV1Server) CreateOrder(context.Context, *CreateOrderRequest) (*CreateOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrder not implemented")
+}
+func (UnimplementedJarvisV1Server) ListOrders(context.Context, *ListOrderRequest) (*ListOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListOrders not implemented")
 }
 
 // UnsafeJarvisV1Server may be embedded to opt out of forward compatibility for this service.
@@ -502,6 +517,24 @@ func _JarvisV1_CreateOrder_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JarvisV1_ListOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JarvisV1Server).ListOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/jarvis.v1.JarvisV1/ListOrders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JarvisV1Server).ListOrders(ctx, req.(*ListOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JarvisV1_ServiceDesc is the grpc.ServiceDesc for JarvisV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -564,6 +597,10 @@ var JarvisV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateOrder",
 			Handler:    _JarvisV1_CreateOrder_Handler,
+		},
+		{
+			MethodName: "ListOrders",
+			Handler:    _JarvisV1_ListOrders_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

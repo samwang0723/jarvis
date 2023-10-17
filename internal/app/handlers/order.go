@@ -41,3 +41,19 @@ func (h *handlerImpl) CreateOrder(
 		Success:      true,
 	}, nil
 }
+
+func (h *handlerImpl) ListOrders(ctx context.Context, req *dto.ListOrderRequest) (*dto.ListOrderResponse, error) {
+	orders, totalCount, err := h.dataService.ListOrders(ctx, req)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to list orders")
+
+		return nil, err
+	}
+
+	return &dto.ListOrderResponse{
+		Entries:    orders,
+		Offset:     req.Offset,
+		Limit:      req.Limit,
+		TotalCount: totalCount,
+	}, nil
+}

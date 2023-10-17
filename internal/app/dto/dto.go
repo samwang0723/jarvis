@@ -170,9 +170,9 @@ type GetBalanceViewResponse struct {
 }
 
 type CreateTransactionRequest struct {
-	UserID    uint64  `json:"userID"`
 	OrderType string  `json:"orderType"`
 	Amount    float32 `json:"amount"`
+	UserID    uint64  `json:"userID"`
 }
 
 type CreateTransactionResponse struct {
@@ -183,12 +183,12 @@ type CreateTransactionResponse struct {
 }
 
 type CreateOrderRequest struct {
-	UserID       uint64  `json:"userID"`
 	OrderType    string  `json:"orderType"`
 	StockID      string  `json:"stockID"`
 	ExchangeDate string  `json:"exchangeDate"`
 	TradePrice   float32 `json:"tradePrice"`
 	Quantity     uint64  `json:"quantity"`
+	UserID       uint64  `json:"userID"`
 }
 
 type CreateOrderResponse struct {
@@ -196,4 +196,24 @@ type CreateOrderResponse struct {
 	ErrorMessage string `json:"errorMessage"`
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
+}
+
+type ListOrderSearchParams struct {
+	StockIDs      *[]string `json:"stockIDs,omitempty"`
+	ExchangeMonth *string   `json:"exchangeMonth,omitempty"`
+	Status        *string   `json:"status,omitempty"`
+	UserID        uint64    `json:"userID"`
+}
+
+type ListOrderRequest struct {
+	SearchParams *ListOrderSearchParams `json:"searchParams"`
+	Offset       int32                  `json:"offset"`
+	Limit        int32                  `json:"limit"`
+}
+
+type ListOrderResponse struct {
+	Entries    []*entity.Order `json:"entries"`
+	Offset     int32           `json:"offset"`
+	Limit      int32           `json:"limit"`
+	TotalCount int64           `json:"totalCount"`
 }

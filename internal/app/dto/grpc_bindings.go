@@ -805,3 +805,94 @@ func CreateOrderResponseToPB(in *CreateOrderResponse) *pb.CreateOrderResponse {
 		ErrorMessage: pbErrorMessage,
 	}
 }
+
+func ListOrderRequestFromPB(in *pb.ListOrderRequest) *ListOrderRequest {
+	if in == nil {
+		return nil
+	}
+	out := &ListOrderRequest{
+		Offset:       in.Offset,
+		Limit:        in.Limit,
+		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams, in.UserID),
+	}
+
+	return out
+}
+
+func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams, userID uint64) *ListOrderSearchParams {
+	if in == nil {
+		return nil
+	}
+
+	out := &ListOrderSearchParams{
+		UserID: userID,
+	}
+
+	stockIDs := in.StockIDs
+	if stockIDs != nil {
+		out.StockIDs = &stockIDs
+	}
+	status := in.Status
+	if len(status) > 0 {
+		out.Status = &status
+	}
+	exchangeMonth := in.ExchangeMonth
+	if len(exchangeMonth) > 0 {
+		out.ExchangeMonth = &exchangeMonth
+	}
+
+	return out
+}
+
+func ListOrderResponseToPB(in *ListOrderResponse) *pb.ListOrderResponse {
+	if in == nil {
+		return nil
+	}
+
+	entries := make([]*pb.Order, 0, len(in.Entries))
+
+	for _, obj := range in.Entries {
+		entries = append(entries, OrderToPB(obj))
+	}
+
+	return &pb.ListOrderResponse{
+		Offset:     in.Offset,
+		Limit:      in.Limit,
+		TotalCount: in.TotalCount,
+		Entries:    entries,
+	}
+}
+
+func OrderToPB(in *entity.Order) *pb.Order {
+	if in == nil {
+		return nil
+	}
+
+	pbID := in.ID
+	pbUserID := in.UserID
+	pbStockID := in.StockID
+	pbBuyPrice := in.BuyPrice
+	pbBuyQuantity := in.BuyQuantity
+	pbBuyExchangeDate := in.BuyExchangeDate
+	pbSellPrice := in.SellPrice
+	pbSellQuantity := in.SellQuantity
+	pbSellExchangeDate := in.SellExchangeDate
+	pbProfitablePrice := in.ProfitablePrice
+	pbStatus := in.Status
+
+	return &pb.Order{
+		Id:               pbID,
+		UserID:           pbUserID,
+		StockID:          pbStockID,
+		BuyPrice:         pbBuyPrice,
+		BuyQuantity:      pbBuyQuantity,
+		BuyExchangeDate:  pbBuyExchangeDate,
+		SellPrice:        pbSellPrice,
+		SellQuantity:     pbSellQuantity,
+		SellExchangeDate: pbSellExchangeDate,
+		ProfitablePrice:  pbProfitablePrice,
+		Status:           pbStatus,
+		CreatedAt:        timestamppb.New(in.CreatedAt),
+		UpdatedAt:        timestamppb.New(in.UpdatedAt),
+	}
+}

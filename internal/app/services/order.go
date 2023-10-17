@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
 
 const (
@@ -18,6 +20,25 @@ const (
 type processedOrder struct {
 	order            *entity.Order
 	exchangeQuantity uint64
+}
+
+func (s *serviceImpl) ListOrders(
+	ctx context.Context,
+	req *dto.ListOrderRequest,
+) (objs []*entity.Order, totalCount int64, err error) {
+	objs, totalCount, err = s.dal.ListOrders(
+		ctx,
+		req.Offset,
+		req.Limit,
+		convert.ListOrderSearchParamsDTOToDAL(req.SearchParams),
+	)
+	if err != nil {
+		sentry.CaptureException(err)
+
+		return nil, 0, err
+	}
+
+	return objs, totalCount, nil
 }
 
 func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error {
