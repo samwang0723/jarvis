@@ -7,5 +7,6 @@ import (
 )
 
 type IOrderDAL interface {
-	CreateOrder(ctx context.Context, orderRequest *entity.Order, transactions []*entity.Transaction) error
+	ListOpenOrders(ctx context.Context, userID uint64, stockID, orderType string) ([]*entity.Order, error)
+	CreateOrder(ctx context.Context, orders []*entity.Order, transactions []*entity.Transaction) error
 }

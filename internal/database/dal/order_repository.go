@@ -103,87 +103,51 @@ func (tr *OrderRepository) Save(ctx context.Context, orderRequest *entity.Order)
 	return nil
 }
 
+func (i *dalImpl) ListOpenOrders(
+	ctx context.Context,
+	userID uint64,
+	stockID, orderType string,
+) ([]*entity.Order, error) {
+	var ids []uint64
+
+	condition := ""
+	if orderType == entity.OrderTypeSell {
+		condition = "and buy_quantity - sell_quantity > 0"
+	} else {
+		condition = "and sell_quantity - buy_quantity > 0"
+	}
+
+	sql := fmt.Sprintf(`select id from orders where 
+                        user_id = %d and stock_id = %s 
+                        and status IN ('created', 'changed')
+                        %s order by created_at asc;`, userID, stockID, condition)
+
+	err := i.db.Raw(sql).Scan(&ids).Error
+	if err != nil {
+		return []*entity.Order{}, err
+	}
+
+	objs := make([]*entity.Order, len(ids))
+	for idx, orderID := range ids {
+		obj, err := i.orderRepository.Load(ctx, orderID)
+		if err != nil {
+			return objs, err
+		}
+		objs[idx] = obj
+	}
+
+	return objs, nil
+}
+
 func (i *dalImpl) CreateOrder(
 	ctx context.Context,
-	orderRequest *entity.Order,
+	orders []*entity.Order,
 	transactions []*entity.Transaction,
-	orderType string,
 ) error {
 	err := i.db.Transaction(func(tx *gorm.DB) error {
 		ctx = database.WithTx(ctx, tx)
-		// check non-closed orders to perform sell or buy
-		var objs []*entity.Order
-		condition := ""
-		if orderType == entity.OrderTypeSell {
-			condition = "and buy_quantity - sell_quantity > 0"
-		} else {
-			condition = "and sell_quantity - buy_quantity > 0"
-		}
 
-		sql := fmt.Sprintf(`select * from orders where 
-                        user_id = %d and stock_id = %d 
-                        and status IN ('created', 'changed')
-                        %s order by created_at asc;`, orderRequest.UserID, orderRequest.StockID, condition)
-
-		err := i.db.Raw(sql).Scan(&objs).Error
-		if err != nil {
-			return err
-		}
-		// loop through all orders to perform sell or buy
-		// if orderRequest is sell, then loop through all buy open orders until satisfied
-		// if orderRequest is buy, then loop through all sell open orders until satisfied
-		remainingQuantity := uint64(0)
-		if orderType == entity.OrderTypeSell {
-			remainingQuantity = orderRequest.SellQuantity
-		} else {
-			remainingQuantity = orderRequest.BuyQuantity
-		}
-
-		for _, order := range objs {
-			obj, err := i.orderRepository.Load(ctx, order.ID)
-			if err != nil {
-				return err
-			}
-
-			// loop through all open orders until satisfied
-			if orderType == entity.OrderTypeSell {
-				if obj.BuyQuantity-obj.SellQuantity >= remainingQuantity {
-					obj.SellPrice = (obj.SellPrice*float32(obj.SellQuantity)+orderRequest.SellPrice*float32(remainingQuantity))/float32(obj.SellQuantity) + float32(remainingQuantity)
-					obj.SellQuantity += remainingQuantity
-					obj.SellExchangeDate = orderRequest.SellExchangeDate
-					remainingQuantity = 0
-				} else if obj.BuyQuantity-obj.SellQuantity < remainingQuantity {
-					obj.SellPrice = (obj.SellPrice*float32(obj.SellQuantity) + orderRequest.SellPrice*float32(obj.BuyQuantity-obj.SellQuantity)) / float32(obj.BuyQuantity)
-					obj.SellQuantity = obj.BuyQuantity
-					obj.SellExchangeDate = orderRequest.SellExchangeDate
-					remainingQuantity -= obj.BuyQuantity - obj.SellQuantity
-				}
-			} else {
-				if obj.SellQuantity-obj.BuyQuantity >= remainingQuantity {
-					obj.BuyPrice = (obj.BuyPrice*float32(obj.BuyQuantity)+orderRequest.BuyPrice*float32(remainingQuantity))/float32(obj.BuyQuantity) + float32(remainingQuantity)
-					obj.BuyQuantity += remainingQuantity
-					obj.BuyExchangeDate = orderRequest.BuyExchangeDate
-					remainingQuantity = 0
-				} else if obj.SellQuantity-obj.BuyQuantity < remainingQuantity {
-					obj.BuyPrice = (obj.BuyPrice*float32(obj.BuyQuantity) + orderRequest.BuyPrice*float32(obj.SellQuantity-obj.BuyQuantity)) / float32(obj.SellQuantity)
-					obj.BuyQuantity = obj.SellQuantity
-					obj.BuyExchangeDate = orderRequest.BuyExchangeDate
-					remainingQuantity -= obj.SellQuantity - obj.BuyQuantity
-				}
-			}
-			if err := i.orderRepository.Save(ctx, obj); err != nil {
-				return err
-			}
-		}
-
-		// No remaining pending quantity, need to create a new order
-		if remainingQuantity > 0 {
-			if orderType == entity.OrderTypeSell {
-				orderRequest.SellQuantity = remainingQuantity
-			} else {
-				orderRequest.BuyQuantity = remainingQuantity
-			}
-
+		for _, orderRequest := range orders {
 			if err := i.orderRepository.Save(ctx, orderRequest); err != nil {
 				return err
 			}

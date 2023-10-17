@@ -48,6 +48,10 @@ func (order *Order) GetCurrentState() eventsourcing.State {
 	return eventsourcing.State(order.Status)
 }
 
+func (order *Order) QuantityMatched() bool {
+	return order.BuyQuantity == order.SellQuantity
+}
+
 // Apply updates the aggregate according to a event.
 func (order *Order) Apply(event eventsourcing.Event) error {
 	newState, err := eventsourcing.TransistOnEvent(order, event)
@@ -191,15 +195,14 @@ func (order *Order) Change(
 	order.AppendChange(event)
 
 	// close order if all open positions are closed
-	if (orderType == OrderTypeBuy && order.BuyQuantity+quantity == order.SellQuantity) ||
-		(orderType == OrderTypeSell && order.SellQuantity+quantity == order.BuyQuantity) {
-		order.close()
+	if order.QuantityMatched() {
+		order.Close()
 	}
 
 	return nil
 }
 
-func (order *Order) close() error {
+func (order *Order) Close() error {
 	event := &OrderClosed{}
 
 	// fill base event data

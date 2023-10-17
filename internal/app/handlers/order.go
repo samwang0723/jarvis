@@ -22,26 +22,7 @@ func (h *handlerImpl) CreateOrder(
 		}, errOrderTypeNotAllowed
 	}
 
-	order, err := entity.NewOrder(
-		req.UserID,
-		req.OrderType,
-		req.StockID,
-		req.ExchangeDate,
-		req.TradePrice,
-		req.Quantity,
-	)
-	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to create order")
-
-		return &dto.CreateOrderResponse{
-			Status:       dto.StatusError,
-			ErrorCode:    "",
-			ErrorMessage: err.Error(),
-			Success:      false,
-		}, err
-	}
-
-	err = h.dataService.CreateOrder(ctx, order, req.OrderType)
+	err := h.dataService.CreateOrder(ctx, req)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create order")
 
