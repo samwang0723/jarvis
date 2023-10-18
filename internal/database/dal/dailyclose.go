@@ -74,6 +74,44 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset, limit int32,
 	return objs, totalCount, nil
 }
 
+func (i *dalImpl) ListLatestPrice(ctx context.Context, stockIDs []string) (objs []*entity.StockPrice, err error) {
+	idList := ""
+	for i := 0; i < len(stockIDs); i++ {
+		if i > 0 {
+			idList += ","
+		}
+		idList += "'" + stockIDs[i] + "'"
+	}
+	sql := fmt.Sprintf(`
+                WITH RankedCloses AS (
+                    SELECT 
+                        stock_id,
+                        close,
+                        exchange_date,
+                        ROW_NUMBER() OVER (PARTITION BY stock_id ORDER BY exchange_date DESC) AS rn
+                    FROM 
+                        daily_closes
+                    WHERE 
+                        stock_id IN (%s)
+                )
+                
+                SELECT 
+                    stock_id,
+                    close,
+                    exchange_date
+                FROM 
+                    RankedCloses
+                WHERE 
+                    rn = 1;`, idList)
+
+	err = i.db.Raw(sql).Scan(&objs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return objs, nil
+}
+
 func buildQueryFromListDailyCloseSearchParams(params *idal.ListDailyCloseSearchParams) string {
 	if params == nil {
 		return ""

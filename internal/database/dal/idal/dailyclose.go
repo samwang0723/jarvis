@@ -35,4 +35,5 @@ type IDailyCloseDAL interface {
 		searchParams *ListDailyCloseSearchParams,
 	) (objs []*entity.DailyClose, totalCount int64, err error)
 	HasDailyClose(ctx context.Context, date string) bool
+	ListLatestPrice(ctx context.Context, stockIDs []string) (objs []*entity.StockPrice, err error)
 }

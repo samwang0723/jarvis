@@ -15,12 +15,14 @@ package dto
 
 import (
 	"encoding/json"
+	"math"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
+	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -879,20 +881,24 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	pbSellExchangeDate := in.SellExchangeDate
 	pbProfitablePrice := in.ProfitablePrice
 	pbStatus := in.Status
+	pbProfitLoss := float32(math.Round(float64(in.ProfitLoss)))
+	pbProfitLossPercent := helper.RoundDecimalTwo(in.ProfitLossPercent)
 
 	return &pb.Order{
-		Id:               pbID,
-		UserID:           pbUserID,
-		StockID:          pbStockID,
-		BuyPrice:         pbBuyPrice,
-		BuyQuantity:      pbBuyQuantity,
-		BuyExchangeDate:  pbBuyExchangeDate,
-		SellPrice:        pbSellPrice,
-		SellQuantity:     pbSellQuantity,
-		SellExchangeDate: pbSellExchangeDate,
-		ProfitablePrice:  pbProfitablePrice,
-		Status:           pbStatus,
-		CreatedAt:        timestamppb.New(in.CreatedAt),
-		UpdatedAt:        timestamppb.New(in.UpdatedAt),
+		Id:                pbID,
+		UserID:            pbUserID,
+		StockID:           pbStockID,
+		BuyPrice:          pbBuyPrice,
+		BuyQuantity:       pbBuyQuantity,
+		BuyExchangeDate:   pbBuyExchangeDate,
+		SellPrice:         pbSellPrice,
+		SellQuantity:      pbSellQuantity,
+		SellExchangeDate:  pbSellExchangeDate,
+		ProfitablePrice:   pbProfitablePrice,
+		Status:            pbStatus,
+		ProfitLoss:        pbProfitLoss,
+		ProfitLossPercent: pbProfitLossPercent,
+		CreatedAt:         timestamppb.New(in.CreatedAt),
+		UpdatedAt:         timestamppb.New(in.UpdatedAt),
 	}
 }

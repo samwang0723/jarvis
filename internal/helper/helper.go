@@ -102,3 +102,21 @@ func RewindDate(dateStr string, rewind int) string {
 
 	return date.AddDate(0, 0, rewind).Format("20060102")
 }
+
+func Keys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+func SliceToMap[K comparable, V any](source []V, fn func(in V) K) map[K]V {
+	output := map[K]V{}
+	for _, s := range source {
+		output[fn(s)] = s
+	}
+
+	return output
+}

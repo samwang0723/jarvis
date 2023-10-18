@@ -7,6 +7,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 const (
@@ -36,6 +37,28 @@ func (s *serviceImpl) ListOrders(
 		sentry.CaptureException(err)
 
 		return nil, 0, err
+	}
+
+	m := helper.SliceToMap(objs, func(order *entity.Order) string {
+		return order.StockID
+	})
+
+	// pull lastest price from database
+	p, err := s.dal.ListLatestPrice(ctx, helper.Keys(m))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// calculate settled profit loss
+	for _, order := range objs {
+		order.CalculateProfitLoss()
+	}
+
+	// calculate unrealized profit loss
+	for _, price := range p {
+		if order, ok := m[price.StockID]; ok {
+			order.CalculateUnrealizedProfitLoss(price.Price)
+		}
 	}
 
 	return objs, totalCount, nil

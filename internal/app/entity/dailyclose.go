@@ -15,6 +15,12 @@ package entity
 
 import "github.com/samwang0723/jarvis/internal/app/businessmodel"
 
+type StockPrice struct {
+	ExchangeDate string  `gorm:"column:exchange_date" json:"exchangeDate"`
+	StockID      string  `gorm:"column:stock_id" json:"stockId"`
+	Price        float32 `gorm:"column:close" json:"price"`
+}
+
 type DailyClose struct {
 	Base
 
