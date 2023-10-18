@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="180x180" href="/analysis/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/analysis/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/analysis/static/favicon-16x16.png">
+    <link rel="manifest" href="/analysis/static/site.webmanifest" crossorigin="use-credentials">
+    <link rel="mask-icon" href="/analysis/static/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <title>Jarvis - Orders</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.10/css/dataTables.bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://nightly.datatables.net/js/jquery.dataTables.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.10/js/dataTables.bootstrap.min.js"></script>
+
+    <style type="text/css">
+        .tab-content {
+            padding: 10px;
+            border-left: 1px solid #DDD;
+            border-bottom: 1px solid #DDD;
+            border-right: 1px solid #DDD;
+        }
+
+        .table-hover tbody tr:hover td {
+            background: #F0F8FF !important;
+        }
+
+        .dataTables_wrapper .dataTables_scroll {
+            border: 1px solid #ccc;
+            margin: 1rem 0;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        div.dataTables_scrollHead table.dataTable {
+            margin-bottom: 0 !important;
+            margin-top: 0 !important;
+            border: 0 !important;
+        }
+
+        .dataTables_scrollBody {
+            overflow-x: hidden !important;
+            border-top: 1px solid #ccc;
+        }
+
+        .table {
+            border-left: 0px !important;
+            border-right: 0px !important;
+        }
+
+        .table th {
+            border-bottom: none
+        }
+
+        thead {
+            background-color: #236e99;
+            color: #ffffff;
+        }
+
+        table.dataTable tbody td {
+            vertical-align: middle;
+            height: 100%;
+        }
+
+        div.container {
+            width: 580px;
+        }
+
+        div.target {
+            width: 50px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        div.candle {
+            float: right;
+            vertical-align: middle;
+        }
+
+        div.innerContainer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #alert {
+            position: fixed;
+            z-index: 9999;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="alert" class="alert" role="alert"></div>
+    <div class="container">
+        <br>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#tab1" aria-controls="tab1" role="tab"
+                    data-toggle="tab"><b>即時庫存</b></a></li>
+            <li role="presentation"><a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab"><b>已實現</b></a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="tab1">
+                <table id="myTable" class="table table-hover table-striped table-bordered table-condensed responsive"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>標的</th>
+                            <th>買價</th>
+                            <th>買量</th>
+                            <th>買進日期</th>
+                            <th>賣價</th>
+                            <th>賣量</th>
+                            <th>賣出日期</th>
+                            <th>成本價</th>
+                            <th>獲利</th>
+                            <th>獲利率</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
+            <div role="tabpanel" class="tab-pane fade" id="tab2">
+                <table id="myTable2" class="table table-hover table-striped table-bordered table-condensed responsive"
+                    cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>標的</th>
+                            <th>買價</th>
+                            <th>買量</th>
+                            <th>買進日期</th>
+                            <th>賣價</th>
+                            <th>賣量</th>
+                            <th>賣出日期</th>
+                            <th>成本價</th>
+                            <th>獲利</th>
+                            <th>獲利率</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <br>
+    </div>
+</body>
+
+</html>
+
+<script>
+    $(document).ready(function () {
+        loadTable();
+    });
+
+    function loadTable() {
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders/483167980826394793";
+        var dataJSON = {
+            offset: 0,
+            limit: 20,
+            userID: 483162868708016391,
+            searchParams: {
+                // stockIDs: ["2449", "2363", "6239"],
+                exchangeMonth: "202310",
+                status: "created"
+            }
+        };
+
+        $.ajax({
+            type: "POST",
+            url: requestURL,
+            data: JSON.stringify(dataJSON),
+            dataType: 'json',
+            success: function (data) {
+                $('#myTable').DataTable({
+                    destroy: true,
+                    paging: false,
+                    footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    columnDefs: [
+                        {
+                            targets: [0],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [1, 2, 3, 4, 5, 6, 7],
+                            searchable: true,
+                            responsivePriority: 2
+                        },
+                        {
+                            targets: [8],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                        {
+                            targets: [9],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                                current = $(td).text();
+                                $(td).text(current + "%");
+                            }
+                        }
+                    ],
+                    responsive: true,
+                    data: data.entries,
+                    columns: [
+                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "buyPrice", "sWidth": "50px"},
+                        {"data": "buyQuantity", "sWidth": "20px"},
+                        {"data": "buyExchangeDate", "sWidth": "90px", "className": "text-right"},
+                        {"data": "sellPrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "sellQuantity", "sWidth": "20px", "className": "text-right"},
+                        {"data": "sellExchangeDate", "sWidth": "90px", "className": "text-right"},
+                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitLoss", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitLossPercent", "sWidth": "50px", "className": "text-center"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                    }
+                });
+
+                $('#myTable2').DataTable({
+                    destroy: true,
+                    paging: false,
+                    footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    columnDefs: [
+                        {
+                            targets: [0],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [1, 2, 3, 4, 5, 6, 7],
+                            searchable: true,
+                            responsivePriority: 2
+                        },
+                        {
+                            targets: [8],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                        {
+                            targets: [9],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                                current = $(td).text();
+                                $(td).text(current + "%");
+                            }
+                        }
+                    ],
+                    responsive: true,
+                    data: data.entries,
+                    columns: [
+                        {"data": "stockID", "sWidth": "50px"},
+                        {"data": "buyPrice", "sWidth": "50px"},
+                        {"data": "buyQuantity", "sWidth": "20px"},
+                        {"data": "buyExchangeDate", "sWidth": "90px", "className": "text-right"},
+                        {"data": "sellPrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "sellQuantity", "sWidth": "20px", "className": "text-right"},
+                        {"data": "sellExchangeDate", "sWidth": "90px", "className": "text-right"},
+                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitLoss", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitLossPercent", "sWidth": "50px", "className": "text-center"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                    }
+                });
+            },
+            error: function () {
+            }
+        });
+    };
+
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $($.fn.dataTable.tables(true)).DataTable()
+            .columns.adjust();
+    });
+
+</script>
