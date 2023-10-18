@@ -1145,6 +1145,14 @@
         "profitablePrice": {
           "type": "number",
           "format": "float"
+        },
+        "profitLoss": {
+          "type": "number",
+          "format": "float"
+        },
+        "profitLossPercent": {
+          "type": "number",
+          "format": "float"
         }
       }
     },

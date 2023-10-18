@@ -47,7 +47,7 @@ type IService interface {
 	StopCron()
 	AddJob(ctx context.Context, spec string, job func()) error
 	CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error
-	RetrieveRealTimePrice(ctx context.Context) error
+	CrawlingRealTimePrice(ctx context.Context) error
 	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
 	DeletePickedStockByID(ctx context.Context, stockID string) error
 	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)

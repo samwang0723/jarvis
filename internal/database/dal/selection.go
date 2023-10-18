@@ -160,7 +160,17 @@ func (i *dalImpl) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		return nil, err
 	}
 
+	var ordered []*realTimeList
+	err = i.db.Raw(`select o.stock_id, c.market
+                        from orders o
+                        left join stocks c on c.stock_id = o.stock_id 
+                        where o.status != 'closed'`).Scan(&ordered).Error
+	if err != nil {
+		return nil, err
+	}
+
 	mergedList := merge(objs, picked)
+	mergedList = merge(mergedList, ordered)
 
 	stockSymbols := make([]string, len(mergedList))
 	for idx, obj := range mergedList {

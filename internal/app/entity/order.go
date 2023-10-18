@@ -20,21 +20,26 @@ const (
 	feeRate             = 0.001425
 	brokerFeeDiscount   = 0.25
 	buySellTime         = 2
+	percent             = 100
 )
 
 type Order struct {
-	StockID          string    `gorm:"column:stock_id" json:"stockId"`
-	UserID           uint64    `gorm:"column:user_id" json:"userId"`
-	BuyPrice         float32   `gorm:"column:buy_price" json:"buyPrice"`
-	BuyQuantity      uint64    `gorm:"column:buy_quantity" json:"buyQuantity"`
-	BuyExchangeDate  string    `gorm:"column:buy_exchange_date" json:"buyExchangeDate"`
-	SellPrice        float32   `gorm:"column:sell_price" json:"sellPrice"`
-	SellQuantity     uint64    `gorm:"column:sell_quantity" json:"sellQuantity"`
-	SellExchangeDate string    `gorm:"column:sell_exchange_date" json:"sellExchangeDate"`
-	ProfitablePrice  float32   `gorm:"column:profitable_price" json:"profitablePrice"`
-	Status           string    `gorm:"column:status" json:"status,omitempty"`
-	CreatedAt        time.Time `gorm:"column:created_at" mapstructure:"created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
+	StockID          string  `gorm:"column:stock_id" json:"stockId"`
+	UserID           uint64  `gorm:"column:user_id" json:"userId"`
+	BuyPrice         float32 `gorm:"column:buy_price" json:"buyPrice"`
+	BuyQuantity      uint64  `gorm:"column:buy_quantity" json:"buyQuantity"`
+	BuyExchangeDate  string  `gorm:"column:buy_exchange_date" json:"buyExchangeDate"`
+	SellPrice        float32 `gorm:"column:sell_price" json:"sellPrice"`
+	SellQuantity     uint64  `gorm:"column:sell_quantity" json:"sellQuantity"`
+	SellExchangeDate string  `gorm:"column:sell_exchange_date" json:"sellExchangeDate"`
+	ProfitablePrice  float32 `gorm:"column:profitable_price" json:"profitablePrice"`
+	Status           string  `gorm:"column:status" json:"status,omitempty"`
+
+	ProfitLoss        float32
+	ProfitLossPercent float32
+
+	CreatedAt time.Time `gorm:"column:created_at" mapstructure:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
 
 	eventsourcing.BaseAggregate
 }
@@ -56,6 +61,40 @@ func (order *Order) GetCurrentState() eventsourcing.State {
 
 func (order *Order) QuantityMatched() bool {
 	return order.BuyQuantity == order.SellQuantity
+}
+
+func (order *Order) CalculateProfitLoss() {
+	if order.QuantityMatched() {
+		order.ProfitLoss = (order.SellPrice - order.BuyPrice) * float32(order.SellQuantity) * taiwanStockQuantity
+		order.ProfitLossPercent = (order.SellPrice - order.BuyPrice) / order.BuyPrice
+	}
+}
+
+//nolint:nestif // ignore nested if
+func (order *Order) CalculateUnrealizedProfitLoss(currentPrice float32) {
+	if order.BuyQuantity > order.SellQuantity {
+		remainingQuantity := order.BuyQuantity - order.SellQuantity
+		if order.SellQuantity > 0 {
+			profit := (order.SellPrice - order.ProfitablePrice) * float32(order.SellQuantity) * taiwanStockQuantity
+			order.ProfitLoss = profit + (currentPrice-order.ProfitablePrice)*float32(remainingQuantity)*taiwanStockQuantity
+		} else {
+			order.ProfitLoss = (currentPrice - order.ProfitablePrice) * float32(order.BuyQuantity) * taiwanStockQuantity
+		}
+		cost := order.ProfitablePrice * float32(order.BuyQuantity) * taiwanStockQuantity
+		current := currentPrice * float32(order.BuyQuantity) * taiwanStockQuantity
+		order.ProfitLossPercent = ((cost / current) - 1) * percent * -1
+	} else if order.BuyQuantity < order.SellQuantity {
+		remainingQuantity := order.SellQuantity - order.BuyQuantity
+		if order.BuyQuantity > 0 {
+			profit := (order.ProfitablePrice - order.BuyPrice) * float32(order.BuyQuantity) * taiwanStockQuantity
+			order.ProfitLoss = profit + (order.ProfitablePrice-currentPrice)*float32(remainingQuantity)*taiwanStockQuantity
+		} else {
+			order.ProfitLoss = (order.ProfitablePrice - currentPrice) * float32(order.SellQuantity) * taiwanStockQuantity
+		}
+		cost := order.ProfitablePrice * float32(order.SellQuantity) * taiwanStockQuantity
+		current := currentPrice * float32(order.SellQuantity) * taiwanStockQuantity
+		order.ProfitLossPercent = ((cost / current) - 1) * percent
+	}
 }
 
 // Apply updates the aggregate according to a event.

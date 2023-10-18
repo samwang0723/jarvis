@@ -31,7 +31,7 @@ type IHandler interface {
 	ListThreePrimary(ctx context.Context, req *dto.ListThreePrimaryRequest) (*dto.ListThreePrimaryResponse, error)
 	ListeningKafkaInput(ctx context.Context)
 	CronjobPresetRealtimeMonitoringKeys(ctx context.Context, schedule string) error
-	RetrieveRealTimePrice(ctx context.Context, schedule string) error
+	CrawlingRealTimePrice(ctx context.Context, schedule string) error
 	ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error)
 	InsertPickedStocks(ctx context.Context, req *dto.InsertPickedStocksRequest) (*dto.InsertPickedStocksResponse, error)
 	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
