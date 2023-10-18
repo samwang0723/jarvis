@@ -37,6 +37,8 @@ type Order struct {
 
 	ProfitLoss        float32
 	ProfitLossPercent float32
+	StockName         string
+	CurrentPrice      float32
 
 	CreatedAt time.Time `gorm:"column:created_at" mapstructure:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
@@ -95,6 +97,7 @@ func (order *Order) CalculateUnrealizedProfitLoss(currentPrice float32) {
 		current := currentPrice * float32(order.SellQuantity) * taiwanStockQuantity
 		order.ProfitLossPercent = ((cost / current) - 1) * percent
 	}
+	order.CurrentPrice = currentPrice
 }
 
 // Apply updates the aggregate according to a event.

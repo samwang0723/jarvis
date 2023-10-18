@@ -56,7 +56,7 @@ func (ols *OrderLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.A
 		}
 	}
 
-	if err := queries.Omit("ProfitLoss", "ProfitLossPercent").Save(order).Error; err != nil {
+	if err := queries.Omit("ProfitLoss", "ProfitLossPercent", "StockName", "CurrentPrice").Save(order).Error; err != nil {
 		return err
 	}
 

@@ -23,6 +23,7 @@ type processedOrder struct {
 	exchangeQuantity uint64
 }
 
+//nolint:cyclop // this is a special case
 func (s *serviceImpl) ListOrders(
 	ctx context.Context,
 	req *dto.ListOrderRequest,
@@ -44,13 +45,33 @@ func (s *serviceImpl) ListOrders(
 	})
 
 	// pull lastest price from database
-	p, err := s.dal.ListLatestPrice(ctx, helper.Keys(m))
+	stockIDs := helper.Keys(m)
+	p, err := s.dal.ListLatestPrice(ctx, stockIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	stocks, _, err := s.ListStock(ctx, &dto.ListStockRequest{
+		SearchParams: &dto.ListStockSearchParams{
+			StockIDs: &stockIDs,
+			Country:  "TW",
+		},
+		Offset: 0,
+		Limit:  int32(len(stockIDs)),
+	})
 	if err != nil {
 		return nil, 0, err
 	}
 
 	// calculate settled profit loss
 	for _, order := range objs {
+		for _, stock := range stocks {
+			if stock.StockID == order.StockID {
+				order.StockName = stock.Name
+
+				break
+			}
+		}
 		order.CalculateProfitLoss()
 	}
 

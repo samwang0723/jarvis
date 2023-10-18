@@ -432,6 +432,8 @@ message Order {
   float profitablePrice = 13;
   float profitLoss = 14;
   float profitLossPercent = 15;
+  string stockName = 16;
+  float currentPrice = 17;
 }
 
 message ListOrderSearchParams {

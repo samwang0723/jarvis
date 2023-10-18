@@ -883,6 +883,8 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	pbStatus := in.Status
 	pbProfitLoss := float32(math.Round(float64(in.ProfitLoss)))
 	pbProfitLossPercent := helper.RoundDecimalTwo(in.ProfitLossPercent)
+	pbStockName := in.StockName
+	pbCurrentPrice := in.CurrentPrice
 
 	return &pb.Order{
 		Id:                pbID,
@@ -898,6 +900,8 @@ func OrderToPB(in *entity.Order) *pb.Order {
 		Status:            pbStatus,
 		ProfitLoss:        pbProfitLoss,
 		ProfitLossPercent: pbProfitLossPercent,
+		StockName:         pbStockName,
+		CurrentPrice:      pbCurrentPrice,
 		CreatedAt:         timestamppb.New(in.CreatedAt),
 		UpdatedAt:         timestamppb.New(in.UpdatedAt),
 	}

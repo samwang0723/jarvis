@@ -121,15 +121,13 @@
                     <thead>
                         <tr>
                             <th>標的</th>
-                            <th>買價</th>
-                            <th>買量</th>
-                            <th>買進日期</th>
-                            <th>賣價</th>
-                            <th>賣量</th>
-                            <th>賣出日期</th>
-                            <th>成本價</th>
+                            <th>型態</th>
+                            <th>價格</th>
+                            <th>成交股數</th>
+                            <th>日期</th>
+                            <th>成本</th>
                             <th>獲利</th>
-                            <th>獲利率</th>
+                            <th>比率</th>
                         </tr>
                     </thead>
                 </table>
@@ -141,15 +139,13 @@
                     <thead>
                         <tr>
                             <th>標的</th>
-                            <th>買價</th>
-                            <th>買量</th>
-                            <th>買進日期</th>
-                            <th>賣價</th>
-                            <th>賣量</th>
-                            <th>賣出日期</th>
-                            <th>成本價</th>
+                            <th>型態</th>
+                            <th>價格</th>
+                            <th>成交股數</th>
+                            <th>日期</th>
+                            <th>成本</th>
                             <th>獲利</th>
-                            <th>獲利率</th>
+                            <th>比率</th>
                         </tr>
                     </thead>
                 </table>
@@ -167,17 +163,26 @@
     });
 
     function loadTable() {
-        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders/483167980826394793";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders/483162868708016391";
         var dataJSON = {
-            offset: 0,
-            limit: 20,
-            userID: 483162868708016391,
-            searchParams: {
-                // stockIDs: ["2449", "2363", "6239"],
-                exchangeMonth: "202310",
-                status: "created"
+            "offset": 0,
+            "limit": 20,
+            "userID": 483162868708016391,
+            "searchParams": {
+                // "stockIDs": ["2449", "2363", "6239"],
+                "exchangeMonth": "202310",
+                "status": "created"
             }
         };
+
+        const formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        });
+
+        const quantityFormatter = new Intl.NumberFormat('en-US');
 
         $.ajax({
             type: "POST",
@@ -185,6 +190,28 @@
             data: JSON.stringify(dataJSON),
             dataType: 'json',
             success: function (data) {
+                $.each(data.entries, function (_, val) {
+                    val.stockID = `
+                        <div class="innerContainer"><div class="target">
+                        <a href="https://stock.wearn.com/finance_chart.asp?stockid=${val.stockID}
+                        &timekind=0&timeblock=120&sma1=8&sma2=21&sma3=55&volume=1" 
+                        target="_blank" rel="noopener noreferrer">${val.stockID}
+                        <br>${val.stockName}</a></div></div>
+                    `;
+                    if (val.buyQuantity > val.sellQuantity) {
+                        val["type"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">做多</span>';
+                        val["price"] = val.buyPrice;
+                        val["quantity"] = quantityFormatter.format(val.buyQuantity * 1000);
+                        val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.buyExchangeDate)}</span>`;
+                    } else {
+                        val["type"] = '<span class="badge progress-bar-success" style="font-size:1.4rem;">做空</span>';
+                        val["price"] = val.sellPrice;
+                        val["quantity"] = quantityFormatter.format(val.sellQuantity * 1000);
+                        val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.sellExchangeDate)}</span>`;
+                    }
+                    val.profitLoss = formatter.format(val.profitLoss);
+                });
+
                 $('#myTable').DataTable({
                     destroy: true,
                     paging: false,
@@ -193,94 +220,30 @@
                     scrollX: true,
                     columnDefs: [
                         {
-                            targets: [0],
+                            targets: [0, 1],
                             searchable: true,
                             responsivePriority: 1
                         },
                         {
-                            targets: [1, 2, 3, 4, 5, 6, 7],
+                            targets: [2, 3, 4, 5],
                             searchable: true,
                             responsivePriority: 2
                         },
                         {
-                            targets: [8],
+                            targets: [6],
                             searchable: false,
                             responsivePriority: 3,
                             createdCell: function (td, cellData, rowData, row, col) {
-                                if (cellData > 0) {
-                                    $(td).css('color', 'red')
-                                } else if (cellData < 0) {
+                                if (cellData.includes('-')) {
                                     $(td).css('color', 'green')
-                                }
-                            }
-                        },
-                        {
-                            targets: [9],
-                            searchable: false,
-                            responsivePriority: 3,
-                            createdCell: function (td, cellData, rowData, row, col) {
-                                if (cellData > 0) {
+                                } else {
                                     $(td).css('color', 'red')
-                                } else if (cellData < 0) {
-                                    $(td).css('color', 'green')
                                 }
-                                current = $(td).text();
-                                $(td).text(current + "%");
-                            }
-                        }
-                    ],
-                    responsive: true,
-                    data: data.entries,
-                    columns: [
-                        {"data": "stockID", "sWidth": "50px"},
-                        {"data": "buyPrice", "sWidth": "50px"},
-                        {"data": "buyQuantity", "sWidth": "20px"},
-                        {"data": "buyExchangeDate", "sWidth": "90px", "className": "text-right"},
-                        {"data": "sellPrice", "sWidth": "50px", "className": "text-right"},
-                        {"data": "sellQuantity", "sWidth": "20px", "className": "text-right"},
-                        {"data": "sellExchangeDate", "sWidth": "90px", "className": "text-right"},
-                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
-                        {"data": "profitLoss", "sWidth": "50px", "className": "text-right"},
-                        {"data": "profitLossPercent", "sWidth": "50px", "className": "text-center"},
-                    ],
-                    oLanguage: {
-                        sSearch: "搜尋:",
-                    },
-                    initComplete: function () {
-                    }
-                });
 
-                $('#myTable2').DataTable({
-                    destroy: true,
-                    paging: false,
-                    footer: false,
-                    scrollCollapse: true,
-                    scrollX: true,
-                    columnDefs: [
-                        {
-                            targets: [0],
-                            searchable: true,
-                            responsivePriority: 1
-                        },
-                        {
-                            targets: [1, 2, 3, 4, 5, 6, 7],
-                            searchable: true,
-                            responsivePriority: 2
-                        },
-                        {
-                            targets: [8],
-                            searchable: false,
-                            responsivePriority: 3,
-                            createdCell: function (td, cellData, rowData, row, col) {
-                                if (cellData > 0) {
-                                    $(td).css('color', 'red')
-                                } else if (cellData < 0) {
-                                    $(td).css('color', 'green')
-                                }
                             }
                         },
                         {
-                            targets: [9],
+                            targets: [7],
                             searchable: false,
                             responsivePriority: 3,
                             createdCell: function (td, cellData, rowData, row, col) {
@@ -297,16 +260,14 @@
                     responsive: true,
                     data: data.entries,
                     columns: [
-                        {"data": "stockID", "sWidth": "50px"},
-                        {"data": "buyPrice", "sWidth": "50px"},
-                        {"data": "buyQuantity", "sWidth": "20px"},
-                        {"data": "buyExchangeDate", "sWidth": "90px", "className": "text-right"},
-                        {"data": "sellPrice", "sWidth": "50px", "className": "text-right"},
-                        {"data": "sellQuantity", "sWidth": "20px", "className": "text-right"},
-                        {"data": "sellExchangeDate", "sWidth": "90px", "className": "text-right"},
+                        {"data": "stockID", "sWidth": "40px"},
+                        {"data": "type", "sWidth": "40px"},
+                        {"data": "price", "sWidth": "50px", "className": "text-right"},
+                        {"data": "quantity", "sWidth": "40px", "className": "text-right"},
+                        {"data": "exchangeDate", "sWidth": "70px", "className": "text-center"},
                         {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
-                        {"data": "profitLoss", "sWidth": "50px", "className": "text-right"},
-                        {"data": "profitLossPercent", "sWidth": "50px", "className": "text-center"},
+                        {"data": "profitLoss", "sWidth": "60px", "className": "text-right"},
+                        {"data": "profitLossPercent", "sWidth": "40px", "className": "text-center"},
                     ],
                     oLanguage: {
                         sSearch: "搜尋:",
@@ -324,5 +285,18 @@
         $($.fn.dataTable.tables(true)).DataTable()
             .columns.adjust();
     });
+
+    function formatDate(input) {
+        const dateString = input.toString();
+        if (dateString.length !== 8) {
+            throw new Error("Invalid date format. Expected YYYYMMDD.");
+        }
+
+        const year = dateString.substring(0, 4);
+        const month = dateString.substring(4, 6);
+        const day = dateString.substring(6, 8);
+
+        return `${year}/${month}/${day}`;
+    }
 
 </script>

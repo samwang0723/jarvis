@@ -1153,6 +1153,13 @@
         "profitLossPercent": {
           "type": "number",
           "format": "float"
+        },
+        "stockName": {
+          "type": "string"
+        },
+        "currentPrice": {
+          "type": "number",
+          "format": "float"
         }
       }
     },
