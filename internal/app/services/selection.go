@@ -31,7 +31,6 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/helper"
-	"golang.org/x/xerrors"
 )
 
 const (
@@ -261,29 +260,6 @@ func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 	return nil
 }
 
-func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {
-	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
-	if err != nil {
-		sentry.CaptureException(err)
-
-		return nil, err
-	}
-
-	mgetKeys := make([]string, len(keys))
-	for idx, key := range keys {
-		mgetKeys[idx] = fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, date, key)
-	}
-
-	res, err := s.cache.MGet(ctx, mgetKeys...)
-	if err != nil {
-		sentry.CaptureException(err)
-
-		return nil, err
-	}
-
-	return res, nil
-}
-
 func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Selection, error) {
 	m := make(map[string]*entity.Selection)
 	// get latest chip from yesterday
@@ -299,25 +275,4 @@ func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*entity.Sel
 	}
 
 	return m, nil
-}
-
-func (s *serviceImpl) checkHoliday(ctx context.Context) error {
-	skipDates, err := s.cache.SMembers(ctx, skipHeader)
-	if err != nil {
-		sentry.CaptureException(err)
-
-		return err
-	}
-
-	for _, date := range skipDates {
-		if date == helper.Today() {
-			return xerrors.New("skip holiday")
-		}
-	}
-
-	return nil
-}
-
-func getRealtimeMonitoringKeys() string {
-	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, helper.Today())
 }

@@ -20,7 +20,7 @@ const (
 	feeRate             = 0.001425
 	brokerFeeDiscount   = 0.25
 	buySellTime         = 2
-	percent             = -100
+	percent             = 100
 )
 
 type Order struct {
@@ -82,7 +82,7 @@ func (order *Order) CalculateUnrealizedProfitLoss(currentPrice float32) {
 		}
 		cost := order.ProfitablePrice * float32(order.BuyQuantity) * taiwanStockQuantity
 		current := currentPrice * float32(order.BuyQuantity) * taiwanStockQuantity
-		order.ProfitLossPercent = ((cost / current) - 1) * percent
+		order.ProfitLossPercent = ((cost / current) - 1) * percent * -1
 	} else if order.BuyQuantity < order.SellQuantity {
 		remainingQuantity := order.SellQuantity - order.BuyQuantity
 		if order.BuyQuantity > 0 {

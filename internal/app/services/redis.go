@@ -15,10 +15,14 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/bsm/redislock"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/app/businessmodel"
+	"github.com/samwang0723/jarvis/internal/helper"
 	"golang.org/x/xerrors"
 )
 
@@ -66,4 +70,91 @@ func (s *serviceImpl) StopRedis() error {
 	}
 
 	return nil
+}
+
+func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*businessmodel.Realtime, error) {
+	today := helper.Today()
+	latestDate, err := s.dal.DataCompletionDate(ctx, today)
+	if err != nil {
+		sentry.CaptureException(err)
+
+		return nil, err
+	}
+
+	redisRes, err := s.getRealtimeParsedData(ctx, today)
+	if err != nil {
+		s.logger.Warn().Err(err).Msg("no redis cache record")
+	}
+
+	realtimeList := make(map[string]*businessmodel.Realtime)
+
+	// if already had latest stock data from exchange or cannot find redis
+	// realtime cache, using the latest database record.
+	if latestDate >= today || len(redisRes) == 0 {
+		return realtimeList, nil
+	}
+
+	for _, raw := range redisRes {
+		if raw == "" {
+			continue
+		}
+
+		realtime := &businessmodel.Realtime{}
+		e := realtime.UnmarshalJSON([]byte(raw))
+		if e != nil || realtime.Close == 0.0 {
+			sentry.CaptureException(e)
+
+			s.logger.Error().Err(e).Msg("unmarshal realtime error")
+
+			continue
+		}
+
+		realtimeList[realtime.StockID] = realtime
+	}
+
+	return realtimeList, nil
+}
+
+func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {
+	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
+	if err != nil {
+		sentry.CaptureException(err)
+
+		return nil, err
+	}
+
+	mgetKeys := make([]string, len(keys))
+	for idx, key := range keys {
+		mgetKeys[idx] = fmt.Sprintf("%s:%s:temp:%s", realTimeMonitoringKey, date, key)
+	}
+
+	res, err := s.cache.MGet(ctx, mgetKeys...)
+	if err != nil {
+		sentry.CaptureException(err)
+
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *serviceImpl) checkHoliday(ctx context.Context) error {
+	skipDates, err := s.cache.SMembers(ctx, skipHeader)
+	if err != nil {
+		sentry.CaptureException(err)
+
+		return err
+	}
+
+	for _, date := range skipDates {
+		if date == helper.Today() {
+			return xerrors.New("skip holiday")
+		}
+	}
+
+	return nil
+}
+
+func getRealtimeMonitoringKeys() string {
+	return fmt.Sprintf("%s:%s", realTimeMonitoringKey, helper.Today())
 }

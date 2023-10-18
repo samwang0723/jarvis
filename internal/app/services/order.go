@@ -61,6 +61,22 @@ func (s *serviceImpl) ListOrders(
 		}
 	}
 
+	realtimeList, err := s.fetchRealtimePrice(ctx)
+	if err != nil || len(realtimeList) == 0 {
+		s.logger.Error().Err(err).Msg("failed to fetch realtime data")
+
+		// but should return based on history data
+		return objs, totalCount, err
+	}
+
+	for _, order := range objs {
+		// override realtime data with history record.
+		realtime, ok := realtimeList[order.StockID]
+		if ok {
+			order.CalculateUnrealizedProfitLoss(realtime.Close)
+		}
+	}
+
 	return objs, totalCount, nil
 }
 
