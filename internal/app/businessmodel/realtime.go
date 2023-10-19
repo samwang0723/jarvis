@@ -14,6 +14,8 @@
 package businessmodel
 
 import (
+	"errors"
+
 	jsoniter "github.com/json-iterator/go"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
@@ -52,10 +54,16 @@ type rawBody struct {
 	Name    string `json:"n"`
 }
 
+var errEmptyData = errors.New("cannot unmarshal empty data")
+
 func (r *Realtime) UnmarshalJSON(data []byte) error {
 	var raw rawData
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
+	}
+
+	if len(raw.MessageAry) == 0 {
+		return errEmptyData
 	}
 
 	r.StockID = raw.MessageAry[0].StockID

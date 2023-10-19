@@ -122,10 +122,10 @@
                         <tr>
                             <th>標的</th>
                             <th>型態</th>
-                            <th>價格</th>
-                            <th>成交股數</th>
-                            <th>日期</th>
+                            <th>現價</th>
                             <th>成本</th>
+                            <th>股數</th>
+                            <th>日期</th>
                             <th>獲利</th>
                             <th>比率</th>
                         </tr>
@@ -140,10 +140,10 @@
                         <tr>
                             <th>標的</th>
                             <th>型態</th>
-                            <th>價格</th>
-                            <th>成交股數</th>
-                            <th>日期</th>
+                            <th>現價</th>
                             <th>成本</th>
+                            <th>股數</th>
+                            <th>日期</th>
                             <th>獲利</th>
                             <th>比率</th>
                         </tr>
@@ -200,15 +200,22 @@
                     `;
                     if (val.buyQuantity > val.sellQuantity) {
                         val["type"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">做多</span>';
-                        val["price"] = val.buyPrice;
                         val["quantity"] = quantityFormatter.format(val.buyQuantity * 1000);
                         val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.buyExchangeDate)}</span>`;
                     } else {
                         val["type"] = '<span class="badge progress-bar-success" style="font-size:1.4rem;">做空</span>';
-                        val["price"] = val.sellPrice;
+
                         val["quantity"] = quantityFormatter.format(val.sellQuantity * 1000);
                         val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.sellExchangeDate)}</span>`;
                     }
+                    if (val.profitablePrice > val.currentPrice) {
+                        val["price"] = val.currentPrice + "▼";
+                    } else if (val.profitablePrice < val.currentPrice) {
+                        val["price"] = val.currentPrice + "▲";
+                    } else {
+                        val["price"] = val.currentPrice;
+                    }
+                    val.profitablePrice = `<b>${val.profitablePrice}</b>`
                     val.profitLoss = formatter.format(val.profitLoss);
                 });
 
@@ -225,7 +232,19 @@
                             responsivePriority: 1
                         },
                         {
-                            targets: [2, 3, 4, 5],
+                            targets: [2],
+                            searchable: false,
+                            responsivePriority: 2,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (String(cellData).includes("▲")) {
+                                    $(td).css('color', 'red')
+                                } else if (String(cellData).includes("▼")) {
+                                    $(td).css('color', 'green')
+                                }
+                            }
+                        },
+                        {
+                            targets: [3, 4, 5],
                             searchable: true,
                             responsivePriority: 2
                         },
@@ -263,9 +282,9 @@
                         {"data": "stockID", "sWidth": "40px"},
                         {"data": "type", "sWidth": "40px"},
                         {"data": "price", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
                         {"data": "quantity", "sWidth": "40px", "className": "text-right"},
                         {"data": "exchangeDate", "sWidth": "70px", "className": "text-center"},
-                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
                         {"data": "profitLoss", "sWidth": "60px", "className": "text-right"},
                         {"data": "profitLossPercent", "sWidth": "40px", "className": "text-center"},
                     ],
