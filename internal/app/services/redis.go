@@ -104,7 +104,7 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*busin
 		if e != nil || realtime.Close == 0.0 {
 			sentry.CaptureException(e)
 
-			s.logger.Error().Err(e).Msg("unmarshal realtime error")
+			s.logger.Error().Err(e).Msgf("unmarshal realtime error: %s", raw)
 
 			continue
 		}

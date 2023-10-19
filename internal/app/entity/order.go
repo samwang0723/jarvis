@@ -68,7 +68,9 @@ func (order *Order) QuantityMatched() bool {
 func (order *Order) CalculateProfitLoss() {
 	if order.QuantityMatched() {
 		order.ProfitLoss = (order.SellPrice - order.BuyPrice) * float32(order.SellQuantity) * taiwanStockQuantity
-		order.ProfitLossPercent = (order.SellPrice - order.BuyPrice) / order.BuyPrice
+		cost := order.ProfitablePrice * float32(order.BuyQuantity) * taiwanStockQuantity
+		current := order.SellPrice * float32(order.BuyQuantity) * taiwanStockQuantity
+		order.ProfitLossPercent = ((cost / current) - 1) * percent * -1
 	}
 }
 

@@ -140,7 +140,8 @@
                         <tr>
                             <th>標的</th>
                             <th>型態</th>
-                            <th>現價</th>
+                            <th>買價</th>
+                            <th>賣價</th>
                             <th>成本</th>
                             <th>股數</th>
                             <th>日期</th>
@@ -166,12 +167,12 @@
         var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders/483162868708016391";
         var dataJSON = {
             "offset": 0,
-            "limit": 20,
+            "limit": 100,
             "userID": 483162868708016391,
             "searchParams": {
                 // "stockIDs": ["2449", "2363", "6239"],
-                "exchangeMonth": "202310",
-                "status": "created"
+                // "exchangeMonth": "202310",
+                // "status": "created"
             }
         };
 
@@ -183,6 +184,8 @@
         });
 
         const quantityFormatter = new Intl.NumberFormat('en-US');
+        var completedData = {"entries": []};
+        var openedData = {"entries": []};
 
         $.ajax({
             type: "POST",
@@ -202,21 +205,38 @@
                         val["type"] = '<span class="badge progress-bar-danger" style="font-size:1.4rem;">做多</span>';
                         val["quantity"] = quantityFormatter.format(val.buyQuantity * 1000);
                         val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.buyExchangeDate)}</span>`;
-                    } else {
+                    } else if (val.buyQuantity < val.sellQuantity) {
                         val["type"] = '<span class="badge progress-bar-success" style="font-size:1.4rem;">做空</span>';
 
                         val["quantity"] = quantityFormatter.format(val.sellQuantity * 1000);
                         val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.sellExchangeDate)}</span>`;
-                    }
-                    if (val.profitablePrice > val.currentPrice) {
-                        val["price"] = val.currentPrice + "▼";
-                    } else if (val.profitablePrice < val.currentPrice) {
-                        val["price"] = val.currentPrice + "▲";
                     } else {
-                        val["price"] = val.currentPrice;
+                        val["type"] = '<span class="badge progress-bar-info" style="font-size:1.4rem;">平倉</span>';
                     }
-                    val.profitablePrice = `<b>${val.profitablePrice}</b>`
-                    val.profitLoss = formatter.format(val.profitLoss);
+
+                    if (val.status == "closed") {
+                        if (val.buyExchangeDate > val.sellExchangeDate) {
+                            val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.sellExchangeDate)}</span>`;
+                        } else {
+                            val["exchangeDate"] = `<span class="badge badge-info" style="font-size:1.4rem;">${formatDate(val.buyExchangeDate)}</span>`;
+                        }
+                        val["quantity"] = quantityFormatter.format(val.sellQuantity * 1000);
+                        val.profitablePrice = `<b>${val.profitablePrice}</b>`
+                        val.profitLoss = formatter.format(val.profitLoss);
+                        completedData.entries.push(val);
+                    } else {
+                        if (val.profitablePrice > val.currentPrice) {
+                            val["price"] = val.currentPrice + "▼";
+                        } else if (val.profitablePrice < val.currentPrice) {
+                            val["price"] = val.currentPrice + "▲";
+                        } else {
+                            val["price"] = val.currentPrice;
+                        }
+                        val.profitablePrice = `<b>${val.profitablePrice}</b>`
+                        val.profitLoss = formatter.format(val.profitLoss);
+
+                        openedData.entries.push(val);
+                    }
                 });
 
                 $('#myTable').DataTable({
@@ -277,7 +297,7 @@
                         }
                     ],
                     responsive: true,
-                    data: data.entries,
+                    data: openedData.entries,
                     columns: [
                         {"data": "stockID", "sWidth": "40px"},
                         {"data": "type", "sWidth": "40px"},
@@ -294,6 +314,72 @@
                     initComplete: function () {
                     }
                 });
+
+                $('#myTable2').DataTable({
+                    destroy: true,
+                    paging: false,
+                    footer: false,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    columnDefs: [
+                        {
+                            targets: [0, 1],
+                            searchable: true,
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: [2, 3, 4, 5, 6],
+                            searchable: true,
+                            responsivePriority: 2
+                        },
+                        {
+                            targets: [7],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData.includes('-')) {
+                                    $(td).css('color', 'green')
+                                } else {
+                                    $(td).css('color', 'red')
+                                }
+
+                            }
+                        },
+                        {
+                            targets: [8],
+                            searchable: false,
+                            responsivePriority: 3,
+                            createdCell: function (td, cellData, rowData, row, col) {
+                                if (cellData > 0) {
+                                    $(td).css('color', 'red')
+                                } else if (cellData < 0) {
+                                    $(td).css('color', 'green')
+                                }
+                                current = $(td).text();
+                                $(td).text(current + "%");
+                            }
+                        }
+                    ],
+                    responsive: true,
+                    data: completedData.entries,
+                    columns: [
+                        {"data": "stockID", "sWidth": "40px"},
+                        {"data": "type", "sWidth": "40px"},
+                        {"data": "buyPrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "sellPrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "profitablePrice", "sWidth": "50px", "className": "text-right"},
+                        {"data": "quantity", "sWidth": "40px", "className": "text-right"},
+                        {"data": "exchangeDate", "sWidth": "70px", "className": "text-center"},
+                        {"data": "profitLoss", "sWidth": "60px", "className": "text-right"},
+                        {"data": "profitLossPercent", "sWidth": "40px", "className": "text-center"},
+                    ],
+                    oLanguage: {
+                        sSearch: "搜尋:",
+                    },
+                    initComplete: function () {
+                    }
+                });
+
             },
             error: function () {
             }
