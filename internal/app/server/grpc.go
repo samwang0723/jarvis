@@ -174,3 +174,9 @@ func (s *server) ListOrders(ctx context.Context, req *pb.ListOrderRequest) (*pb.
 
 	return dto.ListOrderResponseToPB(res), nil
 }
+
+func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+	res := s.Handler().Login(ctx, dto.LoginRequestFromPB(req))
+
+	return dto.LoginResponseToPB(res), nil
+}

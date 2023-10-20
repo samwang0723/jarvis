@@ -136,10 +136,25 @@ type ListUsersResponse struct {
 	TotalCount int64          `json:"totalCount"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
+	AccessToken  string `json:"access_token"`
+}
+
 type CreateUserRequest struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
-	Phone string `json:"phone"`
+	Email     string `json:"email"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Phone     string `json:"phone"`
+	Password  string `json:"password"`
 }
 
 type CreateUserResponse struct {

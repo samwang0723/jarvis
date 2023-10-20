@@ -20,9 +20,13 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
+	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrUserNotFound = errors.New("user not found")
+var (
+	errUserNotFound         = errors.New("user not found")
+	errUserPasswordNotMatch = errors.New("user password not match")
+)
 
 func (s *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error) {
 	obj, err = s.dal.GetUserByID(ctx, id)
@@ -31,13 +35,22 @@ func (s *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.U
 	}
 
 	if obj == nil {
-		return nil, ErrUserNotFound
+		return nil, errUserNotFound
 	}
 
 	return obj, nil
 }
 
 func (s *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err error) {
+	// Hash the password with a default cost of 10
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), bcrypt.DefaultCost)
+	obj.Password = string(hashedPassword)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to hash password")
+
+		return err
+	}
+
 	err = s.dal.CreateUser(ctx, obj)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to create user")
@@ -87,7 +100,7 @@ func (s *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *en
 	}
 
 	if obj == nil {
-		return nil, ErrUserNotFound
+		return nil, errUserNotFound
 	}
 
 	return obj, nil
@@ -100,7 +113,7 @@ func (s *serviceImpl) GetUserByPhone(ctx context.Context, phone string) (obj *en
 	}
 
 	if obj == nil {
-		return nil, ErrUserNotFound
+		return nil, errUserNotFound
 	}
 
 	return obj, nil

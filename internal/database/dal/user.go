@@ -17,13 +17,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/database"
 	"gorm.io/gorm"
 )
 
-var ErrNoUserID = errors.New("no user id used in update method")
+const (
+	sessionExpiredDays = 5
+)
+
+var errNoUserID = errors.New("no user id used in update method")
 
 func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 	err := i.db.Transaction(func(tx *gorm.DB) error {
@@ -49,10 +55,28 @@ func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 
 func (i *dalImpl) UpdateUser(ctx context.Context, obj *entity.User) error {
 	if obj.ID.Uint64() == 0 {
-		return ErrNoUserID
+		return errNoUserID
 	}
 
-	err := i.db.Unscoped().Model(&entity.User{}).Save(obj).Error
+	err := i.db.Unscoped().Omit("SessionID", "SessionExpiredAt").Model(&entity.User{}).Save(obj).Error
+
+	return err
+}
+
+func (i *dalImpl) UpdateSessionID(ctx context.Context, obj *entity.User) error {
+	if obj.ID.Uint64() == 0 {
+		return errNoUserID
+	}
+
+	var err error
+	if obj.SessionExpiredAt == nil || time.Now().After(*obj.SessionExpiredAt) {
+		obj.SessionID = uuid.New().String()
+		err = i.db.Raw(`
+                        UPDATE users 
+                        SET session_id = ?, session_expired_at = ? 
+                        WHERE id = ?
+                `, obj.SessionID, time.Now().AddDate(0, 0, sessionExpiredDays), obj.ID.Uint64()).Error
+	}
 
 	return err
 }

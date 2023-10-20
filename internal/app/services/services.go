@@ -56,6 +56,7 @@ type IService interface {
 	GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error)
 	CreateUser(ctx context.Context, obj *entity.User) (err error)
 	UpdateUser(ctx context.Context, obj *entity.User) (err error)
+	Login(ctx context.Context, email, password string) (obj *entity.User, err error)
 	DeleteUserByID(ctx context.Context, id uint64) (err error)
 	GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error)
 	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)

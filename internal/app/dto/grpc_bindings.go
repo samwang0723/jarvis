@@ -593,12 +593,16 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 
 	pbEmail := in.Email
 	pbPhone := in.Phone
-	pbName := in.Name
+	pbFirstName := in.FirstName
+	pbLastName := in.LastName
+	pbPassword := in.Password
 
 	return &CreateUserRequest{
-		Email: pbEmail,
-		Phone: pbPhone,
-		Name:  pbName,
+		Email:     pbEmail,
+		Phone:     pbPhone,
+		FirstName: pbFirstName,
+		LastName:  pbLastName,
+		Password:  pbPassword,
 	}
 }
 
@@ -658,7 +662,8 @@ func UserToPB(in *entity.User) *pb.User {
 	pbID := in.ID
 	pbEmail := in.Email
 	pbPhone := in.Phone
-	pbName := in.Name
+	pbFirstName := in.FirstName
+	pbLastName := in.LastName
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -679,7 +684,8 @@ func UserToPB(in *entity.User) *pb.User {
 		Id:        pbID.Uint64(),
 		Email:     pbEmail,
 		Phone:     pbPhone,
-		Name:      pbName,
+		FirstName: pbFirstName,
+		LastName:  pbLastName,
 		CreatedAt: pbCreatedAt,
 		UpdatedAt: pbUpdatedAt,
 		DeletedAt: pbDeletedAt,
@@ -904,5 +910,39 @@ func OrderToPB(in *entity.Order) *pb.Order {
 		CurrentPrice:      pbCurrentPrice,
 		CreatedAt:         timestamppb.New(in.CreatedAt),
 		UpdatedAt:         timestamppb.New(in.UpdatedAt),
+	}
+}
+
+func LoginRequestFromPB(in *pb.LoginRequest) *LoginRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbEmail := in.Email
+	pbPassword := in.Password
+
+	return &LoginRequest{
+		Email:    pbEmail,
+		Password: pbPassword,
+	}
+}
+
+func LoginResponseToPB(in *LoginResponse) *pb.LoginResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+	pbAccessToken := in.AccessToken
+
+	return &pb.LoginResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+		AccessToken:  pbAccessToken,
 	}
 }

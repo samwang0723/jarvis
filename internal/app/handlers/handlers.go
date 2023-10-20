@@ -15,6 +15,7 @@ package handlers
 
 import (
 	"context"
+	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -35,6 +36,7 @@ type IHandler interface {
 	ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error)
 	InsertPickedStocks(ctx context.Context, req *dto.InsertPickedStocksRequest) (*dto.InsertPickedStocksResponse, error)
 	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
+	Login(ctx context.Context, req *dto.LoginRequest) *dto.LoginResponse
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
 	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
@@ -46,12 +48,14 @@ type IHandler interface {
 type handlerImpl struct {
 	dataService services.IService
 	logger      *zerolog.Logger
+	jwtSecret   []byte
 }
 
 func New(dataService services.IService, logger *zerolog.Logger) IHandler {
 	res := &handlerImpl{
 		dataService: dataService,
 		logger:      logger,
+		jwtSecret:   []byte(os.Getenv("JWT_SECRET")),
 	}
 
 	return res

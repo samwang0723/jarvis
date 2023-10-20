@@ -121,6 +121,14 @@ service JarvisV1 {
       body: "*"
     };
   }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/login"
+      body: "*"
+    };
+  }
 }
 
 message ListDailyCloseRequest {
@@ -326,7 +334,9 @@ message DeletePickedStocksResponse {
 message CreateUserRequest {
   string email = 1;
   string phone = 2;
-  string name = 3;
+  string first_name = 3;
+  string last_name = 4;
+  string password = 5;
 }
 
 message CreateUserResponse {
@@ -343,7 +353,8 @@ message User {
   google.protobuf.Timestamp deletedAt = 4;
   string email = 5;
   string phone = 6;
-  string name = 7;
+  string first_name = 7;
+  string last_name = 8;
 }
 
 message ListUsersRequest {
@@ -454,4 +465,17 @@ message ListOrderResponse {
   int32 limit = 2;
   int64 totalCount = 3;
   repeated Order entries = 4;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
+  string access_token = 5;
 }
