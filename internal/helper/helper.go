@@ -64,6 +64,10 @@ func CastInterfaceSlice(s interface{}) *[]interface{} {
 	return &intf
 }
 
+func RoundDecimal(x float32) float32 {
+	return float32(math.Round(float64(x)))
+}
+
 func RoundUpDecimalTwo(x float32) float32 {
 	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 // Define state machine
@@ -22,6 +23,13 @@ const (
 	buySellTime         = 2
 	percent             = 100
 )
+
+type stockState struct {
+	totalSpent    float32
+	totalReceived float32
+	totalFees     float32
+	totalTaxes    float32
+}
 
 type Order struct {
 	StockID          string  `gorm:"column:stock_id" json:"stockId"`
@@ -65,40 +73,81 @@ func (order *Order) QuantityMatched() bool {
 	return order.BuyQuantity == order.SellQuantity
 }
 
-func (order *Order) CalculateProfitLoss() {
-	if order.QuantityMatched() {
-		order.ProfitLoss = (order.SellPrice - order.BuyPrice) * float32(order.SellQuantity) * taiwanStockQuantity
-		cost := order.ProfitablePrice * float32(order.BuyQuantity) * taiwanStockQuantity
-		current := order.SellPrice * float32(order.BuyQuantity) * taiwanStockQuantity
-		order.ProfitLossPercent = ((cost / current) - 1) * percent * -1
+func (s *stockState) Buy(price float32, quantity uint64) {
+	totalCost := price * float32(quantity) * taiwanStockQuantity
+	fee := totalCost * feeRate * brokerFeeDiscount
+
+	s.totalSpent += totalCost + fee
+	s.totalFees += fee
+}
+
+func (s *stockState) Sell(price float32, quantity uint64, dayTrade bool) {
+	totalRevenue := price * float32(quantity) * taiwanStockQuantity
+	fee := totalRevenue * feeRate * brokerFeeDiscount
+	tax := totalRevenue * taxRate
+	if dayTrade {
+		tax *= dayTradeTaxRate
 	}
+
+	s.totalReceived += totalRevenue - fee - tax
+	s.totalFees += fee
+	s.totalTaxes += tax
+}
+
+func (s *stockState) ProfitLoss() float32 {
+	return helper.RoundDecimal(s.totalReceived - s.totalSpent)
+}
+
+func (s *stockState) ProfitLossPercent() float32 {
+	return helper.RoundDecimalTwo((s.totalReceived - s.totalSpent) / s.totalSpent * percent)
+}
+
+func (order *Order) CalculateProfitLoss() {
+	if !order.QuantityMatched() {
+		return
+	}
+
+	stock := &stockState{}
+	stock.Buy(order.BuyPrice, order.BuyQuantity)
+	dayTrade := false
+	if order.BuyExchangeDate == order.SellExchangeDate {
+		dayTrade = true
+	}
+	stock.Sell(order.SellPrice, order.SellQuantity, dayTrade)
+
+	order.ProfitLoss = stock.ProfitLoss()
+	order.ProfitLossPercent = stock.ProfitLossPercent()
 }
 
 //nolint:nestif // ignore nested if
 func (order *Order) CalculateUnrealizedProfitLoss(currentPrice float32) {
+	if order.QuantityMatched() {
+		return
+	}
+
+	stock := &stockState{}
 	if order.BuyQuantity > order.SellQuantity {
 		remainingQuantity := order.BuyQuantity - order.SellQuantity
+		stock.Buy(order.BuyPrice, order.BuyQuantity)
 		if order.SellQuantity > 0 {
-			profit := (order.SellPrice - order.ProfitablePrice) * float32(order.SellQuantity) * taiwanStockQuantity
-			order.ProfitLoss = profit + (currentPrice-order.ProfitablePrice)*float32(remainingQuantity)*taiwanStockQuantity
+			stock.Sell(order.SellPrice, order.SellQuantity, false)
+			stock.Sell(currentPrice, remainingQuantity, false)
 		} else {
-			order.ProfitLoss = (currentPrice - order.ProfitablePrice) * float32(order.BuyQuantity) * taiwanStockQuantity
+			stock.Sell(currentPrice, order.BuyQuantity, false)
 		}
-		cost := order.ProfitablePrice * float32(order.BuyQuantity) * taiwanStockQuantity
-		current := currentPrice * float32(order.BuyQuantity) * taiwanStockQuantity
-		order.ProfitLossPercent = ((cost / current) - 1) * percent * -1
 	} else if order.BuyQuantity < order.SellQuantity {
 		remainingQuantity := order.SellQuantity - order.BuyQuantity
+		stock.Sell(order.SellPrice, order.SellQuantity, false)
 		if order.BuyQuantity > 0 {
-			profit := (order.ProfitablePrice - order.BuyPrice) * float32(order.BuyQuantity) * taiwanStockQuantity
-			order.ProfitLoss = profit + (order.ProfitablePrice-currentPrice)*float32(remainingQuantity)*taiwanStockQuantity
+			stock.Buy(order.BuyPrice, order.BuyQuantity)
+			stock.Buy(currentPrice, remainingQuantity)
 		} else {
-			order.ProfitLoss = (order.ProfitablePrice - currentPrice) * float32(order.SellQuantity) * taiwanStockQuantity
+			stock.Buy(currentPrice, order.SellQuantity)
 		}
-		cost := order.ProfitablePrice * float32(order.SellQuantity) * taiwanStockQuantity
-		current := currentPrice * float32(order.SellQuantity) * taiwanStockQuantity
-		order.ProfitLossPercent = ((cost / current) - 1) * percent
 	}
+
+	order.ProfitLoss = stock.ProfitLoss()
+	order.ProfitLossPercent = stock.ProfitLossPercent()
 	order.CurrentPrice = currentPrice
 }
 
