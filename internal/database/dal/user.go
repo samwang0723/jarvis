@@ -70,12 +70,17 @@ func (i *dalImpl) UpdateSessionID(ctx context.Context, obj *entity.User) error {
 
 	var err error
 	if obj.SessionExpiredAt == nil || time.Now().After(*obj.SessionExpiredAt) {
-		obj.SessionID = uuid.New().String()
-		err = i.db.Raw(`
+		sessionID := uuid.New().String()
+		expiredAt := time.Now().AddDate(0, 0, sessionExpiredDays)
+
+		err = i.db.Exec(`
                         UPDATE users 
                         SET session_id = ?, session_expired_at = ? 
-                        WHERE id = ?
-                `, obj.SessionID, time.Now().AddDate(0, 0, sessionExpiredDays), obj.ID.Uint64()).Error
+                        WHERE id = ?;
+                `, sessionID, expiredAt, obj.ID.Uint64()).Error
+
+		obj.SessionID = sessionID
+		obj.SessionExpiredAt = &expiredAt
 	}
 
 	return err
