@@ -39,7 +39,7 @@ type IHandler interface {
 	Login(ctx context.Context, req *dto.LoginRequest) *dto.LoginResponse
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
-	GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error)
+	GetBalance(ctx context.Context) (*entity.BalanceView, error)
 	CreateTransaction(ctx context.Context, req *dto.CreateTransactionRequest) (*dto.CreateTransactionResponse, error)
 	CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) (*dto.CreateOrderResponse, error)
 	ListOrders(ctx context.Context, req *dto.ListOrderRequest) (*dto.ListOrderResponse, error)

@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/cristalhq/jwt/v5"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
@@ -19,20 +19,30 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		}
 	}
 
-	// Create the JWT claims, which includes the username and expiry time
-	claims := &jwt.StandardClaims{
-		// In JWT, the expiry time is expressed as unix milliseconds
-		ExpiresAt: user.SessionExpiredAt.Unix(),
+	signer, err := jwt.NewSignerHS(jwt.HS256, h.jwtSecret)
+	if err != nil {
+		return &dto.LoginResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: err.Error(),
+			Success:      false,
+		}
+	}
+
+	// create claims (you can create your own, see: ExampleBuilder_withUserClaims)
+	claims := &jwt.RegisteredClaims{
+		Audience:  []string{"jarvis"},
+		ID:        user.SessionID,
+		ExpiresAt: jwt.NewNumericDate(*user.SessionExpiredAt),
 		Issuer:    user.Email,
-		Id:        user.SessionID,
 		Subject:   helper.Uint64ToString(user.ID.Uint64()),
 	}
 
-	// Declare the token with the algorithm used for signing, and the claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// create a Builder
+	builder := jwt.NewBuilder(signer)
 
-	// Create the JWT string
-	tokenString, err := token.SignedString(h.jwtSecret)
+	// and build a Token
+	token, err := builder.Build(claims)
 	if err != nil {
 		return &dto.LoginResponse{
 			Status:       dto.StatusError,
@@ -47,6 +57,6 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		ErrorCode:    "",
 		ErrorMessage: "",
 		Success:      true,
-		AccessToken:  tokenString,
+		AccessToken:  token.String(),
 	}
 }

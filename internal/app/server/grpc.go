@@ -137,7 +137,7 @@ func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.L
 }
 
 func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb.GetBalanceResponse, error) {
-	res, err := s.Handler().GetBalanceViewByUserID(ctx, req.UserID)
+	res, err := s.Handler().GetBalance(ctx)
 	if err != nil {
 		return nil, err
 	}

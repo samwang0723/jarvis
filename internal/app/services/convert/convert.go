@@ -66,9 +66,7 @@ func ListStockSearchParamsDTOToDAL(obj *dto.ListStockSearchParams) *idal.ListSto
 }
 
 func ListOrderSearchParamsDTOToDAL(obj *dto.ListOrderSearchParams) *idal.ListOrderSearchParams {
-	res := &idal.ListOrderSearchParams{
-		UserID: obj.UserID,
-	}
+	res := &idal.ListOrderSearchParams{}
 
 	if obj.StockIDs != nil {
 		res.StockIDs = obj.StockIDs

@@ -28,8 +28,8 @@ var (
 	errUserPasswordNotMatch = errors.New("user password not match")
 )
 
-func (s *serviceImpl) GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error) {
-	obj, err = s.dal.GetUserByID(ctx, id)
+func (s *serviceImpl) GetUser(ctx context.Context) (obj *entity.User, err error) {
+	obj, err = s.dal.GetUserByID(ctx, s.currentUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (s *serviceImpl) UpdateUser(ctx context.Context, obj *entity.User) (err err
 	return nil
 }
 
-func (s *serviceImpl) DeleteUserByID(ctx context.Context, id uint64) (err error) {
-	err = s.dal.DeleteUserByID(ctx, id)
+func (s *serviceImpl) DeleteUser(ctx context.Context) (err error) {
+	err = s.dal.DeleteUserByID(ctx, s.currentUserID)
 	if err != nil {
 		return err
 	}

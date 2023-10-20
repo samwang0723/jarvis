@@ -697,11 +697,7 @@ func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
 		return nil
 	}
 
-	pbUserID := in.UserID
-
-	return &GetBalanceViewRequest{
-		UserID: pbUserID,
-	}
+	return &GetBalanceViewRequest{}
 }
 
 func BalanceToPB(in *entity.BalanceView) *pb.Balance {
@@ -741,12 +737,10 @@ func CreateTransactionRequestFromPB(in *pb.CreateTransactionRequest) *CreateTran
 		return nil
 	}
 
-	pbUserID := in.UserID
 	pbOrderType := in.OrderType
 	pbAmount := in.Amount
 
 	request := &CreateTransactionRequest{
-		UserID:    pbUserID,
 		OrderType: pbOrderType,
 		Amount:    pbAmount,
 	}
@@ -777,7 +771,6 @@ func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
 		return nil
 	}
 
-	pbUserID := in.UserID
 	pbOrderType := in.OrderType
 	pbStockID := in.StockID
 	pbExchangeDate := in.ExchangeDate
@@ -785,7 +778,6 @@ func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
 	pbQuantity := in.Quantity
 
 	request := &CreateOrderRequest{
-		UserID:       pbUserID,
 		OrderType:    pbOrderType,
 		StockID:      pbStockID,
 		ExchangeDate: pbExchangeDate,
@@ -821,20 +813,18 @@ func ListOrderRequestFromPB(in *pb.ListOrderRequest) *ListOrderRequest {
 	out := &ListOrderRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams, in.UserID),
+		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams, userID uint64) *ListOrderSearchParams {
+func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams) *ListOrderSearchParams {
 	if in == nil {
 		return nil
 	}
 
-	out := &ListOrderSearchParams{
-		UserID: userID,
-	}
+	out := &ListOrderSearchParams{}
 
 	stockIDs := in.StockIDs
 	if stockIDs != nil {
@@ -877,7 +867,6 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	}
 
 	pbID := in.ID
-	pbUserID := in.UserID
 	pbStockID := in.StockID
 	pbBuyPrice := in.BuyPrice
 	pbBuyQuantity := in.BuyQuantity
@@ -894,7 +883,6 @@ func OrderToPB(in *entity.Order) *pb.Order {
 
 	return &pb.Order{
 		Id:                pbID,
-		UserID:            pbUserID,
 		StockID:           pbStockID,
 		BuyPrice:          pbBuyPrice,
 		BuyQuantity:       pbBuyQuantity,

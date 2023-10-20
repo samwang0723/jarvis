@@ -86,6 +86,20 @@ func (i *dalImpl) UpdateSessionID(ctx context.Context, obj *entity.User) error {
 	return err
 }
 
+func (i *dalImpl) DeleteSessionID(ctx context.Context, userID uint64) error {
+	if userID == 0 {
+		return errNoUserID
+	}
+
+	err := i.db.Exec(`
+                        UPDATE users
+                        SET session_id = NULL, session_expired_at = NULL
+                        WHERE id = ?;
+                `, userID).Error
+
+	return err
+}
+
 func (i *dalImpl) DeleteUserByID(ctx context.Context, id uint64) error {
 	err := i.db.Delete(&entity.User{}, id).Error
 

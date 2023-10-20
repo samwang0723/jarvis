@@ -128,3 +128,13 @@ func SliceToMap[K comparable, V any](source []V, fn func(in V) K) map[K]V {
 
 	return output
 }
+
+func StringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}

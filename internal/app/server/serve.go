@@ -26,6 +26,8 @@ import (
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
@@ -33,6 +35,7 @@ import (
 	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
+	"github.com/samwang0723/jarvis/internal/app/middleware"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
@@ -98,13 +101,26 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	)
 	// associate service with handler
 	handler := handlers.New(dataService, logger)
+
 	gRPCServer := grpc.NewServer(
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_sentry.StreamServerInterceptor(),
-		)),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_sentry.UnaryServerInterceptor(),
-		)),
+		grpc.ChainStreamInterceptor(
+			selector.StreamServerInterceptor(
+				auth.StreamServerInterceptor(middleware.Authenticate),
+				selector.MatchFunc(middleware.AuthRoutes),
+			),
+			grpc_middleware.ChainStreamServer(
+				grpc_sentry.StreamServerInterceptor(),
+			),
+		),
+		grpc.ChainUnaryInterceptor(
+			selector.UnaryServerInterceptor(
+				auth.UnaryServerInterceptor(middleware.Authenticate),
+				selector.MatchFunc(middleware.AuthRoutes),
+			),
+			grpc_middleware.ChainUnaryServer(
+				grpc_sentry.UnaryServerInterceptor(),
+			),
+		),
 	)
 
 	// health check

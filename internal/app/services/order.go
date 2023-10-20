@@ -28,11 +28,13 @@ func (s *serviceImpl) ListOrders(
 	ctx context.Context,
 	req *dto.ListOrderRequest,
 ) (objs []*entity.Order, totalCount int64, err error) {
+	searchParams := convert.ListOrderSearchParamsDTOToDAL(req.SearchParams)
+	searchParams.UserID = s.currentUserID
 	objs, totalCount, err = s.dal.ListOrders(
 		ctx,
 		req.Offset,
 		req.Limit,
-		convert.ListOrderSearchParamsDTOToDAL(req.SearchParams),
+		searchParams,
 	)
 	if err != nil {
 		sentry.CaptureException(err)
@@ -103,7 +105,7 @@ func (s *serviceImpl) ListOrders(
 
 func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error {
 	// check remaining open buy or sell order has quantity left to fulfill based on order type
-	remainingOrders, err := s.dal.ListOpenOrders(ctx, req.UserID, req.StockID, req.OrderType)
+	remainingOrders, err := s.dal.ListOpenOrders(ctx, s.currentUserID, req.StockID, req.OrderType)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to list open orders")
 
@@ -128,7 +130,7 @@ func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderReque
 	// cannot fulfill based on existing open orders
 	if pendingQuantity > 0 {
 		order, err := entity.NewOrder(
-			req.UserID,
+			s.currentUserID,
 			req.OrderType,
 			req.StockID,
 			req.ExchangeDate,

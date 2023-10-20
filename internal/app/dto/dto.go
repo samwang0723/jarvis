@@ -164,21 +164,7 @@ type CreateUserResponse struct {
 	Status       int    `json:"status"`
 }
 
-type UpdateBalanceViewRequest struct {
-	UserID        uint64  `json:"userID"`
-	CurrentAmount float32 `json:"amount"`
-}
-
-type UpdateBalanceViewResponse struct {
-	ErrorCode    string `json:"errorCode"`
-	ErrorMessage string `json:"errorMessage"`
-	Success      bool   `json:"success"`
-	Status       int    `json:"status"`
-}
-
-type GetBalanceViewRequest struct {
-	UserID uint64 `json:"userID"`
-}
+type GetBalanceViewRequest struct{}
 
 type GetBalanceViewResponse struct {
 	Balance *entity.BalanceView `json:"balance"`
@@ -187,7 +173,6 @@ type GetBalanceViewResponse struct {
 type CreateTransactionRequest struct {
 	OrderType string  `json:"orderType"`
 	Amount    float32 `json:"amount"`
-	UserID    uint64  `json:"userID"`
 }
 
 type CreateTransactionResponse struct {
@@ -203,7 +188,6 @@ type CreateOrderRequest struct {
 	ExchangeDate string  `json:"exchangeDate"`
 	TradePrice   float32 `json:"tradePrice"`
 	Quantity     uint64  `json:"quantity"`
-	UserID       uint64  `json:"userID"`
 }
 
 type CreateOrderResponse struct {
@@ -217,7 +201,6 @@ type ListOrderSearchParams struct {
 	StockIDs      *[]string `json:"stockIDs,omitempty"`
 	ExchangeMonth *string   `json:"exchangeMonth,omitempty"`
 	Status        *string   `json:"status,omitempty"`
-	UserID        uint64    `json:"userID"`
 }
 
 type ListOrderRequest struct {

@@ -7,11 +7,8 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (s *serviceImpl) GetBalanceViewByUserID(
-	ctx context.Context,
-	userID uint64,
-) (obj *entity.BalanceView, err error) {
-	obj, err = s.dal.GetBalanceViewByUserID(ctx, userID)
+func (s *serviceImpl) GetBalance(ctx context.Context) (obj *entity.BalanceView, err error) {
+	obj, err = s.dal.GetBalanceViewByUserID(ctx, s.currentUserID)
 	if err != nil {
 		sentry.CaptureException(err)
 

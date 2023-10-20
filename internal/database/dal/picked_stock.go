@@ -33,16 +33,18 @@ func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.Pic
 	return err
 }
 
-func (i *dalImpl) DeletePickedStockByID(ctx context.Context, stockID string) error {
-	err := i.db.Exec(`update picked_stocks set deleted_at = NOW() where stock_id = ?`, stockID).Error
+func (i *dalImpl) DeletePickedStockByID(ctx context.Context, userID uint64, stockID string) error {
+	err := i.db.Exec(`
+                update picked_stocks set deleted_at = NOW() 
+                where stock_id = ? and user_id = ?`, stockID, userID).Error
 
 	return err
 }
 
-func (i *dalImpl) ListPickedStocks(ctx context.Context) (objs []*entity.Selection, err error) {
+func (i *dalImpl) ListPickedStocks(ctx context.Context, userID uint64) (objs []*entity.Selection, err error) {
 	pickedStocks := []string{}
 	if serr := i.db.Raw(`select stock_id from picked_stocks 
-                        where deleted_at is null`).Scan(&pickedStocks).Error; serr != nil {
+                        where deleted_at is null and user_id = ?`, userID).Scan(&pickedStocks).Error; serr != nil {
 		return nil, serr
 	}
 
