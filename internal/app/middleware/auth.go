@@ -48,7 +48,7 @@ func parseToken(token string) (*jwt.RegisteredClaims, error) {
 	}
 
 	// get Registered claims
-	var newClaims *jwt.RegisteredClaims
+	newClaims := &jwt.RegisteredClaims{}
 	err = json.Unmarshal(newToken.Claims(), newClaims)
 	if err != nil {
 		return nil, err

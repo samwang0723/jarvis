@@ -21,7 +21,7 @@ import (
 )
 
 func (h *handlerImpl) GetBalance(ctx context.Context) (*entity.BalanceView, error) {
-	balanceView, err := h.dataService.GetBalance(ctx)
+	balanceView, err := h.dataService.WithUserID(ctx).GetBalance(ctx)
 	if err != nil {
 		return nil, err
 	}

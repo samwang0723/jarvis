@@ -49,7 +49,7 @@ func (h *handlerImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 }
 
 func (h *handlerImpl) ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
-	entries, totalCount, err := h.dataService.ListUsers(ctx, req)
+	entries, totalCount, err := h.dataService.WithUserID(ctx).ListUsers(ctx, req)
 	if err != nil {
 		return nil, err
 	}

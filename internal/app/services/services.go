@@ -65,6 +65,7 @@ type IService interface {
 	CreateTransaction(ctx context.Context, orderType string, creditAmount, debitAmount float32) error
 	CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error
 	ListOrders(ctx context.Context, req *dto.ListOrderRequest) (objs []*entity.Order, totalCount int64, err error)
+	WithUserID(ctx context.Context) IService
 }
 
 type serviceImpl struct {
@@ -85,7 +86,7 @@ func New(opts ...Option) IService {
 	return impl
 }
 
-func (s *serviceImpl) WithUserID(ctx context.Context) *serviceImpl {
+func (s *serviceImpl) WithUserID(ctx context.Context) IService {
 	userID, err := s.getCurrentUserID(ctx)
 	if err != nil {
 		return s

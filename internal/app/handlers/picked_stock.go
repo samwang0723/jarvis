@@ -32,7 +32,7 @@ func (h *handlerImpl) InsertPickedStocks(
 		})
 	}
 
-	err := h.dataService.BatchUpsertPickedStocks(ctx, objs)
+	err := h.dataService.WithUserID(ctx).BatchUpsertPickedStocks(ctx, objs)
 	if err != nil {
 		return &dto.InsertPickedStocksResponse{
 			Status:       dto.StatusError,
@@ -54,7 +54,7 @@ func (h *handlerImpl) DeletePickedStocks(
 	ctx context.Context,
 	req *dto.DeletePickedStocksRequest,
 ) (*dto.DeletePickedStocksResponse, error) {
-	err := h.dataService.DeletePickedStockByID(ctx, req.StockID)
+	err := h.dataService.WithUserID(ctx).DeletePickedStockByID(ctx, req.StockID)
 	if err != nil {
 		return &dto.DeletePickedStocksResponse{
 			Status:       dto.StatusError,
@@ -73,7 +73,7 @@ func (h *handlerImpl) DeletePickedStocks(
 }
 
 func (h *handlerImpl) ListPickedStocks(ctx context.Context) (*dto.ListPickedStocksResponse, error) {
-	entries, err := h.dataService.ListPickedStock(ctx)
+	entries, err := h.dataService.WithUserID(ctx).ListPickedStock(ctx)
 	if err != nil {
 		return nil, err
 	}

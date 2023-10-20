@@ -37,7 +37,7 @@ func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uint64, err 
 		return 0, errInvalidJWTToken
 	}
 
-	userID, err = helper.StringToUint64(claims.ID)
+	userID, err = helper.StringToUint64(claims.Subject)
 	if err != nil {
 		return 0, err
 	}

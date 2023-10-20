@@ -26,7 +26,7 @@ func (h *handlerImpl) CreateTransaction(
 		}, errOrderTypeNotAllowed
 	}
 
-	err := h.dataService.CreateTransaction(ctx, req.OrderType, creditAmount, debitAmount)
+	err := h.dataService.WithUserID(ctx).CreateTransaction(ctx, req.OrderType, creditAmount, debitAmount)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
 

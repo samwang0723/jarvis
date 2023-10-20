@@ -22,7 +22,7 @@ func (h *handlerImpl) CreateOrder(
 		}, errOrderTypeNotAllowed
 	}
 
-	err := h.dataService.CreateOrder(ctx, req)
+	err := h.dataService.WithUserID(ctx).CreateOrder(ctx, req)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create order")
 
@@ -43,7 +43,7 @@ func (h *handlerImpl) CreateOrder(
 }
 
 func (h *handlerImpl) ListOrders(ctx context.Context, req *dto.ListOrderRequest) (*dto.ListOrderResponse, error) {
-	orders, totalCount, err := h.dataService.ListOrders(ctx, req)
+	orders, totalCount, err := h.dataService.WithUserID(ctx).ListOrders(ctx, req)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to list orders")
 
