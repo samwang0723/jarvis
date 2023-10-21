@@ -37,13 +37,15 @@ func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uint64, err 
 		return 0, errInvalidJWTToken
 	}
 
+	s.logger.Info().Msgf("claims: %+v", claims)
+
 	sessionID := claims.ID
 	userID, err = helper.StringToUint64(claims.Subject)
-	if err != nil {
+	if err != nil || userID == 0 {
 		return 0, err
 	}
 
-	user, err := s.GetUser(ctx)
+	user, err := s.dal.GetUserByID(ctx, userID)
 	if err != nil || user.SessionID != sessionID {
 		return 0, err
 	}

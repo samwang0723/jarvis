@@ -89,6 +89,8 @@ func New(opts ...Option) IService {
 func (s *serviceImpl) WithUserID(ctx context.Context) IService {
 	userID, err := s.getCurrentUserID(ctx)
 	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to get current user id")
+
 		return s
 	}
 
