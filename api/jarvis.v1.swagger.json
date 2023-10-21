@@ -19,7 +19,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/balances/{userID}": {
+    "/v1/balances": {
       "get": {
         "operationId": "JarvisV1_GetBalance",
         "responses": {
@@ -36,15 +36,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "userID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "uint64"
-          }
-        ],
         "tags": [
           "JarvisV1"
         ]
@@ -104,8 +95,102 @@
         ]
       }
     },
+    "/v1/login": {
+      "post": {
+        "operationId": "JarvisV1_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
+    "/v1/logout": {
+      "post": {
+        "operationId": "JarvisV1_Logout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      }
+    },
     "/v1/orders": {
       "post": {
+        "operationId": "JarvisV1_ListOrders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListOrderResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ListOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "JarvisV1"
+        ]
+      },
+      "put": {
         "operationId": "JarvisV1_CreateOrder",
         "responses": {
           "200": {
@@ -128,58 +213,6 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1CreateOrderRequest"
-            }
-          }
-        ],
-        "tags": [
-          "JarvisV1"
-        ]
-      }
-    },
-    "/v1/orders/{userID}": {
-      "post": {
-        "operationId": "JarvisV1_ListOrders",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListOrderResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "userID",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "offset": {
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "limit": {
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "searchParams": {
-                  "$ref": "#/definitions/v1ListOrderSearchParams"
-                }
-              }
             }
           }
         ],
@@ -580,10 +613,6 @@
     "v1CreateOrderRequest": {
       "type": "object",
       "properties": {
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
         "orderType": {
           "type": "string"
         },
@@ -624,10 +653,6 @@
     "v1CreateTransactionRequest": {
       "type": "object",
       "properties": {
-        "userID": {
-          "type": "string",
-          "format": "uint64"
-        },
         "orderType": {
           "type": "string"
         },
@@ -664,7 +689,13 @@
         "phone": {
           "type": "string"
         },
-        "name": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "password": {
           "type": "string"
         }
       }
@@ -887,6 +918,22 @@
         }
       }
     },
+    "v1ListOrderRequest": {
+      "type": "object",
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "searchParams": {
+          "$ref": "#/definitions/v1ListOrderSearchParams"
+        }
+      }
+    },
     "v1ListOrderResponse": {
       "type": "object",
       "properties": {
@@ -1095,6 +1142,59 @@
         }
       }
     },
+    "v1LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "v1LoginResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        },
+        "accessToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1LogoutRequest": {
+      "type": "object"
+    },
+    "v1LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "errorCode": {
+          "type": "string"
+        }
+      }
+    },
     "v1Order": {
       "type": "object",
       "properties": {
@@ -1112,10 +1212,6 @@
         },
         "status": {
           "type": "string"
-        },
-        "userID": {
-          "type": "string",
-          "format": "uint64"
         },
         "stockID": {
           "type": "string"
@@ -1419,7 +1515,10 @@
         "phone": {
           "type": "string"
         },
-        "name": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
           "type": "string"
         }
       }

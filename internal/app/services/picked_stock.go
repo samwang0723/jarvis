@@ -27,16 +27,20 @@ const (
 )
 
 func (s *serviceImpl) BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error {
+	for _, obj := range objs {
+		obj.UserID = s.currentUserID
+	}
+
 	return s.dal.BatchUpsertPickedStock(ctx, objs)
 }
 
 func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string) error {
-	return s.dal.DeletePickedStockByID(ctx, stockID)
+	return s.dal.DeletePickedStockByID(ctx, s.currentUserID, stockID)
 }
 
 //nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {
-	objs, err := s.dal.ListPickedStocks(ctx)
+	objs, err := s.dal.ListPickedStocks(ctx, s.currentUserID)
 	if err != nil {
 		sentry.CaptureException(err)
 

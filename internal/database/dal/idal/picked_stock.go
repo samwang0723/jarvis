@@ -21,6 +21,6 @@ import (
 
 type IPickedStockDAL interface {
 	BatchUpsertPickedStock(ctx context.Context, objs []*entity.PickedStock) error
-	DeletePickedStockByID(ctx context.Context, stockID string) error
-	ListPickedStocks(ctx context.Context) (objs []*entity.Selection, err error)
+	DeletePickedStockByID(ctx context.Context, userID uint64, stockID string) error
+	ListPickedStocks(ctx context.Context, userID uint64) (objs []*entity.Selection, err error)
 }

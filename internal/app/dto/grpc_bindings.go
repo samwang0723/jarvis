@@ -593,12 +593,16 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 
 	pbEmail := in.Email
 	pbPhone := in.Phone
-	pbName := in.Name
+	pbFirstName := in.FirstName
+	pbLastName := in.LastName
+	pbPassword := in.Password
 
 	return &CreateUserRequest{
-		Email: pbEmail,
-		Phone: pbPhone,
-		Name:  pbName,
+		Email:     pbEmail,
+		Phone:     pbPhone,
+		FirstName: pbFirstName,
+		LastName:  pbLastName,
+		Password:  pbPassword,
 	}
 }
 
@@ -658,7 +662,8 @@ func UserToPB(in *entity.User) *pb.User {
 	pbID := in.ID
 	pbEmail := in.Email
 	pbPhone := in.Phone
-	pbName := in.Name
+	pbFirstName := in.FirstName
+	pbLastName := in.LastName
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -679,7 +684,8 @@ func UserToPB(in *entity.User) *pb.User {
 		Id:        pbID.Uint64(),
 		Email:     pbEmail,
 		Phone:     pbPhone,
-		Name:      pbName,
+		FirstName: pbFirstName,
+		LastName:  pbLastName,
 		CreatedAt: pbCreatedAt,
 		UpdatedAt: pbUpdatedAt,
 		DeletedAt: pbDeletedAt,
@@ -691,11 +697,7 @@ func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
 		return nil
 	}
 
-	pbUserID := in.UserID
-
-	return &GetBalanceViewRequest{
-		UserID: pbUserID,
-	}
+	return &GetBalanceViewRequest{}
 }
 
 func BalanceToPB(in *entity.BalanceView) *pb.Balance {
@@ -735,12 +737,10 @@ func CreateTransactionRequestFromPB(in *pb.CreateTransactionRequest) *CreateTran
 		return nil
 	}
 
-	pbUserID := in.UserID
 	pbOrderType := in.OrderType
 	pbAmount := in.Amount
 
 	request := &CreateTransactionRequest{
-		UserID:    pbUserID,
 		OrderType: pbOrderType,
 		Amount:    pbAmount,
 	}
@@ -771,7 +771,6 @@ func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
 		return nil
 	}
 
-	pbUserID := in.UserID
 	pbOrderType := in.OrderType
 	pbStockID := in.StockID
 	pbExchangeDate := in.ExchangeDate
@@ -779,7 +778,6 @@ func CreateOrderRequestFromPB(in *pb.CreateOrderRequest) *CreateOrderRequest {
 	pbQuantity := in.Quantity
 
 	request := &CreateOrderRequest{
-		UserID:       pbUserID,
 		OrderType:    pbOrderType,
 		StockID:      pbStockID,
 		ExchangeDate: pbExchangeDate,
@@ -815,20 +813,18 @@ func ListOrderRequestFromPB(in *pb.ListOrderRequest) *ListOrderRequest {
 	out := &ListOrderRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams, in.UserID),
+		SearchParams: ListOrderSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams, userID uint64) *ListOrderSearchParams {
+func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams) *ListOrderSearchParams {
 	if in == nil {
 		return nil
 	}
 
-	out := &ListOrderSearchParams{
-		UserID: userID,
-	}
+	out := &ListOrderSearchParams{}
 
 	stockIDs := in.StockIDs
 	if stockIDs != nil {
@@ -871,7 +867,6 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	}
 
 	pbID := in.ID
-	pbUserID := in.UserID
 	pbStockID := in.StockID
 	pbBuyPrice := in.BuyPrice
 	pbBuyQuantity := in.BuyQuantity
@@ -888,7 +883,6 @@ func OrderToPB(in *entity.Order) *pb.Order {
 
 	return &pb.Order{
 		Id:                pbID,
-		UserID:            pbUserID,
 		StockID:           pbStockID,
 		BuyPrice:          pbBuyPrice,
 		BuyQuantity:       pbBuyQuantity,
@@ -904,5 +898,57 @@ func OrderToPB(in *entity.Order) *pb.Order {
 		CurrentPrice:      pbCurrentPrice,
 		CreatedAt:         timestamppb.New(in.CreatedAt),
 		UpdatedAt:         timestamppb.New(in.UpdatedAt),
+	}
+}
+
+func LoginRequestFromPB(in *pb.LoginRequest) *LoginRequest {
+	if in == nil {
+		return nil
+	}
+
+	pbEmail := in.Email
+	pbPassword := in.Password
+
+	return &LoginRequest{
+		Email:    pbEmail,
+		Password: pbPassword,
+	}
+}
+
+func LoginResponseToPB(in *LoginResponse) *pb.LoginResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+	pbAccessToken := in.AccessToken
+
+	return &pb.LoginResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+		AccessToken:  pbAccessToken,
+	}
+}
+
+func LogoutResponseToPB(in *LogoutResponse) *pb.LogoutResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.LogoutResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
 	}
 }

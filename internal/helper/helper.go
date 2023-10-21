@@ -85,6 +85,10 @@ func StringToFloat32(s string) (float32, error) {
 	return float32(f), nil
 }
 
+func Uint64ToString(num uint64) string {
+	return strconv.FormatUint(num, 10)
+}
+
 func StringToUint64(s string) (uint64, error) {
 	f, err := strconv.ParseUint(s, uintBase, uintFormat)
 	if err != nil {
@@ -123,4 +127,14 @@ func SliceToMap[K comparable, V any](source []V, fn func(in V) K) map[K]V {
 	}
 
 	return output
+}
+
+func StringInSlice(str string, list []string) bool {
+	for _, v := range list {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }

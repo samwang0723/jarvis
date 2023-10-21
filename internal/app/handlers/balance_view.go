@@ -20,8 +20,8 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (h *handlerImpl) GetBalanceViewByUserID(ctx context.Context, userID uint64) (*entity.BalanceView, error) {
-	balanceView, err := h.dataService.GetBalanceViewByUserID(ctx, userID)
+func (h *handlerImpl) GetBalance(ctx context.Context) (*entity.BalanceView, error) {
+	balanceView, err := h.dataService.WithUserID(ctx).GetBalance(ctx)
 	if err != nil {
 		return nil, err
 	}

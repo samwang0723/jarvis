@@ -18,11 +18,15 @@ import "time"
 type User struct {
 	Base
 
-	Name             string     `gorm:"column:name" json:"name"`
+	FirstName        string     `gorm:"column:first_name" json:"firstName"`
+	LastName         string     `gorm:"column:last_name" json:"lastName"`
 	Email            string     `gorm:"column:email" json:"email"`
 	Phone            string     `gorm:"column:phone" json:"phone"`
+	Password         string     `gorm:"column:password" json:"password"`
+	SessionID        string     `gorm:"column:session_id" json:"sessionID"`
 	EmailConfirmedAt *time.Time `gorm:"column:email_confirmed_at" mapstructure:"email_confirmed_at"`
 	PhoneConfirmedAt *time.Time `gorm:"column:phone_confirmed_at" mapstructure:"phone_confirmed_at"`
+	SessionExpiredAt *time.Time `gorm:"column:session_expired_at" mapstructure:"session_expired_at"`
 }
 
 func (User) TableName() string {

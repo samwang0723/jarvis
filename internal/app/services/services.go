@@ -53,24 +53,28 @@ type IService interface {
 	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)
 	ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (objs []*entity.User, totalCount int64, err error)
-	GetUserByID(ctx context.Context, id uint64) (obj *entity.User, err error)
+	GetUser(ctx context.Context) (obj *entity.User, err error)
 	CreateUser(ctx context.Context, obj *entity.User) (err error)
 	UpdateUser(ctx context.Context, obj *entity.User) (err error)
-	DeleteUserByID(ctx context.Context, id uint64) (err error)
+	Login(ctx context.Context, email, password string) (obj *entity.User, err error)
+	Logout(ctx context.Context) error
+	DeleteUser(ctx context.Context) (err error)
 	GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error)
 	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
-	GetBalanceViewByUserID(ctx context.Context, userID uint64) (obj *entity.BalanceView, err error)
-	CreateTransaction(ctx context.Context, trans *entity.Transaction) error
+	GetBalance(ctx context.Context) (obj *entity.BalanceView, err error)
+	CreateTransaction(ctx context.Context, orderType string, creditAmount, debitAmount float32) error
 	CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error
 	ListOrders(ctx context.Context, req *dto.ListOrderRequest) (objs []*entity.Order, totalCount int64, err error)
+	WithUserID(ctx context.Context) IService
 }
 
 type serviceImpl struct {
-	dal      idal.IDAL
-	consumer ikafka.IKafka
-	cache    cache.Redis
-	cronjob  cronjob.Cronjob
-	logger   *zerolog.Logger
+	dal           idal.IDAL
+	consumer      ikafka.IKafka
+	cache         cache.Redis
+	cronjob       cronjob.Cronjob
+	logger        *zerolog.Logger
+	currentUserID uint64
 }
 
 func New(opts ...Option) IService {
@@ -80,4 +84,18 @@ func New(opts ...Option) IService {
 	}
 
 	return impl
+}
+
+func (s *serviceImpl) WithUserID(ctx context.Context) IService {
+	userID, err := s.getCurrentUserID(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to get current user id")
+
+		return s
+	}
+
+	boundService := *s
+	boundService.currentUserID = userID
+
+	return &boundService
 }

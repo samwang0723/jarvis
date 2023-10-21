@@ -26,24 +26,7 @@ func (h *handlerImpl) CreateTransaction(
 		}, errOrderTypeNotAllowed
 	}
 
-	transaction, err := entity.NewTransaction(
-		req.UserID,
-		req.OrderType,
-		creditAmount,
-		debitAmount,
-	)
-	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to create transaction")
-
-		return &dto.CreateTransactionResponse{
-			Status:       dto.StatusError,
-			ErrorCode:    "",
-			ErrorMessage: err.Error(),
-			Success:      false,
-		}, err
-	}
-
-	err = h.dataService.CreateTransaction(ctx, transaction)
+	err := h.dataService.WithUserID(ctx).CreateTransaction(ctx, req.OrderType, creditAmount, debitAmount)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
 

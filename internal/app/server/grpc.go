@@ -137,7 +137,7 @@ func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.L
 }
 
 func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb.GetBalanceResponse, error) {
-	res, err := s.Handler().GetBalanceViewByUserID(ctx, req.UserID)
+	res, err := s.Handler().GetBalance(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -173,4 +173,16 @@ func (s *server) ListOrders(ctx context.Context, req *pb.ListOrderRequest) (*pb.
 	}
 
 	return dto.ListOrderResponseToPB(res), nil
+}
+
+func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+	res := s.Handler().Login(ctx, dto.LoginRequestFromPB(req))
+
+	return dto.LoginResponseToPB(res), nil
+}
+
+func (s *server) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+	res := s.Handler().Logout(ctx)
+
+	return dto.LogoutResponseToPB(res), nil
 }
