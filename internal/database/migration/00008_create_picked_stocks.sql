@@ -8,7 +8,7 @@ CREATE TABLE
     created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at datetime NULL,
-    UNIQUE KEY index_user_id (user_id)
+    UNIQUE KEY index_user_stock (user_id, stock_id, deleted_at)
   ) DEFAULT CHARSET = utf8 COLLATE = utf8_unicode_ci;
 
 -- +goose StatementEnd
