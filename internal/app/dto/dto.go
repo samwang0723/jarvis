@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	StatusSuccess = 200
-	StatusError   = 500
+	StatusSuccess      = 200
+	StatusBadRequest   = 400
+	StatusUnauthorized = 401
+	StatusError        = 500
 )
 
 type ListDailyCloseSearchParams struct {
@@ -147,6 +149,13 @@ type LoginResponse struct {
 	Success      bool   `json:"success"`
 	Status       int    `json:"status"`
 	AccessToken  string `json:"access_token"`
+}
+
+type LogoutResponse struct {
+	ErrorCode    string `json:"errorCode"`
+	ErrorMessage string `json:"errorMessage"`
+	Success      bool   `json:"success"`
+	Status       int    `json:"status"`
 }
 
 type CreateUserRequest struct {

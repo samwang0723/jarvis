@@ -45,6 +45,7 @@ func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uint64, err 
 		return 0, err
 	}
 
+	// TODO: Use redis to validate session_id
 	user, err := s.dal.GetUserByID(ctx, userID)
 	if err != nil || user.SessionID != sessionID {
 		return 0, err

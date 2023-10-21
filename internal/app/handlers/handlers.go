@@ -37,6 +37,7 @@ type IHandler interface {
 	InsertPickedStocks(ctx context.Context, req *dto.InsertPickedStocksRequest) (*dto.InsertPickedStocksResponse, error)
 	DeletePickedStocks(ctx context.Context, req *dto.DeletePickedStocksRequest) (*dto.DeletePickedStocksResponse, error)
 	Login(ctx context.Context, req *dto.LoginRequest) *dto.LoginResponse
+	Logout(ctx context.Context) *dto.LogoutResponse
 	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error)
 	ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error)
 	GetBalance(ctx context.Context) (*entity.BalanceView, error)

@@ -129,6 +129,14 @@ service JarvisV1 {
       body: "*"
     };
   }
+
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (google.api.http) = {
+      post: "/v1/logout"
+      body: "*"
+    };
+  }
 }
 
 message ListDailyCloseRequest {
@@ -471,4 +479,13 @@ message LoginResponse {
   string error_message = 3;
   string error_code = 4;
   string access_token = 5;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+  bool success = 1;
+  int32 status = 2;
+  string error_message = 3;
+  string error_code = 4;
 }

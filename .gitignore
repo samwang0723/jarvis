@@ -12,3 +12,4 @@ bench.txt
 coverage.out
 secret.yml
 secrets.yaml
+.eslintrc.js

@@ -934,3 +934,21 @@ func LoginResponseToPB(in *LoginResponse) *pb.LoginResponse {
 		AccessToken:  pbAccessToken,
 	}
 }
+
+func LogoutResponseToPB(in *LogoutResponse) *pb.LogoutResponse {
+	if in == nil {
+		return nil
+	}
+
+	pbSuccess := in.Success
+	pbStatus := int32(in.Status)
+	pbErrorCode := in.ErrorCode
+	pbErrorMessage := in.ErrorMessage
+
+	return &pb.LogoutResponse{
+		Success:      pbSuccess,
+		Status:       pbStatus,
+		ErrorCode:    pbErrorCode,
+		ErrorMessage: pbErrorMessage,
+	}
+}

@@ -12,7 +12,7 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 	user, err := h.dataService.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return &dto.LoginResponse{
-			Status:       dto.StatusError,
+			Status:       dto.StatusUnauthorized,
 			ErrorCode:    "",
 			ErrorMessage: err.Error(),
 			Success:      false,
@@ -58,5 +58,24 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		ErrorMessage: "",
 		Success:      true,
 		AccessToken:  token.String(),
+	}
+}
+
+func (h *handlerImpl) Logout(ctx context.Context) *dto.LogoutResponse {
+	err := h.dataService.WithUserID(ctx).Logout(ctx)
+	if err != nil {
+		return &dto.LogoutResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: err.Error(),
+			Success:      false,
+		}
+	}
+
+	return &dto.LogoutResponse{
+		Status:       dto.StatusSuccess,
+		ErrorCode:    "",
+		ErrorMessage: "",
+		Success:      true,
 	}
 }

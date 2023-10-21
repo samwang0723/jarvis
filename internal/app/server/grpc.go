@@ -180,3 +180,9 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 
 	return dto.LoginResponseToPB(res), nil
 }
+
+func (s *server) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+	res := s.Handler().Logout(ctx)
+
+	return dto.LogoutResponseToPB(res), nil
+}

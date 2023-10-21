@@ -159,16 +159,59 @@
 </html>
 
 <script>
+    var access_token = "";
     $(document).ready(function () {
-        loadTable();
+        async function main(username, password) {
+            if (await login(username, password)) {
+                loadTable();
+            } else {
+                console.log('Login failed');
+            }
+        }
+
+        main('sam.wang.0723@gmail.com', 'abcd1234');
     });
 
+    async function login(username, password) {
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/login";
+        var dataJSON = {email: username, password: password};
+
+        console.log("Request: " + requestURL);
+        // check if the user is already logged in from cookie access_token
+        if (document.cookie.includes("access_token")) {
+            console.log("cookie: " + document.cookie);
+            access_token = document.cookie
+                .split(";")
+                .filter(function (item) {
+                    return item.trim().startsWith("access_token=");
+                })
+                .map(function (item) {
+                    return item.trim().replace("access_token=", "");
+                })[0];
+
+            return Promise.resolve(true);
+        }
+
+        return $.post(requestURL, JSON.stringify(dataJSON), function (response) {
+            console.log("Response: " + response);
+            // check if the response was successful
+            if (response.success == true) {
+                // set the access_token cookie
+                document.cookie =
+                    "access_token=" + response.accessToken + "; SameSite=Strict; Secure";
+                access_token = response.accessToken;
+                return true;
+            } else {
+                return false;
+            }
+        });
+    }
+
     function loadTable() {
-        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders/483589885563765500";
+        var requestURL = "https://" + document.domain + ":" + location.port + "/v1/orders";
         var dataJSON = {
             "offset": 0,
             "limit": 100,
-            "userID": 483589885563765500,
             "searchParams": {
                 // "stockIDs": ["2449", "2363", "6239"],
                 // "exchangeMonth": "202310",
@@ -190,6 +233,9 @@
         $.ajax({
             type: "POST",
             url: requestURL,
+            headers: {
+                'Authorization': 'Bearer ' + access_token,
+            },
             data: JSON.stringify(dataJSON),
             dataType: 'json',
             success: function (data) {
