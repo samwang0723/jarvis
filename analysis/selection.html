@@ -546,23 +546,32 @@
         var requestURL = "https://" + document.domain + ":" + location.port + "/v1/pickedstocks";
         var dataJSON = {"stockIDs": [$(this).attr('id')]};
 
-        $.post(requestURL, JSON.stringify(dataJSON), function (response) {
-            console.log('Response: ' + response);
-            // check if the response was successful
-            if (response.success == true) {
-                // display success message in the alert
-                $('#alert').addClass('alert-success').text('成功加入自選股');
-                loadSelfPicked();
-            } else {
-                // display failure message in the alert
+        $.ajax({
+            url: requestURL,
+            type: 'POST',
+            data: JSON.stringify(dataJSON),
+            contentType: 'application/json', // This is needed when sending JSON data
+            headers: {
+                'Authorization': 'Bearer ' + access_token,
+            },
+            success: function (response) {
+                console.log('Response: ' + response);
+                if (response.success == true) {
+                    $('#alert').addClass('alert-success').text('成功加入自選股');
+                    loadSelfPicked();
+                } else {
+                    $('#alert').addClass('alert-danger').text('加入自選股失敗');
+                }
+                $('#alert').show();
+                setTimeout(function () {
+                    $('#alert').hide();
+                }, 3000);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error:', textStatus, errorThrown);
+                // Handle the error scenario here
                 $('#alert').addClass('alert-danger').text('加入自選股失敗');
             }
-            // show the alert
-            $('#alert').show();
-            // dismiss the alert after 3 seconds
-            setTimeout(function () {
-                $('#alert').hide();
-            }, 3000);
         });
     });
 
