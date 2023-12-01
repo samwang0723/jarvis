@@ -9,6 +9,6 @@ spec:
     app: istio-ingressgateway
     istio: ingressgateway
   ports:
-    - name: jarvis-api
+    - name: jarvis-service
       port: 8080
       targetPort: 8080
