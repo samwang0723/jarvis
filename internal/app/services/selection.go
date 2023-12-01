@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
-	// this is to autoload the .env file
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/businessmodel"
@@ -200,11 +198,9 @@ func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 
 	for _, key := range keys {
 		go func(ctx context.Context, key string, logger *zerolog.Logger, ca cache.Redis) {
-			token := os.Getenv(webScraping)
 			uri := fmt.Sprintf(realTimePriceURI, key)
-			finalURI := fmt.Sprintf(proxyURI, token, uri)
 
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, finalURI, http.NoBody)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, http.NoBody)
 			if err != nil {
 				logger.Error().Err(err).Msg("failed to create request")
 
@@ -227,7 +223,8 @@ func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 
 			// Skip payloads for invalid http status codes.
 			if resp.StatusCode < 200 || resp.StatusCode > 299 {
-				logger.Warn().Msgf("response status code is not 2xx: %d, key: %s", resp.StatusCode, key)
+				logger.Warn().
+					Msgf("response status code is not 2xx: %d, key: %s", resp.StatusCode, key)
 
 				return
 			}
