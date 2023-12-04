@@ -158,11 +158,6 @@ message ListDailyCloseSearchParams {
   string end = 3;
 }
 
-message Average {
-  google.protobuf.Struct ma = 1;
-  google.protobuf.Struct mv = 2;
-}
-
 message DailyClose {
   uint64 id = 1;
   google.protobuf.Timestamp createdAt = 2;
@@ -178,7 +173,6 @@ message DailyClose {
   float high = 12;
   float low = 13;
   float diff = 14;
-  Average average = 15;
 }
 
 message ListStockRequest {

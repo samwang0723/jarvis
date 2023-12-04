@@ -19,7 +19,6 @@ import (
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -40,7 +39,9 @@ func ListDailyCloseRequestFromPB(in *pb.ListDailyCloseRequest) *ListDailyCloseRe
 	return out
 }
 
-func ListDailyCloseSearchParamsFromPB(in *pb.ListDailyCloseSearchParams) *ListDailyCloseSearchParams {
+func ListDailyCloseSearchParamsFromPB(
+	in *pb.ListDailyCloseSearchParams,
+) *ListDailyCloseSearchParams {
 	if in == nil {
 		return nil
 	}
@@ -144,17 +145,6 @@ func MapToProtobufStructUint64(m map[int]uint64) *structpb.Struct {
 	return s
 }
 
-func AverageToPB(in *businessmodel.Average) *pb.Average {
-	if in == nil {
-		return nil
-	}
-
-	return &pb.Average{
-		Ma: MapToProtobufStructFloat32(in.MA),
-		Mv: MapToProtobufStructUint64(in.MV),
-	}
-}
-
 func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	if in == nil {
 		return nil
@@ -171,7 +161,6 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbHigh := in.High
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
-	pbAverage := in.Average
 
 	var pbCreatedAt *timestamp.Timestamp
 	if in.CreatedAt != nil {
@@ -203,7 +192,6 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 		CreatedAt:    pbCreatedAt,
 		UpdatedAt:    pbUpdatedAt,
 		DeletedAt:    pbDeletedAt,
-		Average:      AverageToPB(pbAverage),
 	}
 }
 
@@ -279,7 +267,9 @@ func ListCategoriesResponseToPB(in *ListCategoriesResponse) *pb.ListCategoriesRe
 	}
 }
 
-func GetStakeConcentrationRequestFromPB(in *pb.GetStakeConcentrationRequest) *GetStakeConcentrationRequest {
+func GetStakeConcentrationRequestFromPB(
+	in *pb.GetStakeConcentrationRequest,
+) *GetStakeConcentrationRequest {
 	if in == nil {
 		return nil
 	}
@@ -290,7 +280,9 @@ func GetStakeConcentrationRequestFromPB(in *pb.GetStakeConcentrationRequest) *Ge
 	}
 }
 
-func GetStakeConcentrationResponseToPB(in *entity.StakeConcentration) *pb.GetStakeConcentrationResponse {
+func GetStakeConcentrationResponseToPB(
+	in *entity.StakeConcentration,
+) *pb.GetStakeConcentrationResponse {
 	if in == nil {
 		return nil
 	}
@@ -357,7 +349,9 @@ func ListThreePrimaryRequestFromPB(in *pb.ListThreePrimaryRequest) *ListThreePri
 	return out
 }
 
-func ListThreePrimarySearchParamsFromPB(in *pb.ListThreePrimarySearchParams) *ListThreePrimarySearchParams {
+func ListThreePrimarySearchParamsFromPB(
+	in *pb.ListThreePrimarySearchParams,
+) *ListThreePrimarySearchParams {
 	if in == nil {
 		return nil
 	}
