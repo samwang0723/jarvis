@@ -18,20 +18,9 @@ import (
 	"context"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
-	"github.com/samwang0723/jarvis/internal/helper"
-)
-
-const (
-	priceMA8   = 8
-	priceMA21  = 21
-	priceMA55  = 55
-	volumeMV5  = 5
-	volumeMV13 = 13
-	volumeMV34 = 34
 )
 
 func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error {
@@ -73,11 +62,6 @@ func (s *serviceImpl) ListDailyClose(
 		return nil, 0, err
 	}
 
-	// Calculate the average
-	for idx, obj := range objs {
-		calculateAverage(obj, objs[idx:])
-	}
-
 	capacity := int(req.Limit)
 	if capacity > len(objs) {
 		capacity = len(objs)
@@ -88,29 +72,4 @@ func (s *serviceImpl) ListDailyClose(
 
 func (s *serviceImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return s.dal.HasDailyClose(ctx, date)
-}
-
-func calculateAverage(target *entity.DailyClose, objs []*entity.DailyClose) {
-	cache := &businessmodel.Average{
-		MA: make(map[int]float32),
-		MV: make(map[int]uint64),
-	}
-	cursor := 0
-	volumeSum := uint64(0)
-	priceSum := float32(0)
-
-	for _, obj := range objs {
-		cursor++
-		priceSum += obj.Close
-		if cursor == priceMA8 || cursor == priceMA21 || cursor == priceMA55 {
-			cache.MA[cursor] = helper.RoundUpDecimalTwo(priceSum / float32(cursor))
-		}
-
-		volumeSum += obj.TradedShares
-		if cursor == volumeMV5 || cursor == volumeMV13 || cursor == volumeMV34 {
-			cache.MV[cursor] = volumeSum / uint64(cursor)
-		}
-	}
-
-	target.Average = cache
 }

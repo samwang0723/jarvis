@@ -16,11 +16,9 @@ package dal
 import (
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -120,7 +118,9 @@ func (i *dalImpl) GetLatestChip(ctx context.Context) ([]*entity.Selection, error
 			) >= 4
 			and s.exchange_date = ?
 			and d.trade_shares >= ?
-			order by s.stock_id`, date, date, date, minWeeklyVolume).Scan(&objs).Error
+			order by s.stock_id`, date, date, date, minWeeklyVolume).
+		Scan(&objs).
+		Error
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,9 @@ func (i *dalImpl) ListSelectionsBasedOnPickedStocks(
 			left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = ?)
                         where s.stock_id in (?)
 			and s.exchange_date = ?
-			order by s.stock_id`, date, date, pickedStocks, date).Scan(&objs).Error
+			order by s.stock_id`, date, date, pickedStocks, date).
+		Scan(&objs).
+		Error
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +252,9 @@ func (i *dalImpl) concentrationBackfill(
 				if obj.StockID == currentStockID {
 					obj.Trust10 = int(currentTrustSum)
 					obj.Foreign10 = int(currentForeignSum)
-					obj.QuoteChange = helper.RoundDecimalTwo((1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent)
+					obj.QuoteChange = helper.RoundDecimalTwo(
+						(1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent,
+					)
 				}
 			}
 		}
@@ -264,7 +268,6 @@ func (i *dalImpl) ListSelections(
 	date string,
 	strict bool,
 ) (objs []*entity.Selection, err error) {
-	start := time.Now()
 	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
                         d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
                         s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
@@ -284,18 +287,15 @@ func (i *dalImpl) ListSelections(
 			) >= 4
 			and s.exchange_date = ?
 			and d.trade_shares >= ?
-			order by s.stock_id`, date, date, date, minDailyVolume).Scan(&objs).Error
-	elapsed := time.Since(start)
-	log.Printf("ListSelections took %s", elapsed)
+			order by s.stock_id`, date, date, date, minDailyVolume).
+		Scan(&objs).
+		Error
 	if err != nil {
 		return nil, err
 	}
 
 	// doing analysis
-	start = time.Now()
 	output, err := i.AdvancedFiltering(ctx, objs, strict, date)
-	elapsed = time.Since(start)
-	log.Printf("AdvancedFiltering took %s", elapsed)
 	if err != nil {
 		return nil, err
 	}
@@ -372,8 +372,6 @@ func (i *dalImpl) mappingMovingAverageConcentration(
 	currentPriceSum := float32(0)
 	currentVolumeSum := uint64(0)
 
-	start := time.Now()
-
 	for _, p := range pList {
 		if _, ok := analysisMap[p.StockID]; !ok {
 			currentIdx = 0
@@ -432,8 +430,6 @@ func (i *dalImpl) mappingMovingAverageConcentration(
 			analysisMap[currentStockID].Foreign = currentForeignSum
 		}
 	}
-	elapsed := time.Since(start)
-	log.Printf("mappingMovingAverageConcentration took %s", elapsed)
 
 	return analysisMap
 }
@@ -480,7 +476,9 @@ func (i *dalImpl) filter(
 		if (selected && !strict) || (selected && selectedStrict) {
 			ref.Trust10 = int(v.Trust)
 			ref.Foreign10 = int(v.Foreign)
-			ref.QuoteChange = helper.RoundDecimalTwo((1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent)
+			ref.QuoteChange = helper.RoundDecimalTwo(
+				(1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent,
+			)
 			output = append(output, ref)
 		}
 	}
@@ -497,12 +495,10 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	highest := []*HighPrice{}
 
 	var startDate string
-	start := time.Now()
 	err := i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
-		group by exchange_date order by exchange_date desc limit 120) as a;`).Scan(&startDate).Error
-	elapsed := time.Since(start)
-
-	log.Printf("getHighestPrice min date took %s", elapsed)
+		group by exchange_date order by exchange_date desc limit 120) as a;`).
+		Scan(&startDate).
+		Error
 	if err != nil {
 		return nil, err
 	}
@@ -511,12 +507,9 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	if endDate == "" {
 		endDate = date
 	}
-	start = time.Now()
 
 	err = i.db.Raw(`select stock_id, max(high) as high from daily_closes where exchange_date >= ?
 			and exchange_date < ? and stock_id IN (?) group by stock_id`, startDate, endDate, stockIDs).Scan(&highest).Error
-	elapsed = time.Since(start)
-	log.Printf("getHighestPrice took %s", elapsed)
 	if err != nil {
 		return nil, err
 	}
@@ -528,18 +521,19 @@ func (i *dalImpl) getHighestPrice(stockIDs []string, date string) (map[string]fl
 	return highestPriceMap, nil
 }
 
+//
 //nolint:nolintlint,errcheck,dupl,govet
-func (i *dalImpl) retrieveDailyCloseHistory(ctx context.Context, stockIDs []string, opts ...string) ([]*price, error) {
+func (i *dalImpl) retrieveDailyCloseHistory(
+	ctx context.Context,
+	stockIDs []string,
+	opts ...string,
+) ([]*price, error) {
 	var pList []*price
 	var startDate string
 	var err error
 
-	start := time.Now()
-
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 120) as a;`).Scan(&startDate).Error
-	elapsed := time.Since(start)
-	log.Printf("retrieveDailyCloseHistory min date took %s", elapsed)
 
 	if err != nil {
 		return nil, err
@@ -547,7 +541,6 @@ func (i *dalImpl) retrieveDailyCloseHistory(ctx context.Context, stockIDs []stri
 
 	if len(opts) > 0 {
 		searchDate, _ := i.DataCompletionDate(ctx, opts[0])
-		start = time.Now()
 		if searchDate != "" {
 			err = i.db.Raw(`select stock_id, exchange_date, close, trade_shares from daily_closes
 			        where exchange_date >= ? and exchange_date <= ? and stock_id IN (?) order by
@@ -557,11 +550,6 @@ func (i *dalImpl) retrieveDailyCloseHistory(ctx context.Context, stockIDs []stri
 			        where exchange_date >= ? and exchange_date < ? and stock_id IN (?) order by
 			        stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
 		}
-		query := fmt.Sprintf(`select stock_id, exchange_date, close, trade_shares from daily_closes
-                                where exchange_date >= %s and exchange_date < %s and stock_id IN (%s) order by
-                                stock_id, exchange_date desc`, startDate, opts[0], stockIDs)
-		elapsed = time.Since(start)
-		log.Printf("retrieveDailyCloseHistory list took %s, %s", elapsed, query)
 	}
 
 	if err != nil {
@@ -581,19 +569,14 @@ func (i *dalImpl) retrieveThreePrimaryHistory(
 	var startDate string
 	var err error
 
-	start := time.Now()
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 10) as a;`).Scan(&startDate).Error
-	elapsed := time.Since(start)
-	log.Printf("retrieveThreePrimaryHistory min date took %s", elapsed)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(opts) > 0 {
 		searchDate, _ := i.DataCompletionDate(ctx, opts[0])
-
-		start = time.Now()
 		if searchDate != "" {
 			err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
 			        floor(trust_trade_shares/1000) as trust_trade_shares, 
@@ -601,7 +584,9 @@ func (i *dalImpl) retrieveThreePrimaryHistory(
 			        floor(hedging_trade_shares/1000) as hedging_trade_shares
 			        from three_primary where exchange_date >= ?
 			        and exchange_date <= ? and stock_id IN (?) 
-			        order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
+			        order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).
+				Scan(&pList).
+				Error
 		} else {
 			err = i.db.Raw(`select stock_id, exchange_date, floor(foreign_trade_shares/1000) as foreign_trade_shares, 
 			        floor(trust_trade_shares/1000) as trust_trade_shares, 
@@ -611,8 +596,6 @@ func (i *dalImpl) retrieveThreePrimaryHistory(
 			        and exchange_date < ? and stock_id IN (?) 
 			        order by stock_id, exchange_date desc`, startDate, opts[0], stockIDs).Scan(&pList).Error
 		}
-		elapsed = time.Since(start)
-		log.Printf("retrieveThreePrimaryHistory list took %s", elapsed)
 	}
 
 	if err != nil {
