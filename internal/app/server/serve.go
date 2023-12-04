@@ -384,20 +384,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	// support swagger-ui API document
 	httpMux := http.NewServeMux()
 	// merge grpc gateway endpoint handling
-	corsOptions := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"}, // or specify your list of origins
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		AllowedHeaders: []string{
-			"X-Requested-With",
-			"Accept",
-			"Content-Type",
-			"Accept-Encoding",
-			"Authorization",
-		},
-		AllowCredentials: true,
-		Debug:            false, // set to false in production
-	})
-	httpMux.Handle("/", corsOptions.Handler(mux))
+	httpMux.Handle("/", mux)
 	// support swagger API documentation
 	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
 	// support analysis pages
@@ -411,7 +398,7 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,
 		Addr:              host,
-		Handler:           httpMux,
+		Handler:           cors.AllowAll().Handler(httpMux),
 	}
 
 	s.Logger().Info().Msgf("http server start listening on %s", host)
