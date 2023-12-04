@@ -31,6 +31,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
@@ -143,7 +144,10 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		logger.Fatal().Err(dbErr).Msg("failed to get db")
 	}
 
-	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(genericDB, databasePingTimeout))
+	health.AddReadinessCheck(
+		"database",
+		healthcheck.DatabasePingCheck(genericDB, databasePingTimeout),
+	)
 
 	s := newServer(
 		Name(cfg.Server.Name),
@@ -351,18 +355,26 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	}
 
 	// add healthcheck into gRPC gateway mux
-	err = mux.HandlePath("GET", "/live", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-		s.HealthCheck().LiveEndpoint(w, r)
-	})
+	err = mux.HandlePath(
+		"GET",
+		"/live",
+		func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+			s.HealthCheck().LiveEndpoint(w, r)
+		},
+	)
 	if err != nil {
 		s.Logger().Error().Err(err).Msg("cannot handle /live path")
 
 		return
 	}
 
-	err = mux.HandlePath("GET", "/ready", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-		s.HealthCheck().ReadyEndpoint(w, r)
-	})
+	err = mux.HandlePath(
+		"GET",
+		"/ready",
+		func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+			s.HealthCheck().ReadyEndpoint(w, r)
+		},
+	)
 	if err != nil {
 		s.Logger().Error().Err(err).Msg("cannot handle /ready path")
 
@@ -372,7 +384,20 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 	// support swagger-ui API document
 	httpMux := http.NewServeMux()
 	// merge grpc gateway endpoint handling
-	httpMux.Handle("/", cors(mux))
+	corsOptions := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"}, // or specify your list of origins
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders: []string{
+			"X-Requested-With",
+			"Accept",
+			"Content-Type",
+			"Accept-Encoding",
+			"Authorization",
+		},
+		AllowCredentials: true,
+		Debug:            false, // set to false in production
+	})
+	httpMux.Handle("/", corsOptions.Handler(mux))
 	// support swagger API documentation
 	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
 	// support analysis pages
@@ -396,17 +421,4 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 
 		return
 	}
-}
-
-func cors(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers",
-			"Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, ResponseType")
-		if r.Method == http.MethodOptions {
-			return
-		}
-		h.ServeHTTP(w, r)
-	})
 }

@@ -46,6 +46,7 @@ require (
 	github.com/cristalhq/jwt/v5 v5.1.0
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
+	github.com/rs/cors v1.10.1
 	golang.org/x/crypto v0.14.0
 )
 
