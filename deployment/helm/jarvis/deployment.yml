@@ -72,6 +72,11 @@ spec:
             secretKeyRef:
               name: proxy-secret-proxycrawl
               key: token
+        - name: SMART_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: proxy-secret-smartproxy
+              key: token
         - name: REDIS_PASSWD
           valueFrom:
             secretKeyRef:

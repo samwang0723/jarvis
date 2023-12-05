@@ -15,7 +15,6 @@ package services
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,22 +36,10 @@ const (
 	realTimeMonitoringKey      = "real_time_monitoring_keys"
 	defaultCacheExpire         = 7 * 24 * time.Hour
 	defaultRealtimeCacheExpire = 24 * time.Hour
-	defaultHTTPTimeout         = 10 * time.Second
 	rateLimit                  = 2 * time.Second
-	webScraping                = "WEB_SCRAPING"
 	skipHeader                 = "skip_dates"
 	closeToHighestToday        = 0.985
 	realtimeVolume             = 3000
-)
-
-//nolint:nolintlint, gochecknoglobals, gosec
-var (
-	defaultHTTPClient = &http.Client{
-		Timeout: defaultHTTPTimeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
 )
 
 //nolint:nolintlint,cyclop,nestif
@@ -212,7 +199,7 @@ func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 				// It is important to close the connection otherwise fd count will overhead
 				"Connection": []string{"close"},
 			}
-			resp, err := defaultHTTPClient.Do(req)
+			resp, err := s.proxyClient.Do(req)
 			if err != nil {
 				logger.Error().Err(err).Msgf("failed to do request: %s", key)
 

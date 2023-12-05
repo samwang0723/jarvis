@@ -15,6 +15,8 @@
 package services
 
 import (
+	"net/http"
+
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
@@ -71,5 +73,11 @@ func WithCronJob(cfg CronjobConfig) Option {
 func WithLogger(logger *zerolog.Logger) Option {
 	return func(i *serviceImpl) {
 		i.logger = logger
+	}
+}
+
+func WithProxy(client *http.Client) Option {
+	return func(i *serviceImpl) {
+		i.proxyClient = client
 	}
 }

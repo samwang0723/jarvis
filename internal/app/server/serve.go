@@ -16,9 +16,11 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sync"
@@ -53,6 +55,8 @@ const (
 	databasePingTimeout    = 1 * time.Second
 	readTimeout            = 5 * time.Second
 	writeTimeout           = 10 * time.Second
+	defaultHTTPTimeout     = 10 * time.Second
+	smartproxy             = "SMART_PROXY"
 )
 
 type IServer interface {
@@ -70,6 +74,7 @@ type server struct {
 	opts Options
 }
 
+//nolint:gosec //skip tls verification
 func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
@@ -80,6 +85,24 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
 		dal.WithOrderRepository(dal.NewOrderRepository(dbPool)),
 	)
+
+	// Initialize a HTTP client with proxy
+	smartProxy := ""
+	if proxy := os.Getenv(smartproxy); len(proxy) > 0 {
+		smartProxy = proxy
+	}
+	proxyURL, pErr := url.Parse(smartProxy)
+	if pErr != nil {
+		logger.Fatal().Err(pErr).Msg("failed to parse proxy url")
+	}
+	proxy := &http.Client{
+		Timeout: defaultHTTPTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			Proxy:           http.ProxyURL(proxyURL),
+		},
+	}
+
 	// bind DAL layer with service
 	dataService := services.New(
 		services.WithDAL(dalService),
@@ -99,6 +122,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 			Logger: logger,
 		}),
 		services.WithLogger(logger),
+		services.WithProxy(proxy),
 	)
 	// associate service with handler
 	handler := handlers.New(dataService, logger)
