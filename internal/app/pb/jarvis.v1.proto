@@ -11,9 +11,25 @@ option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info: {
     title: "Javis smart stock analysis API";
-    version: "1.3";
+    version: "1.4";
   };
   schemes: HTTP;
+  security_definitions: {
+    security: {
+      key: "bearer"
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+        description: "Authentication token, prefixed by Bearer: Bearer <token>"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "bearer"
+    }
+  }
 };
 
 service JarvisV1 {
@@ -127,6 +143,9 @@ service JarvisV1 {
     option (google.api.http) = {
       post: "/v1/login"
       body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      security: { } // Disable security key
     };
   }
 
