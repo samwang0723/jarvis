@@ -18,6 +18,8 @@ import (
 
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *server) ListDailyClose(ctx context.Context,
@@ -31,7 +33,10 @@ func (s *server) ListDailyClose(ctx context.Context,
 	return dto.ListDailyCloseResponseToPB(res), nil
 }
 
-func (s *server) ListStocks(ctx context.Context, req *pb.ListStockRequest) (*pb.ListStockResponse, error) {
+func (s *server) ListStocks(
+	ctx context.Context,
+	req *pb.ListStockRequest,
+) (*pb.ListStockResponse, error) {
 	res, err := s.Handler().ListStock(ctx, dto.ListStockRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -41,7 +46,7 @@ func (s *server) ListStocks(ctx context.Context, req *pb.ListStockRequest) (*pb.
 }
 
 func (s *server) ListCategories(ctx context.Context,
-	req *pb.ListCategoriesRequest,
+	_ *pb.ListCategoriesRequest,
 ) (*pb.ListCategoriesResponse, error) {
 	res, err := s.Handler().ListCategories(ctx)
 	if err != nil {
@@ -73,7 +78,10 @@ func (s *server) ListThreePrimary(ctx context.Context,
 	return dto.ListThreePrimaryResponseToPB(res), nil
 }
 
-func (s *server) ListSelections(ctx context.Context, req *pb.ListSelectionRequest) (*pb.ListSelectionResponse, error) {
+func (s *server) ListSelections(
+	ctx context.Context,
+	req *pb.ListSelectionRequest,
+) (*pb.ListSelectionResponse, error) {
 	res, err := s.Handler().ListSelections(ctx, dto.ListSelectionRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -84,7 +92,7 @@ func (s *server) ListSelections(ctx context.Context, req *pb.ListSelectionReques
 
 func (s *server) ListPickedStocks(
 	ctx context.Context,
-	req *pb.ListPickedStocksRequest,
+	_ *pb.ListPickedStocksRequest,
 ) (*pb.ListPickedStocksResponse, error) {
 	res, err := s.Handler().ListPickedStocks(ctx)
 	if err != nil {
@@ -118,7 +126,10 @@ func (s *server) DeletePickedStocks(
 	return dto.DeletePickedStocksResponseToPB(res), nil
 }
 
-func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+func (s *server) CreateUser(
+	ctx context.Context,
+	req *pb.CreateUserRequest,
+) (*pb.CreateUserResponse, error) {
 	res, err := s.Handler().CreateUser(ctx, dto.CreateUserRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -127,7 +138,10 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 	return dto.CreateUserResponseToPB(res), nil
 }
 
-func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.ListUsersResponse, error) {
+func (s *server) ListUsers(
+	ctx context.Context,
+	req *pb.ListUsersRequest,
+) (*pb.ListUsersResponse, error) {
 	res, err := s.Handler().ListUsers(ctx, dto.ListUsersRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -136,7 +150,10 @@ func (s *server) ListUsers(ctx context.Context, req *pb.ListUsersRequest) (*pb.L
 	return dto.ListUsersResponseToPB(res), nil
 }
 
-func (s *server) GetBalance(ctx context.Context, req *pb.GetBalanceRequest) (*pb.GetBalanceResponse, error) {
+func (s *server) GetBalance(
+	ctx context.Context,
+	_ *pb.GetBalanceRequest,
+) (*pb.GetBalanceResponse, error) {
 	res, err := s.Handler().GetBalance(ctx)
 	if err != nil {
 		return nil, err
@@ -157,7 +174,10 @@ func (s *server) CreateTransaction(
 	return dto.CreateTransactionResponseToPB(res), nil
 }
 
-func (s *server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+func (s *server) CreateOrder(
+	ctx context.Context,
+	req *pb.CreateOrderRequest,
+) (*pb.CreateOrderResponse, error) {
 	res, err := s.Handler().CreateOrder(ctx, dto.CreateOrderRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -166,7 +186,10 @@ func (s *server) CreateOrder(ctx context.Context, req *pb.CreateOrderRequest) (*
 	return dto.CreateOrderResponseToPB(res), nil
 }
 
-func (s *server) ListOrders(ctx context.Context, req *pb.ListOrderRequest) (*pb.ListOrderResponse, error) {
+func (s *server) ListOrders(
+	ctx context.Context,
+	req *pb.ListOrderRequest,
+) (*pb.ListOrderResponse, error) {
 	res, err := s.Handler().ListOrders(ctx, dto.ListOrderRequestFromPB(req))
 	if err != nil {
 		return nil, err
@@ -177,11 +200,20 @@ func (s *server) ListOrders(ctx context.Context, req *pb.ListOrderRequest) (*pb.
 
 func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 	res := s.Handler().Login(ctx, dto.LoginRequestFromPB(req))
+	if !res.Success {
+		return dto.LoginResponseToPB(
+				res,
+			), status.Errorf(
+				codes.Unauthenticated,
+				"Login failed: %s",
+				res.ErrorMessage,
+			)
+	}
 
 	return dto.LoginResponseToPB(res), nil
 }
 
-func (s *server) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+func (s *server) Logout(ctx context.Context, _ *pb.LogoutRequest) (*pb.LogoutResponse, error) {
 	res := s.Handler().Logout(ctx)
 
 	return dto.LogoutResponseToPB(res), nil

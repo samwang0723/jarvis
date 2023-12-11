@@ -71,7 +71,7 @@ func Authenticate(ctx context.Context) (context.Context, error) {
 
 	tokenInfo, err := parseToken(token)
 	if err != nil || !tokenInfo.IsValidAt(time.Now()) || !tokenInfo.IsForAudience("jarvis") {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid auth token: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid auth token: %v", err)
 	}
 
 	ctx = logging.InjectFields(ctx, logging.Fields{"auth.sub", tokenInfo.Subject})
