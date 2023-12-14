@@ -26,7 +26,10 @@ const (
 	RoundDecimalTwo = 100
 )
 
-func (s *serviceImpl) BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error {
+func (s *serviceImpl) BatchUpsertPickedStocks(
+	ctx context.Context,
+	objs []*entity.PickedStock,
+) error {
 	for _, obj := range objs {
 		obj.UserID = s.currentUserID
 	}
@@ -66,6 +69,7 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection,
 		obj.Low = realtime.Low
 		obj.Close = realtime.Close
 		obj.Volume = int(realtime.Volume)
+		obj.Date = realtime.Date
 	}
 
 	return objs, nil
