@@ -36,12 +36,15 @@ func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.Pic
 func (i *dalImpl) DeletePickedStockByID(ctx context.Context, userID uint64, stockID string) error {
 	err := i.db.Exec(`
                 update picked_stocks set deleted_at = NOW() 
-                where stock_id = ? and user_id = ?`, stockID, userID).Error
+                where stock_id = ? and user_id = ? and deleted_at is null`, stockID, userID).Error
 
 	return err
 }
 
-func (i *dalImpl) ListPickedStocks(ctx context.Context, userID uint64) (objs []*entity.Selection, err error) {
+func (i *dalImpl) ListPickedStocks(
+	ctx context.Context,
+	userID uint64,
+) (objs []*entity.Selection, err error) {
 	pickedStocks := []string{}
 	if serr := i.db.Raw(`select stock_id from picked_stocks 
                         where deleted_at is null and user_id = ?`, userID).Scan(&pickedStocks).Error; serr != nil {
@@ -58,7 +61,9 @@ func (i *dalImpl) ListPickedStocks(ctx context.Context, userID uint64) (objs []*
 	}
 
 	for _, obj := range objs {
-		obj.QuoteChange = helper.RoundDecimalTwo((1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent)
+		obj.QuoteChange = helper.RoundDecimalTwo(
+			(1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent,
+		)
 	}
 
 	return
