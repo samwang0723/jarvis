@@ -12,3 +12,6 @@ spec:
     - name: jarvis-service
       port: 8080
       targetPort: 8080
+    - name: maven-service
+      port: 3004
+      targetPort: 3004
