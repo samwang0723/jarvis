@@ -10,7 +10,7 @@ BEGIN
   FROM picked_stocks
   WHERE user_id = NEW.user_id
     AND stock_id = NEW.stock_id
-    AND (deleted_at IS NULL OR NEW.deleted_at IS NULL);
+    AND (deleted_at IS NULL);
 
   IF duplicate_count > 0 THEN
     SIGNAL SQLSTATE '45000'

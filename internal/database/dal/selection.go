@@ -268,26 +268,55 @@ func (i *dalImpl) ListSelections(
 	date string,
 	strict bool,
 ) (objs []*entity.Selection, err error) {
-	err = i.db.Raw(`select s.stock_id, c.name, CONCAT(c.category, '.', c.market) AS category, s.exchange_date, d.open, 
-                        d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
-                        s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
-                        floor(t.foreign_trade_shares/1000) as foreignc,
-			floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
-			floor(t.dealer_trade_shares/1000) as dealer
-			from stake_concentration s
-			left join stocks c on c.stock_id = s.stock_id
-			left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = ?)
-			left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = ?)
-			where (
-				IF(s.concentration_1 > 0, 1, 0) +
-				IF(s.concentration_5 > 0, 1, 0) +
-				IF(s.concentration_10 > 0, 1, 0) +
-				IF(s.concentration_20 > 0, 1, 0) +
-				IF(s.concentration_60 > 0, 1, 0)
-			) >= 4
-			and s.exchange_date = ?
-			and d.trade_shares >= ?
-			order by s.stock_id`, date, date, date, minDailyVolume).
+	err = i.db.Raw(`SELECT 
+        s.stock_id, 
+        c.name, 
+        CONCAT(c.category, '.', c.market) AS category, 
+        s.exchange_date, 
+        d.open, 
+        d.close, 
+        d.high, 
+        d.low, 
+        d.price_diff,
+        s.concentration_1, 
+        s.concentration_5, 
+        s.concentration_10, 
+        s.concentration_20, 
+        s.concentration_60, 
+        FLOOR(d.trade_shares/1000) as volume, 
+        FLOOR(t.foreign_trade_shares/1000) as foreignc,
+        FLOOR(t.trust_trade_shares/1000) as trust, 
+        FLOOR(t.hedging_trade_shares/1000) as hedging,
+        FLOOR(t.dealer_trade_shares/1000) as dealer,
+        av.avg_volume
+    FROM 
+        stake_concentration s
+    LEFT JOIN stocks c ON c.stock_id = s.stock_id
+    LEFT JOIN daily_closes d ON (d.stock_id = s.stock_id AND d.exchange_date = ?)
+    LEFT JOIN three_primary t ON (t.stock_id = s.stock_id AND t.exchange_date = ?)
+    LEFT JOIN (
+        SELECT 
+            stock_id, 
+            AVG(trade_shares) AS avg_volume
+        FROM 
+            daily_closes
+        WHERE 
+            exchange_date BETWEEN DATE_FORMAT(DATE_SUB(?, INTERVAL 4 DAY), '%Y%m%d') AND ?
+        GROUP BY 
+            stock_id
+    ) av ON av.stock_id = s.stock_id
+    WHERE (
+        IF(s.concentration_1 > 0, 1, 0) +
+        IF(s.concentration_5 > 0, 1, 0) +
+        IF(s.concentration_10 > 0, 1, 0) +
+        IF(s.concentration_20 > 0, 1, 0) +
+        IF(s.concentration_60 > 0, 1, 0)
+    ) >= 4
+    AND s.exchange_date = ?
+    AND d.trade_shares >= ?
+    AND av.avg_volume >= ?
+    ORDER BY s.stock_id;
+    `, date, date, date, date, date, minDailyVolume, minWeeklyVolume).
 		Scan(&objs).
 		Error
 	if err != nil {
