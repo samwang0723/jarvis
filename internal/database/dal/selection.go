@@ -301,7 +301,8 @@ func (i *dalImpl) ListSelections(
         FROM 
             daily_closes
         WHERE 
-            exchange_date BETWEEN DATE_FORMAT(DATE_SUB(?, INTERVAL 4 DAY), '%Y%m%d') AND ?
+            exchange_date BETWEEN DATE_FORMAT(DATE_SUB(?, INTERVAL 5 DAY), '%Y%m%d') 
+              AND DATE_FORMAT(DATE_SUB(?, INTERVAL 1 DAY), '%Y%m%d')
         GROUP BY 
             stock_id
     ) av ON av.stock_id = s.stock_id
