@@ -28,7 +28,7 @@ const (
 	minDailyVolume           = 3000000
 	minWeeklyVolume          = 1000000
 	highestRangePercent      = 0.04
-	dailyHighestRangePercent = 0.97
+	dailyHighestRangePercent = 0.96
 	yesterday                = 1
 	yesterdayAfterClosed     = 2
 	priceMA8                 = 8

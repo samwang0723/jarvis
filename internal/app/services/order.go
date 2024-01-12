@@ -23,7 +23,7 @@ type processedOrder struct {
 	exchangeQuantity uint64
 }
 
-//nolint:cyclop // this is a special case
+//nolint:nolintlint,cyclop
 func (s *serviceImpl) ListOrders(
 	ctx context.Context,
 	req *dto.ListOrderRequest,
@@ -79,19 +79,26 @@ func (s *serviceImpl) ListOrders(
 
 	// calculate unrealized profit loss
 	for _, price := range p {
-		if order, ok := m[price.StockID]; ok {
-			order.CalculateUnrealizedProfitLoss(price.Price)
+		for _, order := range objs {
+			if order.StockID == price.StockID && order.Status != "closed" {
+				order.CalculateUnrealizedProfitLoss(price.Price)
+			}
 		}
 	}
 
-	realtimeList, err := s.fetchRealtimePrice(ctx)
-	if err != nil || len(realtimeList) == 0 {
-		s.logger.Error().Err(err).Msg("failed to fetch realtime data")
-
-		// but should return based on history data
-		return objs, totalCount, err
+	err = s.fillRealtimePrice(ctx, objs)
+	if err != nil {
+		return nil, 0, err
 	}
 
+	return objs, totalCount, nil
+}
+
+func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*entity.Order) error {
+	realtimeList, err := s.fetchRealtimePrice(ctx)
+	if err != nil {
+		return err
+	}
 	for _, order := range objs {
 		// override realtime data with history record.
 		realtime, ok := realtimeList[order.StockID]
@@ -100,7 +107,7 @@ func (s *serviceImpl) ListOrders(
 		}
 	}
 
-	return objs, totalCount, nil
+	return nil
 }
 
 func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error {
@@ -173,8 +180,11 @@ func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderReque
 	return s.dal.CreateOrder(ctx, saveOrders, processedTrans)
 }
 
-//nolint:lll // this is a special case
-func (s *serviceImpl) mergeOrderQuantity(order *entity.Order, req *dto.CreateOrderRequest, pendingQuantity uint64) (mergedQuantity, leftQuantity uint64) {
+func (s *serviceImpl) mergeOrderQuantity(
+	order *entity.Order,
+	req *dto.CreateOrderRequest,
+	pendingQuantity uint64,
+) (mergedQuantity, leftQuantity uint64) {
 	// if buy = 4, sell = 0, quantity = 2, orderType = sell, then sell = 2
 	// if buy = 4, sell = 3, quantity = 2, orderType = sell, then sell = 4, left = 1
 	leftQuantity = pendingQuantity
@@ -186,7 +196,9 @@ func (s *serviceImpl) mergeOrderQuantity(order *entity.Order, req *dto.CreateOrd
 		eventQuantity = order.BuyQuantity
 		gap := order.SellQuantity - order.BuyQuantity
 		if gap >= leftQuantity {
-			price = (order.BuyPrice*float32(order.BuyQuantity) + req.TradePrice*float32(req.Quantity)) / float32(order.BuyQuantity+req.Quantity)
+			price = (order.BuyPrice*float32(order.BuyQuantity) + req.TradePrice*float32(req.Quantity)) / float32(
+				order.BuyQuantity+req.Quantity,
+			)
 			mergedQuantity = leftQuantity
 			leftQuantity = 0
 		} else {
@@ -199,7 +211,9 @@ func (s *serviceImpl) mergeOrderQuantity(order *entity.Order, req *dto.CreateOrd
 		eventQuantity = order.SellQuantity
 		gap := order.BuyQuantity - order.SellQuantity
 		if gap >= leftQuantity {
-			price = (order.SellPrice*float32(order.SellQuantity) + req.TradePrice*float32(req.Quantity)) / float32(order.SellQuantity+req.Quantity)
+			price = (order.SellPrice*float32(order.SellQuantity) + req.TradePrice*float32(req.Quantity)) / float32(
+				order.SellQuantity+req.Quantity,
+			)
 			mergedQuantity = leftQuantity
 			leftQuantity = 0
 		} else {
@@ -254,7 +268,15 @@ func (s *serviceImpl) chainTransactions(
 
 	chainedTransactions = append(chainedTransactions, transaction)
 
-	tax, err := s.genTaxTransaction(orderID, userID, price, quantity, orderType, partialCloseOrClose, dayTrade)
+	tax, err := s.genTaxTransaction(
+		orderID,
+		userID,
+		price,
+		quantity,
+		orderType,
+		partialCloseOrClose,
+		dayTrade,
+	)
 	if err != nil {
 		return chainedTransactions, err
 	} else if tax != nil {
