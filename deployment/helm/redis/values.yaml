@@ -314,7 +314,18 @@ master:
   ## @param master.podAnnotations Annotations for Redis&reg; master pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
-  podAnnotations: {}
+  podAnnotations: 
+    ad.datadoghq.com/redis.check_names: '["redisdb"]'
+    ad.datadoghq.com/redis.init_configs: '[{}]'
+    ad.datadoghq.com/redis.instances: |
+      [
+        {
+          "host": "%%host%%",
+          "port":"6379",
+          "password":"abcd1234"
+        }
+      ]
+
   ## @param master.shareProcessNamespace Share a single process namespace between all of the containers in Redis&reg; master pods
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
   ##
@@ -731,7 +742,17 @@ replica:
   ## @param replica.podAnnotations Annotations for Redis&reg; replicas pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
-  podAnnotations: {}
+  podAnnotations: 
+    ad.datadoghq.com/redis.check_names: '["redisdb"]'
+    ad.datadoghq.com/redis.init_configs: '[{}]'
+    ad.datadoghq.com/redis.instances: |
+      [
+        {
+          "host": "%%host%%",
+          "port":"6379",
+          "password":"abcd1234"
+        }
+      ]
   ## @param replica.shareProcessNamespace Share a single process namespace between all of the containers in Redis&reg; replicas pods
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/
   ##
