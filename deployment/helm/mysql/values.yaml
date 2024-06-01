@@ -82,7 +82,7 @@ diagnosticMode:
 image:
   registry: docker.io
   repository: bitnami/mysql
-  tag: 8.0.33
+  tag: 8.0.37
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -181,10 +181,10 @@ primary:
   hostAliases: []
   ## @param primary.configuration [string] Configure MySQL Primary with a custom my.cnf file
   ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
-  ##
+  ## 
+  ## old: default_authentication_plugin=mysql_native_password
   configuration: |-
     [mysqld]
-    default_authentication_plugin=mysql_native_password
     skip-name-resolve
     explicit_defaults_for_timestamp
     basedir=/opt/bitnami/mysql
@@ -197,6 +197,7 @@ primary:
     bind-address=*
     pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
     log-error=/opt/bitnami/mysql/logs/mysqld.log
+    log-error-verbosity=1
     character-set-server=UTF8
     collation-server=utf8_general_ci
     slow_query_log=0
@@ -558,9 +559,9 @@ secondary:
   ## @param secondary.configuration [string] Configure MySQL Secondary with a custom my.cnf file
   ## ref: https://mysql.com/kb/en/mysql/configuring-mysql-with-mycnf/#example-of-configuration-file
   ##
+  ## old: default_authentication_plugin=mysql_native_password
   configuration: |-
     [mysqld]
-    default_authentication_plugin=mysql_native_password
     skip-name-resolve
     explicit_defaults_for_timestamp
     basedir=/opt/bitnami/mysql
@@ -573,6 +574,7 @@ secondary:
     bind-address=*
     pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
     log-error=/opt/bitnami/mysql/logs/mysqld.log
+    log-error-verbosity=1
     character-set-server=UTF8
     collation-server=utf8_general_ci
     slow_query_log=0
