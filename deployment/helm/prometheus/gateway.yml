@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: grafana-gateway
+  name: prometheus-gateway
   namespace: monitoring
 spec:
   selector:
@@ -9,7 +9,7 @@ spec:
   servers:
   - port:
       name: http
-      number: 3005
+      number: 3006
       protocol: HTTP
     hosts:
     - "*"
@@ -17,16 +17,16 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: grafana-virtualservice
+  name: prometheus-virtualservice
   namespace: monitoring
 spec:
   hosts:
   - "*"
   gateways:
-  - grafana-gateway.monitoring.svc.cluster.local
+  - prometheus-gateway.monitoring.svc.cluster.local
   http:
   - route:
     - destination:
-        host: prometheus-grafana.monitoring.svc.cluster.local
+        host: prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local
         port:
-          number: 80
+          number: 9090

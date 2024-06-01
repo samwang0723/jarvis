@@ -15,3 +15,6 @@ spec:
     - name: grafana
       port: 3005
       targetPort: 3005
+    - name: prometheus
+      port: 3006
+      targetPort: 3006
