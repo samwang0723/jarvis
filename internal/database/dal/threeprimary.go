@@ -23,13 +23,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (i *dalImpl) CreateThreePrimary(ctx context.Context, obj *entity.ThreePrimary) error {
+func (i *dalImpl) CreateThreePrimary(_ context.Context, obj *entity.ThreePrimary) error {
 	err := i.db.Create(obj).Error
 
 	return err
 }
 
-func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.ThreePrimary) error {
+func (i *dalImpl) BatchUpsertThreePrimary(_ context.Context, objs []*entity.ThreePrimary) error {
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
@@ -37,7 +37,7 @@ func (i *dalImpl) BatchUpsertThreePrimary(ctx context.Context, objs []*entity.Th
 	return err
 }
 
-func (i *dalImpl) ListThreePrimary(ctx context.Context, offset, limit int32,
+func (i *dalImpl) ListThreePrimary(_ context.Context, offset, limit int32,
 	searchParams *idal.ListThreePrimarySearchParams,
 ) (objs []*entity.ThreePrimary, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from three_primary where %s",

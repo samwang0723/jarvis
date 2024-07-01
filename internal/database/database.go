@@ -56,7 +56,7 @@ func GormFactory(cfg *config.Config) *gorm.DB {
 	if err != nil {
 		panic("connect database error: " + err.Error())
 	}
-	if len(dsns["replica"]) > 0 {
+	if dsns["replica"] != "" {
 		dbResolverCfg := dbresolver.Config{
 			Replicas: []gorm.Dialector{mysql.Open(dsns["replica"])},
 		}
@@ -90,7 +90,7 @@ func generateDSN(cfg *config.Config) map[string]string {
 	)
 	resp["master"] = masterDsn
 
-	if len(cfg.Replica.User) > 0 {
+	if cfg.Replica.User != "" {
 		replica := cfg.Replica
 		replicaDsn := fmt.Sprintf("%s:%s@%s/%s?charset=utf8&parseTime=True&timeout=10s",
 			replica.User,

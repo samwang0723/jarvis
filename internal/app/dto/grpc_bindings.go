@@ -52,7 +52,7 @@ func ListDailyCloseSearchParamsFromPB(
 	}
 
 	end := in.End
-	if len(end) > 0 {
+	if end != "" {
 		out.End = &end
 	}
 
@@ -84,15 +84,15 @@ func ListStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchP
 		out.StockIDs = &stockIDs
 	}
 	country := in.Country
-	if len(country) > 0 {
+	if country != "" {
 		out.Country = country
 	}
 	name := in.Name
-	if len(name) > 0 {
+	if name != "" {
 		out.Name = &name
 	}
 	category := in.Category
-	if len(category) > 0 {
+	if category != "" {
 		out.Category = &category
 	}
 
@@ -362,7 +362,7 @@ func ListThreePrimarySearchParamsFromPB(
 
 	out.StockID = in.StockID
 	end := in.End
-	if len(end) > 0 {
+	if end != "" {
 		out.End = &end
 	}
 
@@ -825,11 +825,11 @@ func ListOrderSearchParamsFromPB(in *pb.ListOrderSearchParams) *ListOrderSearchP
 		out.StockIDs = &stockIDs
 	}
 	status := in.Status
-	if len(status) > 0 {
+	if status != "" {
 		out.Status = &status
 	}
 	exchangeMonth := in.ExchangeMonth
-	if len(exchangeMonth) > 0 {
+	if exchangeMonth != "" {
 		out.ExchangeMonth = &exchangeMonth
 	}
 

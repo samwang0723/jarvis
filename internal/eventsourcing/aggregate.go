@@ -51,6 +51,6 @@ func (ba *BaseAggregate) GetTransitions() []Transition {
 	return []Transition{}
 }
 
-func (ba *BaseAggregate) SkipTransition(event Event) bool {
+func (ba *BaseAggregate) SkipTransition(_ Event) bool {
 	return false
 }

@@ -105,11 +105,14 @@ func (tr *OrderRepository) Save(ctx context.Context, orderRequest *entity.Order)
 }
 
 func (i *dalImpl) ListOrders(
-	ctx context.Context,
+	_ context.Context,
 	offset, limit int32,
 	searchParams *idal.ListOrderSearchParams,
 ) (objs []*entity.Order, totalCount int64, err error) {
-	sql := fmt.Sprintf("select count(*) from orders where %s", buildQueryFromListOrderSearchParams(searchParams))
+	sql := fmt.Sprintf(
+		"select count(*) from orders where %s",
+		buildQueryFromListOrderSearchParams(searchParams),
+	)
 
 	err = i.db.Raw(sql).Scan(&totalCount).Error
 	if err != nil {
@@ -169,7 +172,7 @@ func (i *dalImpl) ListOpenOrders(
 ) ([]*entity.Order, error) {
 	var ids []uint64
 
-	condition := ""
+	var condition string
 	if orderType == entity.OrderTypeSell {
 		condition = "and buy_quantity - sell_quantity > 0"
 	} else {

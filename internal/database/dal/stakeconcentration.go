@@ -23,7 +23,7 @@ import (
 )
 
 func (i *dalImpl) GetStakeConcentrationByStockID(
-	ctx context.Context,
+	_ context.Context,
 	stockID,
 	date string,
 ) (*entity.StakeConcentration, error) {
@@ -35,7 +35,10 @@ func (i *dalImpl) GetStakeConcentrationByStockID(
 	return res, nil
 }
 
-func (i *dalImpl) BatchUpsertStakeConcentration(ctx context.Context, objs []*entity.StakeConcentration) error {
+func (i *dalImpl) BatchUpsertStakeConcentration(
+	_ context.Context,
+	objs []*entity.StakeConcentration,
+) error {
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
@@ -44,7 +47,7 @@ func (i *dalImpl) BatchUpsertStakeConcentration(ctx context.Context, objs []*ent
 }
 
 func (i *dalImpl) GetStakeConcentrationsWithVolumes(
-	ctx context.Context,
+	_ context.Context,
 	stockID,
 	date string,
 ) (objs []*entity.CalculationBase, err error) {

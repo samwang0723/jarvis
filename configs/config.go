@@ -96,26 +96,25 @@ func Load() {
 
 	decoder := yaml.NewDecoder(configFile)
 	err = decoder.Decode(&instance)
-
 	if err != nil {
 		panic(err)
 	}
 
-	if user := os.Getenv(SecretUsername); len(user) > 0 {
+	if user := os.Getenv(SecretUsername); user != "" {
 		instance.Database.User = user
 		instance.Replica.User = user
 	}
 
-	if passwd := os.Getenv(SecretPassword); len(passwd) > 0 {
+	if passwd := os.Getenv(SecretPassword); passwd != "" {
 		instance.Database.Password = passwd
 		instance.Replica.Password = passwd
 	}
 
-	if redisPasswd := os.Getenv(RedisPassword); len(redisPasswd) > 0 {
+	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
 	}
 
-	if dsn := os.Getenv(SentryDSN); len(dsn) > 0 {
+	if dsn := os.Getenv(SentryDSN); dsn != "" {
 		instance.Sentry.DSN = dsn
 	}
 

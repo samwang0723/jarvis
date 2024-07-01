@@ -35,7 +35,6 @@ import (
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/api/swagger"
 	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	"github.com/samwang0723/jarvis/internal/app/middleware"
@@ -88,7 +87,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 
 	// Initialize a HTTP client with proxy
 	smartProxy := ""
-	if proxy := os.Getenv(smartproxy); len(proxy) > 0 {
+	if proxy := os.Getenv(smartproxy); proxy != "" {
 		smartProxy = proxy
 	}
 	proxyURL, pErr := url.Parse(smartProxy)
@@ -405,14 +404,9 @@ func (s *server) startGRPCGateway(ctx context.Context, addr string) {
 		return
 	}
 
-	// support swagger-ui API document
 	httpMux := http.NewServeMux()
 	// merge grpc gateway endpoint handling
 	httpMux.Handle("/", mux)
-	// support swagger API documentation
-	httpMux.HandleFunc("/swagger/", swagger.ServeSwaggerFile)
-	// support analysis pages
-	httpMux.HandleFunc("/analysis/", swagger.ServeAnalysisFile)
 
 	cfg := config.GetCurrentConfig()
 	host := fmt.Sprintf(":%d", cfg.Server.Port)

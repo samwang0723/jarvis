@@ -25,7 +25,7 @@ import (
 
 var ErrNoPickedStock = errors.New("no picked stock")
 
-func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.PickedStock) error {
+func (i *dalImpl) BatchUpsertPickedStock(_ context.Context, objs []*entity.PickedStock) error {
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
@@ -33,7 +33,7 @@ func (i *dalImpl) BatchUpsertPickedStock(ctx context.Context, objs []*entity.Pic
 	return err
 }
 
-func (i *dalImpl) DeletePickedStockByID(ctx context.Context, userID uint64, stockID string) error {
+func (i *dalImpl) DeletePickedStockByID(_ context.Context, userID uint64, stockID string) error {
 	err := i.db.Exec(`
                 update picked_stocks set deleted_at = NOW() 
                 where stock_id = ? and user_id = ? and deleted_at is null`, stockID, userID).Error
