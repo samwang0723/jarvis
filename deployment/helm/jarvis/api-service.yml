@@ -3,6 +3,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jarvis-service
+  labels:
+    app: jarvis-api
+    service: jarvis-service
 spec:
   ports:
   - name: http
@@ -11,3 +14,4 @@ spec:
     targetPort: 8080
   selector:
     app: jarvis-api
+    version: v1

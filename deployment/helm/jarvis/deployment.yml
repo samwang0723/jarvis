@@ -3,15 +3,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jarvis-api
+  labels:
+    app: jarvis-api
+    version: v1
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: jarvis-api
+      version: v1
   template:
     metadata:
       labels:
         app: jarvis-api
+        version: v1
     spec:
       containers:
       - name: application
@@ -43,6 +48,11 @@ spec:
             path: /ready
             port: 8080
           periodSeconds: 5
+        resources:
+          limits:
+            memory: "256Mi"
+          requests:
+            memory: "128Mi"
         env:
         - name: MY_IP
           valueFrom:
