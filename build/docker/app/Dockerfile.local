@@ -34,7 +34,6 @@ WORKDIR /
 
 COPY --from=build_base /app/configs/config.dev.yaml /configs/config.dev.yaml
 COPY --from=build_base /app/configs/config.local.yaml /configs/config.local.yaml
-COPY --from=build_base /app/analysis /analysis
 COPY --from=build_base /jarvis-api /jarvis-api
 
 # This container exposes ports to the outside world

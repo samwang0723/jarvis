@@ -242,7 +242,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v1.4.0", s.Config().Environment)
+	signatureOut := fmt.Sprintf(signature, "v2.0.0", s.Config().Environment)
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 

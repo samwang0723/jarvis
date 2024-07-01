@@ -39,7 +39,7 @@ func main() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:         cfg.Sentry.DSN,
 		Environment: cfg.Environment,
-		Release:     "v1.4.0",
+		Release:     "v2.0.0",
 		// Enable printing of SDK debug messages.
 		// Useful when getting started or trying to figure something out.
 		Debug: cfg.Sentry.Debug,
