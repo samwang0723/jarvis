@@ -53,17 +53,21 @@ func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 	return err
 }
 
-func (i *dalImpl) UpdateUser(ctx context.Context, obj *entity.User) error {
+func (i *dalImpl) UpdateUser(_ context.Context, obj *entity.User) error {
 	if obj.ID.Uint64() == 0 {
 		return errNoUserID
 	}
 
-	err := i.db.Unscoped().Omit("SessionID", "SessionExpiredAt").Model(&entity.User{}).Save(obj).Error
+	err := i.db.Unscoped().
+		Omit("SessionID", "SessionExpiredAt").
+		Model(&entity.User{}).
+		Save(obj).
+		Error
 
 	return err
 }
 
-func (i *dalImpl) UpdateSessionID(ctx context.Context, obj *entity.User) error {
+func (i *dalImpl) UpdateSessionID(_ context.Context, obj *entity.User) error {
 	if obj.ID.Uint64() == 0 {
 		return errNoUserID
 	}
@@ -86,7 +90,7 @@ func (i *dalImpl) UpdateSessionID(ctx context.Context, obj *entity.User) error {
 	return err
 }
 
-func (i *dalImpl) DeleteSessionID(ctx context.Context, userID uint64) error {
+func (i *dalImpl) DeleteSessionID(_ context.Context, userID uint64) error {
 	if userID == 0 {
 		return errNoUserID
 	}
@@ -100,13 +104,13 @@ func (i *dalImpl) DeleteSessionID(ctx context.Context, userID uint64) error {
 	return err
 }
 
-func (i *dalImpl) DeleteUserByID(ctx context.Context, id uint64) error {
+func (i *dalImpl) DeleteUserByID(_ context.Context, id uint64) error {
 	err := i.db.Delete(&entity.User{}, id).Error
 
 	return err
 }
 
-func (i *dalImpl) GetUserByID(ctx context.Context, id uint64) (*entity.User, error) {
+func (i *dalImpl) GetUserByID(_ context.Context, id uint64) (*entity.User, error) {
 	res := &entity.User{}
 	if err := i.db.First(res, "id = ?", id).Error; err != nil {
 		return nil, err
@@ -115,7 +119,7 @@ func (i *dalImpl) GetUserByID(ctx context.Context, id uint64) (*entity.User, err
 	return res, nil
 }
 
-func (i *dalImpl) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (i *dalImpl) GetUserByEmail(_ context.Context, email string) (*entity.User, error) {
 	res := &entity.User{}
 	if err := i.db.First(res, "email = ?", email).Error; err != nil {
 		return nil, err
@@ -124,7 +128,7 @@ func (i *dalImpl) GetUserByEmail(ctx context.Context, email string) (*entity.Use
 	return res, nil
 }
 
-func (i *dalImpl) GetUserByPhone(ctx context.Context, phone string) (*entity.User, error) {
+func (i *dalImpl) GetUserByPhone(_ context.Context, phone string) (*entity.User, error) {
 	res := &entity.User{}
 	if err := i.db.First(res, "phone = ?", phone).Error; err != nil {
 		return nil, err
@@ -134,7 +138,7 @@ func (i *dalImpl) GetUserByPhone(ctx context.Context, phone string) (*entity.Use
 }
 
 func (i *dalImpl) ListUsers(
-	ctx context.Context,
+	_ context.Context,
 	offset,
 	limit int32,
 ) (objs []*entity.User, totalCount int64, err error) {
@@ -144,7 +148,11 @@ func (i *dalImpl) ListUsers(
 		return nil, 0, err
 	}
 
-	sql = fmt.Sprintf(`select * from users where deleted_at is null order by created_at desc limit %d, %d`, offset, limit)
+	sql = fmt.Sprintf(
+		`select * from users where deleted_at is null order by created_at desc limit %d, %d`,
+		offset,
+		limit,
+	)
 	if err := i.db.Raw(sql).Scan(&objs).Error; err != nil {
 		return nil, totalCount, err
 	}

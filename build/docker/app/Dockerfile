@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.17-alpine AS build_base
+FROM golang:1.22-alpine AS build_base
 
 # Add Maintainer Info
 LABEL maintainer="Sam Wang <sam.wang.0723@gmail.com>"
@@ -36,7 +36,6 @@ WORKDIR /
 COPY --from=build_base /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=build_base /app/api/jarvis.v1.swagger.json /api/jarvis.v1.swagger.json
 COPY --from=build_base /app/configs/config.prod.yaml /configs/config.prod.yaml
 COPY --from=build_base /app/analysis /analysis
 COPY --from=build_base /jarvis-api /jarvis-api

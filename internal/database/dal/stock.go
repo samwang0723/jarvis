@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func (i *dalImpl) BatchUpsertStocks(ctx context.Context, objs []*entity.Stock) error {
+func (i *dalImpl) BatchUpsertStocks(_ context.Context, objs []*entity.Stock) error {
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
@@ -30,25 +30,25 @@ func (i *dalImpl) BatchUpsertStocks(ctx context.Context, objs []*entity.Stock) e
 	return err
 }
 
-func (i *dalImpl) CreateStock(ctx context.Context, obj *entity.Stock) error {
+func (i *dalImpl) CreateStock(_ context.Context, obj *entity.Stock) error {
 	err := i.db.Create(obj).Error
 
 	return err
 }
 
-func (i *dalImpl) UpdateStock(ctx context.Context, obj *entity.Stock) error {
+func (i *dalImpl) UpdateStock(_ context.Context, obj *entity.Stock) error {
 	err := i.db.Unscoped().Model(&entity.Stock{}).Save(obj).Error
 
 	return err
 }
 
-func (i *dalImpl) DeleteStockByID(ctx context.Context, id entity.ID) error {
+func (i *dalImpl) DeleteStockByID(_ context.Context, id entity.ID) error {
 	err := i.db.Delete(&entity.Stock{}, id).Error
 
 	return err
 }
 
-func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entity.Stock, error) {
+func (i *dalImpl) GetStockByStockID(_ context.Context, stockID string) (*entity.Stock, error) {
 	res := &entity.Stock{}
 	if err := i.db.First(res, "stock_id = ?", stockID).Error; err != nil {
 		return nil, err
@@ -57,10 +57,13 @@ func (i *dalImpl) GetStockByStockID(ctx context.Context, stockID string) (*entit
 	return res, nil
 }
 
-func (i *dalImpl) ListStock(ctx context.Context, offset, limit int32,
+func (i *dalImpl) ListStock(_ context.Context, offset, limit int32,
 	searchParams *idal.ListStockSearchParams,
 ) (objs []*entity.Stock, totalCount int64, err error) {
-	sql := fmt.Sprintf("select count(*) from stocks where %s", buildQueryFromListStockSearchParams(searchParams))
+	sql := fmt.Sprintf(
+		"select count(*) from stocks where %s",
+		buildQueryFromListStockSearchParams(searchParams),
+	)
 
 	err = i.db.Raw(sql).Scan(&totalCount).Error
 	if err != nil {
@@ -79,7 +82,7 @@ func (i *dalImpl) ListStock(ctx context.Context, offset, limit int32,
 	return objs, totalCount, nil
 }
 
-func (i *dalImpl) ListCategories(ctx context.Context) (objs []string, err error) {
+func (i *dalImpl) ListCategories(_ context.Context) (objs []string, err error) {
 	err = i.db.Raw("SELECT category FROM stocks group by category").Scan(&objs).Error
 	if err != nil {
 		return []string{}, err
@@ -94,7 +97,7 @@ func buildQueryFromListStockSearchParams(params *idal.ListStockSearchParams) str
 		return query
 	}
 
-	if len(params.Country) > 0 {
+	if params.Country != "" {
 		query = fmt.Sprintf("country = '%s'", params.Country)
 	}
 

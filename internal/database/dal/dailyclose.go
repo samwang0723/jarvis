@@ -24,13 +24,13 @@ import (
 
 const maxAverageLimit = 55 * 3
 
-func (i *dalImpl) CreateDailyClose(ctx context.Context, obj *entity.DailyClose) error {
+func (i *dalImpl) CreateDailyClose(_ context.Context, obj *entity.DailyClose) error {
 	err := i.db.Create(obj).Error
 
 	return err
 }
 
-func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.DailyClose) error {
+func (i *dalImpl) BatchUpsertDailyClose(_ context.Context, objs []*entity.DailyClose) error {
 	err := i.db.Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).CreateInBatches(&objs, idal.MaxRow).Error
@@ -38,7 +38,7 @@ func (i *dalImpl) BatchUpsertDailyClose(ctx context.Context, objs []*entity.Dail
 	return err
 }
 
-func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
+func (i *dalImpl) HasDailyClose(_ context.Context, date string) bool {
 	res := []string{}
 	if err := i.db.Raw(`select stock_id from daily_closes
 				where exchange_date = ? limit 1`, date).Scan(&res).Error; err != nil {
@@ -48,7 +48,7 @@ func (i *dalImpl) HasDailyClose(ctx context.Context, date string) bool {
 	return len(res) > 0
 }
 
-func (i *dalImpl) ListDailyClose(ctx context.Context, offset, limit int32,
+func (i *dalImpl) ListDailyClose(_ context.Context, offset, limit int32,
 	searchParams *idal.ListDailyCloseSearchParams,
 ) (objs []*entity.DailyClose, totalCount int64, err error) {
 	sql := fmt.Sprintf("select count(*) from daily_closes where %s",
@@ -74,7 +74,10 @@ func (i *dalImpl) ListDailyClose(ctx context.Context, offset, limit int32,
 	return objs, totalCount, nil
 }
 
-func (i *dalImpl) ListLatestPrice(ctx context.Context, stockIDs []string) (objs []*entity.StockPrice, err error) {
+func (i *dalImpl) ListLatestPrice(
+	_ context.Context,
+	stockIDs []string,
+) (objs []*entity.StockPrice, err error) {
 	idList := ""
 	for i := 0; i < len(stockIDs); i++ {
 		if i > 0 {

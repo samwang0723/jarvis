@@ -122,9 +122,6 @@ proto: ## generate proto files
 		--grpc-gateway_opt paths=source_relative \
 		--grpc-gateway_opt standalone=true
 
-	@echo "[protoc] generate openapiv2 swagger json"
-	@protoc -I ./third_party -I ./internal/app/pb --openapiv2_out api --openapiv2_opt logtostderr=true jarvis.v1.proto
-		
 
 docker-build: lint test docker-m1 ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"

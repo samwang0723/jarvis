@@ -77,7 +77,7 @@ type realTimeList struct {
 	Market  string `gorm:"column:market"`
 }
 
-func (i *dalImpl) DataCompletionDate(ctx context.Context, opts ...string) (date string, err error) {
+func (i *dalImpl) DataCompletionDate(_ context.Context, opts ...string) (date string, err error) {
 	if len(opts) > 0 {
 		err = i.db.Raw(`select exchange_date from stake_concentration 
 			where exchange_date = ? limit 1;`, opts[0]).Scan(&date).Error
@@ -564,7 +564,6 @@ func (i *dalImpl) retrieveDailyCloseHistory(
 
 	err = i.db.Raw(`select MIN(a.exchange_date) from (select exchange_date from stake_concentration 
 		group by exchange_date order by exchange_date desc limit 120) as a;`).Scan(&startDate).Error
-
 	if err != nil {
 		return nil, err
 	}
