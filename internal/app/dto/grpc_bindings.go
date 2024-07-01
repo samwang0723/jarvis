@@ -17,12 +17,11 @@ import (
 	"encoding/json"
 	"math"
 
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -162,17 +161,17 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbLow := in.Low
 	pbDiff := in.PriceDiff
 
-	var pbCreatedAt *timestamp.Timestamp
+	var pbCreatedAt *timestamppb.Timestamp
 	if in.CreatedAt != nil {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
+	var pbUpdatedAt *timestamppb.Timestamp
 	if in.UpdatedAt != nil {
 		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
-	var pbDeletedAt *timestamp.Timestamp
+	var pbDeletedAt *timestamppb.Timestamp
 	if in.DeletedAt.Valid {
 		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
@@ -226,17 +225,17 @@ func StockToPB(in *entity.Stock) *pb.Stock {
 	pbCountry := in.Country
 	pbMarket := in.Market
 
-	var pbCreatedAt *timestamp.Timestamp
+	var pbCreatedAt *timestamppb.Timestamp
 	if in.CreatedAt != nil {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
+	var pbUpdatedAt *timestamppb.Timestamp
 	if in.UpdatedAt != nil {
 		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
-	var pbDeletedAt *timestamp.Timestamp
+	var pbDeletedAt *timestamppb.Timestamp
 	if in.DeletedAt.Valid {
 		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
@@ -300,17 +299,17 @@ func GetStakeConcentrationResponseToPB(
 	pbConcentration20 := in.Concentration20
 	pbConcentration60 := in.Concentration60
 
-	var pbCreatedAt *timestamp.Timestamp
+	var pbCreatedAt *timestamppb.Timestamp
 	if in.CreatedAt != nil {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
+	var pbUpdatedAt *timestamppb.Timestamp
 	if in.UpdatedAt != nil {
 		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
-	var pbDeletedAt *timestamp.Timestamp
+	var pbDeletedAt *timestamppb.Timestamp
 	if in.DeletedAt.Valid {
 		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
@@ -401,17 +400,17 @@ func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
 	pbDealerTradeShares := in.DealerTradeShares
 	pbHedgingTradeShares := in.HedgingTradeShares
 
-	var pbCreatedAt *timestamp.Timestamp
+	var pbCreatedAt *timestamppb.Timestamp
 	if in.CreatedAt != nil {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
+	var pbUpdatedAt *timestamppb.Timestamp
 	if in.UpdatedAt != nil {
 		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
-	var pbDeletedAt *timestamp.Timestamp
+	var pbDeletedAt *timestamppb.Timestamp
 	if in.DeletedAt.Valid {
 		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}
@@ -659,17 +658,17 @@ func UserToPB(in *entity.User) *pb.User {
 	pbFirstName := in.FirstName
 	pbLastName := in.LastName
 
-	var pbCreatedAt *timestamp.Timestamp
+	var pbCreatedAt *timestamppb.Timestamp
 	if in.CreatedAt != nil {
 		pbCreatedAt = timestamppb.New(*in.CreatedAt)
 	}
 
-	var pbUpdatedAt *timestamp.Timestamp
+	var pbUpdatedAt *timestamppb.Timestamp
 	if in.UpdatedAt != nil {
 		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
 	}
 
-	var pbDeletedAt *timestamp.Timestamp
+	var pbDeletedAt *timestamppb.Timestamp
 	if in.DeletedAt.Valid {
 		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
 	}

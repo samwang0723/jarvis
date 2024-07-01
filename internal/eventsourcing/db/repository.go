@@ -10,17 +10,11 @@ import (
 )
 
 type AggregateRepository struct {
-	aggregateType reflect.Type
-
-	eventStore EventStore
-
-	projectors map[eventsourcing.EventType][]eventsourcing.Projector
-
-	// aggregateLoader loads aggregates from a projected table.
+	aggregateType   reflect.Type
 	aggregateLoader eventsourcing.AggregateLoader
-
-	// aggregateSaver saves aggregates to a projected table.
-	aggregateSaver eventsourcing.AggregateSaver
+	aggregateSaver  eventsourcing.AggregateSaver
+	projectors      map[eventsourcing.EventType][]eventsourcing.Projector
+	eventStore      EventStore
 }
 
 type AggregateRepositoryOption func(*AggregateRepository)
@@ -170,7 +164,10 @@ func (ar *AggregateRepository) project(ctx context.Context, event eventsourcing.
 }
 
 // AddProjector add a projector to repository.
-func (ar *AggregateRepository) AddProjector(event eventsourcing.Event, projector eventsourcing.Projector) {
+func (ar *AggregateRepository) AddProjector(
+	event eventsourcing.Event,
+	projector eventsourcing.Projector,
+) {
 	eventType := event.EventType()
 	ar.projectors[eventType] = append(ar.projectors[eventType], projector)
 }

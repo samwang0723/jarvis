@@ -3,12 +3,11 @@ package entity
 import "github.com/samwang0723/jarvis/internal/eventsourcing"
 
 type TransactionCreated struct {
+	OrderType string
+	eventsourcing.BaseEvent
+	OrderID      uint64
 	DebitAmount  float32
 	CreditAmount float32
-	OrderType    string
-	OrderID      uint64
-
-	eventsourcing.BaseEvent
 }
 
 // EventType returns the name of event

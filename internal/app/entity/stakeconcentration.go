@@ -21,20 +21,19 @@ type CalculationBase struct {
 }
 
 type StakeConcentration struct {
+	StockID string `gorm:"column:stock_id"         json:"stockId"`
+	Date    string `gorm:"column:exchange_date"    json:"exchangeDate"`
 	Base
-
-	StockID         string  `gorm:"column:stock_id" json:"stockId"`
-	Date            string  `gorm:"column:exchange_date" json:"exchangeDate"`
-	SumBuyShares    uint64  `gorm:"column:sum_buy_shares" json:"sumBuyShares"`
-	SumSellShares   uint64  `gorm:"column:sum_sell_shares" json:"sumSellShares"`
-	AvgBuyPrice     float32 `gorm:"column:avg_buy_price" json:"avgBuyPrice"`
-	AvgSellPrice    float32 `gorm:"column:avg_sell_price" json:"avgSellPrice"`
+	Diff            []int32 `gorm:"-"                       json:"diff"`
+	SumBuyShares    uint64  `gorm:"column:sum_buy_shares"   json:"sumBuyShares"`
+	SumSellShares   uint64  `gorm:"column:sum_sell_shares"  json:"sumSellShares"`
+	AvgSellPrice    float32 `gorm:"column:avg_sell_price"   json:"avgSellPrice"`
 	Concentration1  float32 `gorm:"column:concentration_1"`
 	Concentration5  float32 `gorm:"column:concentration_5"`
 	Concentration10 float32 `gorm:"column:concentration_10"`
 	Concentration20 float32 `gorm:"column:concentration_20"`
 	Concentration60 float32 `gorm:"column:concentration_60"`
-	Diff            []int32 `gorm:"-" json:"diff"`
+	AvgBuyPrice     float32 `gorm:"column:avg_buy_price"    json:"avgBuyPrice"`
 }
 
 func (StakeConcentration) TableName() string {

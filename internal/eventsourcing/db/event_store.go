@@ -28,9 +28,9 @@ INSERT INTO %s (aggregate_id, version, parent_id, event_type, payload, created_a
 `
 
 type EventStore struct {
-	eventTable string
 	registry   *eventsourcing.EventRegistry
 	db         *gorm.DB
+	eventTable string
 }
 
 func NewEventStore(

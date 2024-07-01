@@ -242,7 +242,7 @@ High performance stock analysis tool
 Environment (%s)
 _______________________________________________
 `
-	signatureOut := fmt.Sprintf(signature, "v2.0.0", s.Config().Environment)
+	signatureOut := fmt.Sprintf(signature, s.Config().Server.Version, s.Config().Environment)
 	//nolint:nolintlint, forbidigo
 	fmt.Println(signatureOut)
 
@@ -329,7 +329,7 @@ func (s *server) Run(ctx context.Context) error {
 		s.Logger().Warn().Msg("signal interrupt")
 		cancel()
 	case <-childCtx.Done():
-		s.Logger().Warn().Msg("main context being cancelled")
+		s.Logger().Warn().Msg("main context being canceled")
 	}
 
 	return s.Stop()

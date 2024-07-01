@@ -56,11 +56,9 @@ func (ols *OrderLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.A
 		}
 	}
 
-	if err := queries.Omit("ProfitLoss", "ProfitLossPercent", "StockName", "CurrentPrice").Save(order).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return queries.Omit("ProfitLoss", "ProfitLossPercent", "StockName", "CurrentPrice").
+		Save(order).
+		Error
 }
 
 func NewOrderRepository(dbPool *gorm.DB) *OrderRepository {
@@ -215,11 +213,7 @@ func (i *dalImpl) CreateOrder(
 			}
 		}
 
-		if err := i.CreateChainTransactions(ctx, transactions); err != nil {
-			return err
-		}
-
-		return nil
+		return i.CreateChainTransactions(ctx, transactions)
 	})
 
 	return err

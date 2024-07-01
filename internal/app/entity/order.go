@@ -32,26 +32,23 @@ type stockState struct {
 }
 
 type Order struct {
-	StockID          string  `gorm:"column:stock_id" json:"stockId"`
-	UserID           uint64  `gorm:"column:user_id" json:"userId"`
-	BuyPrice         float32 `gorm:"column:buy_price" json:"buyPrice"`
-	BuyQuantity      uint64  `gorm:"column:buy_quantity" json:"buyQuantity"`
-	BuyExchangeDate  string  `gorm:"column:buy_exchange_date" json:"buyExchangeDate"`
-	SellPrice        float32 `gorm:"column:sell_price" json:"sellPrice"`
-	SellQuantity     uint64  `gorm:"column:sell_quantity" json:"sellQuantity"`
-	SellExchangeDate string  `gorm:"column:sell_exchange_date" json:"sellExchangeDate"`
-	ProfitablePrice  float32 `gorm:"column:profitable_price" json:"profitablePrice"`
-	Status           string  `gorm:"column:status" json:"status,omitempty"`
-
+	CreatedAt        time.Time `gorm:"column:created_at"         mapstructure:"created_at"`
+	UpdatedAt        time.Time `gorm:"column:updated_at"         mapstructure:"updated_at"`
+	StockName        string
+	StockID          string `gorm:"column:stock_id"                                     json:"stockId"`
+	BuyExchangeDate  string `gorm:"column:buy_exchange_date"                            json:"buyExchangeDate"`
+	Status           string `gorm:"column:status"                                       json:"status,omitempty"`
+	SellExchangeDate string `gorm:"column:sell_exchange_date"                           json:"sellExchangeDate"`
+	eventsourcing.BaseAggregate
+	SellQuantity      uint64  `gorm:"column:sell_quantity"                                json:"sellQuantity"`
+	BuyQuantity       uint64  `gorm:"column:buy_quantity"                                 json:"buyQuantity"`
+	UserID            uint64  `gorm:"column:user_id"                                      json:"userId"`
+	ProfitablePrice   float32 `gorm:"column:profitable_price"                             json:"profitablePrice"`
+	SellPrice         float32 `gorm:"column:sell_price"                                   json:"sellPrice"`
 	ProfitLoss        float32
 	ProfitLossPercent float32
-	StockName         string
 	CurrentPrice      float32
-
-	CreatedAt time.Time `gorm:"column:created_at" mapstructure:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
-
-	eventsourcing.BaseAggregate
+	BuyPrice          float32 `gorm:"column:buy_price"                                    json:"buyPrice"`
 }
 
 // ensure Transaction implements Aggregate interface

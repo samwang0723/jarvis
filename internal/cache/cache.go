@@ -30,7 +30,7 @@ const (
 	CronjobLock          = "jarvis-realtime-lock"
 )
 
-//go:generate mockgen -source=redis.go -destination=mocks/redis.go -package=cache
+//go:generate mockgen -source=cache.go -destination=mocks/cache.go -package=cache
 type Redis interface {
 	SetExpire(ctx context.Context, key string, expired time.Time) error
 	SAdd(ctx context.Context, key string, values []string) error
@@ -44,18 +44,10 @@ type Redis interface {
 
 // Config encapsulates the settings for configuring the redis service.
 type Config struct {
-	// The logger to use. If not defined an output-discarding logger will
-	// be used instead.
-	Logger *zerolog.Logger
-
-	// Redis master node DNS hostname
-	Master string
-
-	// Redis sentinel addresses
+	Logger        *zerolog.Logger
+	Master        string
+	Password      string
 	SentinelAddrs []string
-
-	// Redis password
-	Password string
 }
 
 type redisImpl struct {
@@ -80,7 +72,12 @@ func New(cfg Config) Redis {
 func (r *redisImpl) SetExpire(ctx context.Context, key string, expired time.Time) error {
 	expire, err := r.instance.ExpireAt(ctx, key, expired).Result()
 	if err != nil {
-		return xerrors.Errorf("cache.SetExpire: failed, key=%s; expired=%s; err=%w;", key, expired, err)
+		return xerrors.Errorf(
+			"cache.SetExpire: failed, key=%s; expired=%s; err=%w;",
+			key,
+			expired,
+			err,
+		)
 	}
 
 	r.cfg.Logger.Info().Msgf("cache.SetExpire: success, key=%s; expired=%t;", key, expire)
@@ -150,7 +147,11 @@ func (r *redisImpl) Get(ctx context.Context, key string) (string, error) {
 	return res, nil
 }
 
-func (r *redisImpl) ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock {
+func (r *redisImpl) ObtainLock(
+	ctx context.Context,
+	key string,
+	expire time.Duration,
+) *redislock.Lock {
 	// Create a new lock client.
 	locker := redislock.New(r.instance)
 

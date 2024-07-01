@@ -23,7 +23,10 @@ type BalanceLoaderSaver struct {
 	query *database.Query
 }
 
-func (bls *BalanceLoaderSaver) Load(ctx context.Context, id uint64) (eventsourcing.Aggregate, error) {
+func (bls *BalanceLoaderSaver) Load(
+	ctx context.Context,
+	id uint64,
+) (eventsourcing.Aggregate, error) {
 	queries := bls.query
 
 	if trans, ok := database.GetTx(ctx); ok {
@@ -53,11 +56,7 @@ func (bls *BalanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 		}
 	}
 
-	if err := queries.Save(balanceView).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return queries.Save(balanceView).Error
 }
 
 func NewBalanceRepository(dbPool *gorm.DB) *BalanceRepository {
@@ -101,7 +100,10 @@ func (br *BalanceRepository) Save(ctx context.Context, balanceView *entity.Balan
 	return nil
 }
 
-func (br *BalanceRepository) LoadForUpdate(ctx context.Context, id uint64) (*entity.BalanceView, error) {
+func (br *BalanceRepository) LoadForUpdate(
+	ctx context.Context,
+	id uint64,
+) (*entity.BalanceView, error) {
 	balanceView := &entity.BalanceView{}
 
 	queries := br.query
@@ -118,7 +120,10 @@ func (br *BalanceRepository) LoadForUpdate(ctx context.Context, id uint64) (*ent
 	return balanceView, nil
 }
 
-func (i *dalImpl) GetBalanceViewByUserID(ctx context.Context, id uint64) (*entity.BalanceView, error) {
+func (i *dalImpl) GetBalanceViewByUserID(
+	ctx context.Context,
+	id uint64,
+) (*entity.BalanceView, error) {
 	res, err := i.balanceRepository.Load(ctx, id)
 	if err != nil {
 		return nil, err

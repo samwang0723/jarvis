@@ -20,9 +20,9 @@ import (
 )
 
 type ListDailyCloseSearchParams struct {
+	End     *string
 	StockID string
 	Start   string
-	End     *string // End = nil means it's querying to up-to-date data
 }
 
 type IDailyCloseDAL interface {

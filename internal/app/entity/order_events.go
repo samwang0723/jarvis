@@ -3,16 +3,15 @@ package entity
 import "github.com/samwang0723/jarvis/internal/eventsourcing"
 
 type OrderCreated struct {
-	OrderType       string
-	StockID         string
-	ExchangeDate    string
-	TradePrice      float32
+	OrderType    string
+	StockID      string
+	ExchangeDate string
+	Description  string
+	eventsourcing.BaseEvent
 	Quantity        uint64
-	Description     string
+	TradePrice      float32
 	ProfitablePrice float32
 	ProfitLoss      float32
-
-	eventsourcing.BaseEvent
 }
 
 // EventType returns the name of event
@@ -24,12 +23,11 @@ type OrderChanged struct {
 	OrderType    string
 	StockID      string
 	ExchangeDate string
-	TradePrice   float32
-	Quantity     uint64
 	Description  string
-	ProfitLoss   float32
-
 	eventsourcing.BaseEvent
+	Quantity   uint64
+	TradePrice float32
+	ProfitLoss float32
 }
 
 // EventType returns the name of event

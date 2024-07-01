@@ -1,14 +1,26 @@
-.PHONY: test lint bench lint-skip-fix migrate proto build build-docker
+.PHONY: test lint bench lint-skip-fix migrate proto build build-docker install vendor
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-PROJECT_NAME?=core
 APP_NAME?=jarvis-api
 VERSION?=v2.0.0
 
 SHELL = /bin/bash
-SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /api/ | grep -v /internal/app/pb)
+SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb)
+
+###########
+# install #
+###########
+## install: Install go dependencies
+install:
+	go mod tidy
+	go mod download
+	go get ./...
+
+# vendor: Vendor go modules
+vendor:
+	go mod vendor
 
 ########
 # test #
@@ -31,7 +43,7 @@ test-coverage-report:
 ########
 
 lint: lint-check-deps ## lints the entire codebase
-	@golangci-lint run ./... --config=./.golangci.toml --timeout=15m && \
+	@golangci-lint run ./... --config=./.golangci.yaml --timeout=15m && \
 	if [ $$(gofumpt -e -l --extra cmd/ | wc -l) = "0" ] && \
 		[ $$(gofumpt -e -l --extra internal/ | wc -l) = "0" ] && \
 		[ $$(gofumpt -e -l --extra configs/ | wc -l) = "0" ] ; \
@@ -51,7 +63,6 @@ lint-check-deps:
 
 lint-skip-fix: ## skip linting the system generate files
 	@git checkout head internal/app/pb
-	@git checkout head api/
 	@git checkout head third_party/
 
 #############
@@ -121,6 +132,9 @@ proto: ## generate proto files
 		--grpc-gateway_opt logtostderr=true \
 		--grpc-gateway_opt paths=source_relative \
 		--grpc-gateway_opt standalone=true
+
+	@echo "[protoc] generate openapiv2 swagger json"
+	@protoc -I ./third_party -I ./internal/app/pb --openapiv2_out api --openapiv2_opt logtostderr=true jarvis.v1.proto
 
 
 docker-build: lint test docker-m1 ## build docker image in M1 device

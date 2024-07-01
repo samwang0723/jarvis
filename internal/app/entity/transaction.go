@@ -25,16 +25,15 @@ const (
 )
 
 type Transaction struct {
-	UserID       uint64    `gorm:"column:user_id" json:"userId"`
-	OrderType    string    `gorm:"column:order_type" json:"orderType"`
-	CreditAmount float32   `gorm:"column:credit_amount" json:"creditAmount"`
-	DebitAmount  float32   `gorm:"column:debit_amount" json:"debitAmount"`
-	OrderID      uint64    `gorm:"column:order_id" json:"orderId"`
-	Status       string    `gorm:"column:status" json:"status,omitempty"`
-	CreatedAt    time.Time `gorm:"column:created_at" mapstructure:"created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
-
+	CreatedAt time.Time `gorm:"column:created_at"    mapstructure:"created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"    mapstructure:"updated_at"`
+	OrderType string    `gorm:"column:order_type"                              json:"orderType"`
+	Status    string    `gorm:"column:status"                                  json:"status,omitempty"`
 	eventsourcing.BaseAggregate
+	UserID       uint64  `gorm:"column:user_id"                                 json:"userId"`
+	OrderID      uint64  `gorm:"column:order_id"                                json:"orderId"`
+	CreditAmount float32 `gorm:"column:credit_amount"                           json:"creditAmount"`
+	DebitAmount  float32 `gorm:"column:debit_amount"                            json:"debitAmount"`
 }
 
 // ensure Transaction implements Aggregate interface

@@ -91,10 +91,10 @@ func machineID() (uint16, error) {
 }
 
 type Base struct {
-	ID        ID         `gorm:"primaryKey"        mapstructure:"id"`
 	CreatedAt *time.Time `gorm:"column:created_at" mapstructure:"created_at"`
 	UpdatedAt *time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
 	DeletedAt gorm.DeletedAt
+	ID        ID `gorm:"primaryKey"        mapstructure:"id"`
 }
 
 func (m *Base) BeforeCreate(_ *gorm.DB) (err error) {
