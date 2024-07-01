@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [2.0.0] - 2024-07-01
 
 ### Bug Fixes
 
@@ -73,6 +73,7 @@ All notable changes to this project will be documented in this file.
 - Update MySQL auth method and reduce warning logs
 - Remove small memory limit
 - Upgrade go version to 1.22 and remove swagger ([#43](https://github.com/samwang0723/stock-crawler/issues/43))
+- Remove unnecessary item and upgrade to v2.0.0
 
 ### Features
 
