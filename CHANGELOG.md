@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2024-07-02
+
+### Bug Fixes
+
+- Update swagger, grpc-gateway v2, linting issue ([#44](https://github.com/samwang0723/stock-crawler/issues/44))
+
+### Features
+
+- Support k8s deployment in Makefile
+- Support auto git tag and changelog gen
+- Update bump version to existing deployment files and auto commit
+
 ## [2.0.0] - 2024-07-01
 
 ### Bug Fixes
