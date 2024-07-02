@@ -30,11 +30,15 @@ fi
 # Replace old version tag with new one in specified files
 files_to_update=("Makefile" "deployments/helm/jarvis/deployment.yaml" "configs/config.local.yaml" "configs/config.dev.yaml" "build/docker/app/docker-compose.yml")
 
+# Include file version changes in commit
 for file in "${files_to_update[@]}"; do
   if [ -f "$file" ]; then
     sed -i '' "s/$latest_tag/$new_tag/g" "$file"
   fi
+  git add $file
 done
+
+git commit -m "Bump version to $new_tag"
 
 # Create a new tag
 git tag $new_tag
