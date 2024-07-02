@@ -41,9 +41,9 @@ func TestSetExpire(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		key     string
 		expired time.Time
 		err     error
+		key     string
 	}
 
 	tests := []struct {
@@ -91,9 +91,9 @@ func TestSAdd(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
+		err   error
 		key   string
 		value []string
-		err   error
 	}
 
 	tests := []struct {
@@ -141,13 +141,13 @@ func TestSMembers(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		key string
 		err error
+		key string
 	}
 
 	tests := []struct {
-		name    string
 		args    args
+		name    string
 		wantErr bool
 	}{
 		{

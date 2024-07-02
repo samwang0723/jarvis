@@ -26,13 +26,12 @@ const (
 )
 
 type BalanceView struct {
-	Balance   float32   `gorm:"column:balance" json:"balance"`
-	Pending   float32   `gorm:"column:pending" json:"pending"`
-	Available float32   `gorm:"column:available" json:"available"`
 	CreatedAt time.Time `gorm:"column:created_at" mapstructure:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at" mapstructure:"updated_at"`
-
 	eventsourcing.BaseAggregate
+	Balance   float32 `gorm:"column:balance"                              json:"balance"`
+	Pending   float32 `gorm:"column:pending"                              json:"pending"`
+	Available float32 `gorm:"column:available"                            json:"available"`
 }
 
 func (BalanceView) TableName() string {

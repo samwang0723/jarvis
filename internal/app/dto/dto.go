@@ -146,9 +146,9 @@ type LoginRequest struct {
 type LoginResponse struct {
 	ErrorCode    string `json:"errorCode"`
 	ErrorMessage string `json:"errorMessage"`
-	Success      bool   `json:"success"`
-	Status       int    `json:"status"`
 	AccessToken  string `json:"access_token"`
+	Status       int    `json:"status"`
+	Success      bool   `json:"success"`
 }
 
 type LogoutResponse struct {

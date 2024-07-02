@@ -25,7 +25,10 @@ type TransactionLoaderSaver struct {
 	query *database.Query
 }
 
-func (tls *TransactionLoaderSaver) Load(ctx context.Context, id uint64) (eventsourcing.Aggregate, error) {
+func (tls *TransactionLoaderSaver) Load(
+	ctx context.Context,
+	id uint64,
+) (eventsourcing.Aggregate, error) {
 	queries := tls.query
 
 	if trans, ok := database.GetTx(ctx); ok {
@@ -40,7 +43,10 @@ func (tls *TransactionLoaderSaver) Load(ctx context.Context, id uint64) (eventso
 	return transaction, nil
 }
 
-func (tls *TransactionLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
+func (tls *TransactionLoaderSaver) Save(
+	ctx context.Context,
+	aggregate eventsourcing.Aggregate,
+) error {
 	queries := tls.query
 
 	if trans, ok := database.GetTx(ctx); ok {
@@ -55,11 +61,7 @@ func (tls *TransactionLoaderSaver) Save(ctx context.Context, aggregate eventsour
 		}
 	}
 
-	if err := queries.Omit("OriginalExchangeDate").Save(transaction).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return queries.Omit("OriginalExchangeDate").Save(transaction).Error
 }
 
 func NewTransactionRepository(dbPool *gorm.DB) *TransactionRepository {
@@ -94,7 +96,10 @@ func (tr *TransactionRepository) Load(ctx context.Context, id uint64) (*entity.T
 	return transactionRequest, nil
 }
 
-func (tr *TransactionRepository) Save(ctx context.Context, transactionRequest *entity.Transaction) error {
+func (tr *TransactionRepository) Save(
+	ctx context.Context,
+	transactionRequest *entity.Transaction,
+) error {
 	err := tr.repo.Save(ctx, transactionRequest)
 	if err != nil {
 		return fmt.Errorf("failed to save transaction: %w", err)
@@ -103,7 +108,10 @@ func (tr *TransactionRepository) Save(ctx context.Context, transactionRequest *e
 	return nil
 }
 
-func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*entity.Transaction) error {
+func (i *dalImpl) CreateChainTransactions(
+	ctx context.Context,
+	transactions []*entity.Transaction,
+) error {
 	err := i.db.Transaction(func(tx *gorm.DB) error {
 		ctx = database.WithTx(ctx, tx)
 		balanceView, err := i.balanceRepository.LoadForUpdate(ctx, transactions[0].UserID)
@@ -126,11 +134,7 @@ func (i *dalImpl) CreateChainTransactions(ctx context.Context, transactions []*e
 			}
 		}
 
-		if err := i.balanceRepository.Save(ctx, balanceView); err != nil {
-			return err
-		}
-
-		return nil
+		return i.balanceRepository.Save(ctx, balanceView)
 	})
 
 	return err

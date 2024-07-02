@@ -14,10 +14,9 @@
 package entity
 
 type PickedStock struct {
-	Base
-
 	StockID string `gorm:"column:stock_id" json:"stockId"`
-	UserID  uint64 `gorm:"column:user_id" json:"userId"`
+	Base
+	UserID uint64 `gorm:"column:user_id"  json:"userId"`
 }
 
 func (PickedStock) TableName() string {

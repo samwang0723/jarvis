@@ -43,11 +43,7 @@ func (i *dalImpl) CreateUser(ctx context.Context, obj *entity.User) error {
 			return err
 		}
 
-		if err := i.balanceRepository.Save(ctx, balance); err != nil {
-			return err
-		}
-
-		return nil
+		return i.balanceRepository.Save(ctx, balance)
 	})
 
 	return err

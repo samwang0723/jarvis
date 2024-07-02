@@ -20,21 +20,17 @@ type StockPrice struct {
 }
 
 type DailyClose struct {
-	Base
-
 	StockID string `gorm:"column:stock_id"      json:"stockId"`
 	Date    string `gorm:"column:exchange_date" json:"date"`
-	// Total volumes of shares being traded.
-	TradedShares uint64 `gorm:"column:trade_shares"  json:"tradeShares"`
-	// Total numbers of transaction.
-	Transactions uint64 `gorm:"column:transactions"  json:"transactions"`
-	// Total traded dollar volume
-	Turnover  uint64  `gorm:"column:turnover"      json:"turnover"`
-	Open      float32 `gorm:"column:open"          json:"open"`
-	Close     float32 `gorm:"column:close"         json:"close"`
-	High      float32 `gorm:"column:high"          json:"high"`
-	Low       float32 `gorm:"column:low"           json:"low"`
-	PriceDiff float32 `gorm:"column:price_diff"    json:"priceDiff"`
+	Base
+	TradedShares uint64  `gorm:"column:trade_shares"  json:"tradeShares"`
+	Transactions uint64  `gorm:"column:transactions"  json:"transactions"`
+	Turnover     uint64  `gorm:"column:turnover"      json:"turnover"`
+	Open         float32 `gorm:"column:open"          json:"open"`
+	Close        float32 `gorm:"column:close"         json:"close"`
+	High         float32 `gorm:"column:high"          json:"high"`
+	Low          float32 `gorm:"column:low"           json:"low"`
+	PriceDiff    float32 `gorm:"column:price_diff"    json:"priceDiff"`
 }
 
 func (DailyClose) TableName() string {

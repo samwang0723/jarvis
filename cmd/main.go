@@ -17,7 +17,6 @@ package main
 import (
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	_ "github.com/joho/godotenv/autoload"
 	zl "github.com/rs/zerolog/log"
 	config "github.com/samwang0723/jarvis/configs"
@@ -26,8 +25,7 @@ import (
 )
 
 const (
-	appName              = "jarvis"
-	sentryFlushThreshold = 2 * time.Second
+	appName = "jarvis-api"
 )
 
 func main() {
@@ -36,23 +34,8 @@ func main() {
 
 	logger := zl.With().Str("app", appName).Logger()
 
-	err := sentry.Init(sentry.ClientOptions{
-		Dsn:         cfg.Sentry.DSN,
-		Environment: cfg.Environment,
-		Release:     "v2.0.0",
-		// Enable printing of SDK debug messages.
-		// Useful when getting started or trying to figure something out.
-		Debug: cfg.Sentry.Debug,
-	})
-	if err != nil {
-		logger.Error().Msgf("sentry.Init: %s", err)
-	}
-
-	// Flush buffered events before the program terminates.
-	// Set the timeout to the maximum duration the program can afford to wait.
-	defer sentry.Flush(sentryFlushThreshold)
-
 	// manually set time zone, docker image may not have preset timezone
+	var err error
 	time.Local, err = time.LoadLocation(helper.TimeZone)
 	if err != nil {
 		logger.Error().Msgf("error loading location '%s': %v\n", helper.TimeZone, err)

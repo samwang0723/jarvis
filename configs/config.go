@@ -29,6 +29,36 @@ const (
 )
 
 type Config struct {
+	RedisCache struct {
+		Master        string   `yaml:"master"`
+		Password      string   `yaml:"password"`
+		SentinelAddrs []string `yaml:"sentinelAddrs"`
+	} `yaml:"redis"`
+	Log struct {
+		Level string `yaml:"level"`
+	} `yaml:"log"`
+	Environment string
+	Kafka       struct {
+		GroupID string   `yaml:"groupId"`
+		Brokers []string `yaml:"brokers"`
+		Topics  []string `yaml:"topics"`
+	} `yaml:"kafka"`
+	Sentry struct {
+		DSN   string `yaml:"dsn"`
+		Debug bool   `yaml:"debug"`
+	} `yaml:"sentry"`
+	Server struct {
+		Name     string `yaml:"name"`
+		Host     string `yaml:"host"`
+		Version  string `yaml:"version"`
+		Port     int    `yaml:"port"`
+		GrpcPort int    `yaml:"grpcPort"`
+	} `yaml:"server"`
+	ElasticSearch struct {
+		Host                string `yaml:"host"`
+		Port                int    `yaml:"port"`
+		HealthCheckInterval int    `yaml:"healthCheckInterval"`
+	} `yaml:"elasticsearch"`
 	Database struct {
 		User         string `yaml:"user"`
 		Password     string `yaml:"password"`
@@ -49,35 +79,6 @@ type Config struct {
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
-	Server struct {
-		Name     string `yaml:"name"`
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		GrpcPort int    `yaml:"grpcPort"`
-	} `yaml:"server"`
-	Log struct {
-		Level string `yaml:"level"`
-	} `yaml:"log"`
-	ElasticSearch struct {
-		Host                string `yaml:"host"`
-		Port                int    `yaml:"port"`
-		HealthCheckInterval int    `yaml:"healthCheckInterval"`
-	} `yaml:"elasticsearch"`
-	Kafka struct {
-		GroupID string   `yaml:"groupId"`
-		Brokers []string `yaml:"brokers"`
-		Topics  []string `yaml:"topics"`
-	} `yaml:"kafka"`
-	RedisCache struct {
-		Master        string   `yaml:"master"`
-		SentinelAddrs []string `yaml:"sentinelAddrs"`
-		Password      string   `yaml:"password"`
-	} `yaml:"redis"`
-	Sentry struct {
-		DSN   string `yaml:"dsn"`
-		Debug bool   `yaml:"debug"`
-	} `yaml:"sentry"`
-	Environment string
 }
 
 //nolint:nolintlint, gochecknoglobals

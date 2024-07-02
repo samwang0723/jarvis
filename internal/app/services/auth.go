@@ -10,7 +10,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *serviceImpl) Login(ctx context.Context, email, password string) (obj *entity.User, err error) {
+func (s *serviceImpl) Login(
+	ctx context.Context,
+	email, password string,
+) (obj *entity.User, err error) {
 	obj, err = s.dal.GetUserByEmail(ctx, email)
 	if err != nil || obj == nil {
 		return nil, errUserNotFound
@@ -45,7 +48,6 @@ func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uint64, err 
 		return 0, err
 	}
 
-	// TODO: Use redis to validate session_id
 	user, err := s.dal.GetUserByID(ctx, userID)
 	if err != nil || user.SessionID != sessionID {
 		return 0, err

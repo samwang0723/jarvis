@@ -10,11 +10,11 @@ import (
 
 type EventModel struct {
 	CreatedAt   time.Time `gorm:"column:created_at"`
-	AggregateID uint64    `gorm:"column:aggregate_id"` // foreign key to the Transaction table
-	ParentID    uint64    `gorm:"column:parent_id"`    // parent aggregate id
-	EventType   string    `gorm:"column:event_type"`   // event EventType
-	Payload     string    `gorm:"column:payload"`      // event payload
-	Version     int       `gorm:"column:version"`      // event version number, used for ordering events
+	EventType   string    `gorm:"column:event_type"`
+	Payload     string    `gorm:"column:payload"`
+	AggregateID uint64    `gorm:"column:aggregate_id"`
+	ParentID    uint64    `gorm:"column:parent_id"`
+	Version     int       `gorm:"column:version"`
 }
 
 // ToEvent converts a EventModel to Event.

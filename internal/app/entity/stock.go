@@ -14,13 +14,12 @@
 package entity
 
 type Stock struct {
-	Base
-
 	StockID  string `gorm:"column:stock_id" json:"stockId"`
-	Name     string `gorm:"column:name" json:"name"`
-	Country  string `gorm:"column:country" json:"country"`
+	Name     string `gorm:"column:name"     json:"name"`
+	Country  string `gorm:"column:country"  json:"country"`
 	Category string `gorm:"column:category" json:"category"`
-	Market   string `gorm:"column:market" json:"market"`
+	Market   string `gorm:"column:market"   json:"market"`
+	Base
 }
 
 func (Stock) TableName() string {
