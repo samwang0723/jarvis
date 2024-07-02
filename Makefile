@@ -147,6 +147,7 @@ docker-m1:
 		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
 		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
 		-f build/docker/app/Dockerfile.local .
+	@docker push samwang0723/$(APP_NAME):$(VERSION)
 
 docker-amd64-deps:
 	@echo "[docker buildx] install buildx dependency"
