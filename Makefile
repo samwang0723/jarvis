@@ -189,10 +189,3 @@ changelog-gen: ## generates the changelog in CHANGELOG.md
 
 changelog-commit:
 	git commit -m $(MESSAGE_CHANGELOG_COMMIT) ./CHANGELOG.md
-
-release: ## create a release
-	@git tag $(VERSION) && \
-	@$(MAKE) changelog-gen
-	@$(MAKE) changelog-commit
-	@git push --tags && \
-	@echo "Changelog committed and version $(VERSION) tagged!"
