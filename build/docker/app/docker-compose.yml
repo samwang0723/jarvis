@@ -2,7 +2,7 @@ version: "3.5"
 services:
   stock-crawler:
     container_name: jarvis-api
-    image: samwang0723/jarvis-api:v2.0.0
+    image: samwang0723/jarvis-api:v2.0.1
     ports:
       - "8080:8080"
       - "8081:8081"

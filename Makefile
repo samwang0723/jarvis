@@ -1,10 +1,10 @@
-.PHONY: test lint bench lint-skip-fix migrate proto build build-docker install vendor
+.PHONY: test lint bench lint-skip-fix migrate proto build build-docker install vendor deploy rollback
 
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 APP_NAME?=jarvis-api
-VERSION?=v2.0.0
+VERSION?=v2.0.1
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb)
@@ -164,6 +164,16 @@ docker-amd64:
 		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
 		-f build/docker/app/Dockerfile .
 
+##################
+# k8s Deployment #
+##################
+deploy:
+	@kubectl apply -f deployments/helm/jarvis/deployment.yaml
+	@kubectl rollout status deployment/jarvis-api
+
+rollback:
+	@kubectl rollout undo deployment/jarvis-api
+
 #############
 # changelog #
 #############
@@ -179,3 +189,10 @@ changelog-gen: ## generates the changelog in CHANGELOG.md
 
 changelog-commit:
 	git commit -m $(MESSAGE_CHANGELOG_COMMIT) ./CHANGELOG.md
+
+release: ## create a release
+	@git tag $(VERSION) && \
+	@$(MAKE) changelog-gen
+	@$(MAKE) changelog-commit
+	@git push --tags && \
+	@echo "Changelog committed and version $(VERSION) tagged!"

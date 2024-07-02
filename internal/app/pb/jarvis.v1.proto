@@ -5,13 +5,11 @@ package jarvis.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
-import "protoc-gen-openapiv2/options/openapiv2.proto";
 
 option go_package = "github.com/samwang0723/jarvis/internal/app/pb";
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
   info: {
     title: "Javis stock analysis API";
-    version: "2.0.0";
   };
   schemes: HTTP;
   security_definitions: {

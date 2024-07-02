@@ -229,22 +229,10 @@ func (s *server) Start(ctx context.Context) error {
 		}
 	}
 
-	signature := `
-      _                  _                   _
-     | |                (_)                 (_)
-     | | __ _ _ ____   ___ ___    __ _ _ __  _
- _   | |/ _' | '__\ \ / / / __|  / _' | '_ \| |
-| |__| | (_| | |   \ V /| \__ \ | (_| | |_) | |
- \____/ \__,_|_|    \_/ |_|___/  \__,_| .__/|_|
-                                      | |
-                                      |_|       Version (%s)
-High performance stock analysis tool
-Environment (%s)
-_______________________________________________
-`
-	signatureOut := fmt.Sprintf(signature, s.Config().Server.Version, s.Config().Environment)
-	//nolint:nolintlint, forbidigo
-	fmt.Println(signatureOut)
+	// print server start message with name, version and env
+	s.Logger().
+		Info().
+		Msgf("Server [%s] started. Version: (%s). Environment: (%s)", s.Name(), s.Config().Server.Version, s.Config().Environment)
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
