@@ -5,9 +5,24 @@ help: ## show this help
 
 APP_NAME?=jarvis-api
 VERSION?=v2.0.1
+SQLC_VERSION=v1.26.0
+GCI_VERSION=0.11.2
+TRIVY_VERSION=0.37.1
+GOLANG_LINTER_VERSION=1.59.1
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/kafka)
+
+tool-version-check:
+	@( \
+	    INSTALLED_TOOL_VERSION=$$($(tool_version_check) | grep $(tool_version)); \
+		if [ -z "$$INSTALLED_TOOL_VERSION" ]; then \
+			echo "$(tool_version_check) mismatch $(tool_version)"; \
+			echo "INSTALLED_TOOL_VERSION: $$INSTALLED_TOOL_VERSION"; \
+			echo "current version: $$($(tool_version_check))"; \
+			exit 1; \
+		fi \
+	)
 
 ###########
 # install #
@@ -46,6 +61,7 @@ test-coverage-report:
 ########
 
 lint: lint-check-deps ## lints the entire codebase
+	@make tool-version-check tool_version_check="golangci-lint version" tool_version=$(GOLANG_LINTER_VERSION)
 	@golangci-lint run ./... --config=./.golangci.yaml --timeout=15m && \
 	if [ $$(gofumpt -e -l --extra cmd/ | wc -l) = "0" ] && \
 		[ $$(gofumpt -e -l --extra internal/ | wc -l) = "0" ] && \
@@ -68,6 +84,14 @@ lint-skip-fix: ## skip linting the system generate files
 	@git checkout head internal/app/pb
 	@git checkout head third_party/
 
+###########
+#   GCI   #
+###########
+
+gci-format: ## format repo through gci linter
+	@make tool-version-check tool_version_check="gci --version" tool_version=${GCI_VERSION}
+	gci write --skip-generated -s standard -s default -s "Prefix(github.com/samwang0723)" -s "Prefix(jarvis)" ./
+
 #############
 # benchmark #
 #############
@@ -85,6 +109,7 @@ bench-compare: ## compare benches results
 sec-scan: trivy-scan vuln-scan ## scan for security and vulnerabilities
 
 trivy-scan: ## scan for sec issues with trivy (trivy binary needed)
+	@make tool-version-check tool_version_check="trivy --version" tool_version=$(TRIVY_VERSION)
 	trivy fs --exit-code 1 --no-progress --severity CRITICAL ./
 
 vuln-scan: ## scan for vuln issues with trivy (trivy binary needed)
@@ -97,11 +122,19 @@ vuln-scan: ## scan for vuln issues with trivy (trivy binary needed)
 mock-gen: ## generate mocks
 	go generate $(SOURCE_LIST)
 
-##############
-#  upgrades  #
-##############
+############
+#   sqlc   #
+############
 
-upgrade: ## upgrade all dependencies
+sqlc: ## gen sqlc code for your app
+	@make tool-version-check tool_version_check="sqlc version" tool_version=$(SQLC_VERSION)
+	sqlc generate -f ./database/sqlc/sqlc.yaml
+
+#############
+#  upgrade  #
+############
+
+upgrade: ## upgrade all dependencies, dangerous!!
 	go mod tidy && \
 	go get -t -u ./... && \
 	go mod tidy
