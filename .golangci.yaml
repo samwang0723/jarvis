@@ -1,4 +1,8 @@
 run:
+  # Exclude the grpc gen folder
+  skip-dirs:
+    - "internal/app/pb"
+    - "internal/app/pb/gateway"
   tests: false
 
 issues:

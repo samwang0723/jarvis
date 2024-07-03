@@ -118,8 +118,8 @@ func WithTx(ctx context.Context, tx *gorm.DB) context.Context {
 
 type DBTX interface {
 	Omit(columns ...string) (tx *gorm.DB)
-	Save(value interface{}) (tx *gorm.DB)
-	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
+	Save(value any) (tx *gorm.DB)
+	Where(query any, args ...any) (tx *gorm.DB)
 	WithContext(ctx context.Context) *gorm.DB
 }
 
@@ -135,11 +135,11 @@ func (q *Query) WithTx(tx *gorm.DB) *Query {
 	return &Query{txdb: tx}
 }
 
-func (q *Query) Save(value interface{}) *gorm.DB {
+func (q *Query) Save(value any) *gorm.DB {
 	return q.txdb.Save(value)
 }
 
-func (q *Query) Where(query interface{}, args ...interface{}) *gorm.DB {
+func (q *Query) Where(query any, args ...any) *gorm.DB {
 	return q.txdb.Where(query, args...)
 }
 

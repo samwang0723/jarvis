@@ -53,10 +53,10 @@ func Bytes2String(b []byte) string {
 }
 
 // Convert a slice or array of a specific type to array of interface{}
-func CastInterfaceSlice(s interface{}) *[]interface{} {
+func CastInterfaceSlice(s any) *[]any {
 	v := reflect.ValueOf(s)
 	// There is no need to check, we want to panic if it's not slice or array
-	intf := make([]interface{}, v.Len())
+	intf := make([]any, v.Len())
 	for i := 0; i < v.Len(); i++ {
 		intf[i] = v.Index(i).Interface()
 	}

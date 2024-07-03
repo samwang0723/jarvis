@@ -26,7 +26,7 @@ import (
 
 var errCannotCastStock = errors.New("cannot cast interface to *dto.Stock")
 
-func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error {
+func (s *serviceImpl) BatchUpsertStocks(ctx context.Context, objs *[]any) error {
 	// Replicate the value from interface to *entity.DailyClose
 	stocks := []*entity.Stock{}
 	for _, v := range *objs {

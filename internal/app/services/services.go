@@ -31,17 +31,17 @@ import (
 )
 
 type IService interface {
-	BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error
+	BatchUpsertDailyClose(ctx context.Context, objs *[]any) error
 	ListDailyClose(
 		ctx context.Context,
 		req *dto.ListDailyCloseRequest,
 	) ([]*entity.DailyClose, int64, error)
 	HasDailyClose(ctx context.Context, date string) bool
-	BatchUpsertStocks(ctx context.Context, objs *[]interface{}) error
+	BatchUpsertStocks(ctx context.Context, objs *[]any) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
 	ListCategories(ctx context.Context) (objs []string, err error)
 	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*entity.Selection, error)
-	BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error
+	BatchUpsertThreePrimary(ctx context.Context, objs *[]any) error
 	ListThreePrimary(
 		ctx context.Context,
 		req *dto.ListThreePrimaryRequest,
@@ -50,7 +50,7 @@ type IService interface {
 		ctx context.Context,
 		req *dto.GetStakeConcentrationRequest,
 	) (*entity.StakeConcentration, error)
-	BatchUpsertStakeConcentration(ctx context.Context, objs *[]interface{}) error
+	BatchUpsertStakeConcentration(ctx context.Context, objs *[]any) error
 	ListeningKafkaInput(ctx context.Context)
 	StopKafka() error
 	StopRedis() error
