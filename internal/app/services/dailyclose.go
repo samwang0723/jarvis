@@ -23,7 +23,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
 
-func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]interface{}) error {
+func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]any) error {
 	// Replicate the value from interface to *entity.DailyClose
 	dailyCloses := []*entity.DailyClose{}
 	for _, v := range *objs {

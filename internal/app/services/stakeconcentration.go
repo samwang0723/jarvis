@@ -43,7 +43,7 @@ func (s *serviceImpl) GetStakeConcentration(
 	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID, req.Date)
 }
 
-func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[]interface{}) error {
+func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[]any) error {
 	// Replicate the value from interface to *entity.StakeConcentration
 	stakeConcentrations := []*entity.StakeConcentration{}
 	for _, v := range *objs {

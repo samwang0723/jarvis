@@ -26,7 +26,7 @@ import (
 
 var errCannotCastThreePrimary = errors.New("cannot cast interface to *dto.ThreePrimary")
 
-func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]interface{}) error {
+func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]any) error {
 	// Replicate the value from interface to *entity.ThreePrimary
 	threePrimary := []*entity.ThreePrimary{}
 	for _, v := range *objs {

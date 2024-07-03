@@ -27,7 +27,7 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type data struct {
-	values *[]interface{}
+	values *[]any
 	topic  string
 }
 
@@ -76,7 +76,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 			}
 			respChan <- data{
 				topic:  msg.Topic,
-				values: &[]interface{}{ent},
+				values: &[]any{ent},
 			}
 
 			select {
@@ -124,10 +124,10 @@ func (s *serviceImpl) StopKafka() error {
 	return s.consumer.Close()
 }
 
-func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (interface{}, error) {
+func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (any, error) {
 	var err error
 
-	var output interface{}
+	var output any
 
 	switch msg.Topic {
 	case ikafka.DailyClosesV1:

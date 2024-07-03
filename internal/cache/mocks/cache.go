@@ -60,7 +60,7 @@ func (m *MockRedis) Get(ctx context.Context, key string) (string, error) {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockRedisMockRecorder) Get(ctx, key interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) Get(ctx, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRedis)(nil).Get), ctx, key)
 }
@@ -68,7 +68,7 @@ func (mr *MockRedisMockRecorder) Get(ctx, key interface{}) *gomock.Call {
 // MGet mocks base method.
 func (m *MockRedis) MGet(ctx context.Context, keys ...string) ([]string, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{ctx}
+	varargs := []any{ctx}
 	for _, a := range keys {
 		varargs = append(varargs, a)
 	}
@@ -79,9 +79,9 @@ func (m *MockRedis) MGet(ctx context.Context, keys ...string) ([]string, error) 
 }
 
 // MGet indicates an expected call of MGet.
-func (mr *MockRedisMockRecorder) MGet(ctx interface{}, keys ...interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) MGet(ctx any, keys ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{ctx}, keys...)
+	varargs := append([]any{ctx}, keys...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MGet", reflect.TypeOf((*MockRedis)(nil).MGet), varargs...)
 }
 
@@ -94,7 +94,7 @@ func (m *MockRedis) ObtainLock(ctx context.Context, key string, expire time.Dura
 }
 
 // ObtainLock indicates an expected call of ObtainLock.
-func (mr *MockRedisMockRecorder) ObtainLock(ctx, key, expire interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) ObtainLock(ctx, key, expire any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ObtainLock", reflect.TypeOf((*MockRedis)(nil).ObtainLock), ctx, key, expire)
 }
@@ -108,7 +108,7 @@ func (m *MockRedis) SAdd(ctx context.Context, key string, values []string) error
 }
 
 // SAdd indicates an expected call of SAdd.
-func (mr *MockRedisMockRecorder) SAdd(ctx, key, values interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) SAdd(ctx, key, values any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SAdd", reflect.TypeOf((*MockRedis)(nil).SAdd), ctx, key, values)
 }
@@ -123,7 +123,7 @@ func (m *MockRedis) SMembers(ctx context.Context, key string) ([]string, error) 
 }
 
 // SMembers indicates an expected call of SMembers.
-func (mr *MockRedisMockRecorder) SMembers(ctx, key interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) SMembers(ctx, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SMembers", reflect.TypeOf((*MockRedis)(nil).SMembers), ctx, key)
 }
@@ -137,7 +137,7 @@ func (m *MockRedis) Set(ctx context.Context, key, val string, expired time.Durat
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockRedisMockRecorder) Set(ctx, key, val, expired interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) Set(ctx, key, val, expired any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedis)(nil).Set), ctx, key, val, expired)
 }
@@ -151,7 +151,7 @@ func (m *MockRedis) SetExpire(ctx context.Context, key string, expired time.Time
 }
 
 // SetExpire indicates an expected call of SetExpire.
-func (mr *MockRedisMockRecorder) SetExpire(ctx, key, expired interface{}) *gomock.Call {
+func (mr *MockRedisMockRecorder) SetExpire(ctx, key, expired any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExpire", reflect.TypeOf((*MockRedis)(nil).SetExpire), ctx, key, expired)
 }
