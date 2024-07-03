@@ -15,6 +15,7 @@ sql:
         emit_params_struct_pointers: true
         emit_enum_valid_method: true
         emit_all_enum_values: true
+        emit_pointers_for_null_types: true
         output_models_file_name: "entities.go"
         overrides:
           - go_type: "github.com/ericlagergren/decimal.Big"
