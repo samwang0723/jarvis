@@ -1,4 +1,4 @@
-CREATE TABLE transaction_events (
+CREATE TABLE order_events (
     aggregate_id uuid NOT NULL,
     parent_id uuid NOT NULL,
     event_type varchar(50) NOT NULL,

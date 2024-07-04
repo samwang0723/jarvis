@@ -54,11 +54,11 @@ func run() {
 	}
 
 	type ConfigDatabase struct {
-		Port     string `env:"PSQL_PORT"   env-default:"5432"`
-		Host     string `env:"PSQL_HOST"   env-default:"localhost"`
-		Name     string `env:"PSQL_DBNAME" env-default:"postgres"`
-		User     string `env:"PSQL_USER"   env-default:"user"`
-		Password string `env:"PSQL_PASS"`
+		Port     string `env:"PSQL_PORT"   env-default:"DB_PORT"`
+		Host     string `env:"PSQL_HOST"   env-default:"DB_HOST"`
+		Name     string `env:"PSQL_DBNAME" env-default:"APP_NAME_UND_main"`
+		User     string `env:"PSQL_USER"   env-default:"APP_NAME_UND_app"`
+		Password string `env:"PSQL_PASS"   env-default:"DB_PASSWORD"`
 	}
 
 	var cfg ConfigDatabase

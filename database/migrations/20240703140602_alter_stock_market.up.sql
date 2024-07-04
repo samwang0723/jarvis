@@ -1,2 +1,0 @@
-ALTER TABLE stocks
-    ADD COLUMN market VARCHAR(10);

@@ -3,6 +3,9 @@
 help: ## show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {sub("\\\\n",sprintf("\n%22c"," "), $$2);printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+PROJECT_NAME?=jarvis
+APP_NAME_UND=$(shell echo "$(PROJECT_NAME)" | tr '-' '_')
+
 APP_NAME?=jarvis-api
 VERSION?=v2.0.1
 SQLC_VERSION=v1.26.0
@@ -130,6 +133,38 @@ sqlc: ## gen sqlc code for your app
 	@make tool-version-check tool_version_check="sqlc version" tool_version=$(SQLC_VERSION)
 	sqlc generate -f ./database/sqlc/sqlc.yaml
 
+###########
+# migrate #
+###########
+
+db-pg-init-main: ## create users and passwords in postgres for your app
+	@( \
+	printf "Enter host for db(localhost): \n"; read -rs DB_HOST &&\
+	printf "Enter pass for db: \n"; read -rs DB_PASSWORD &&\
+	printf "Enter port(5432...): \n"; read -r DB_PORT &&\
+	sed \
+	-e "s/DB_PASSWORD/$$DB_PASSWORD/g" \
+	-e "s/APP_NAME_UND/$(APP_NAME_UND)/g" \
+	./database/init/init.sql | \
+	PGPASSWORD=$$DB_PASSWORD psql -h $$DB_HOST -p $$DB_PORT -U postgres -f - \
+	)
+
+db-pg-migrate:
+	@( \
+	printf "Enter host for db(localhost): \n"; read -rs DB_HOST &&\
+	printf "Enter pass for db: \n"; read -rs DB_PASSWORD &&\
+	printf "Enter port(5432...): \n"; read -r DB_PORT &&\
+	sed \
+	-e "s/DB_HOST/$$DB_HOST/g" \
+	-e "s/DB_PORT/$$DB_PORT/g" \
+	-e "s/DB_PASSWORD/$$DB_PASSWORD/g" \
+	-e "s/APP_NAME_UND/$(APP_NAME_UND)/g" \
+	./database/migrations/main.go > ./database/migrations/tmp.go && \
+	go run ./database/migrations/tmp.go up && \
+	rm ./database/migrations/tmp.go \
+	)
+
+
 #############
 #  upgrade  #
 ############
@@ -138,14 +173,6 @@ upgrade: ## upgrade all dependencies, dangerous!!
 	go mod tidy && \
 	go get -t -u ./... && \
 	go mod tidy
-
-##############
-#   migrate  #
-##############
-
-migrate: ## migrate database
-	@echo "[goose up] do mysql schema migration"
-	@goose -dir internal/db/migration mysql "jarvis:abcd1234@tcp(0.0.0.0:3307)/jarvis?charset=utf8" up
 
 ##############
 #   build    #

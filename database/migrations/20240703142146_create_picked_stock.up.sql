@@ -1,23 +1,24 @@
+BEGIN;
+
 CREATE TABLE picked_stocks (
-    id BIGINT NOT NULL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    stock_id VARCHAR(8) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL,
-    UNIQUE (user_id, stock_id, deleted_at)
+    id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id uuid NOT NULL,
+    stock_id varchar(8) NOT NULL,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at timestamp NULL,
+    CONSTRAINT fk_stock_id FOREIGN KEY (stock_id) REFERENCES stocks (id),
+    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- Create a trigger to update the updated_at column on row update
-CREATE OR REPLACE FUNCTION update_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Create a partial unique index to enforce the constraint
+CREATE UNIQUE INDEX unique_active_picked_stock_per_user
+ON picked_stocks (user_id, stock_id)
+WHERE deleted_at IS NULL;
 
 CREATE TRIGGER update_picked_stocks_updated_at
 BEFORE UPDATE ON picked_stocks
 FOR EACH ROW
-EXECUTE FUNCTION update_timestamp();
+EXECUTE FUNCTION update_updated_at_column();
+
+COMMIT;

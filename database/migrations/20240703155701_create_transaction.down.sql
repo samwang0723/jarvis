@@ -1,4 +1,6 @@
-DROP TRIGGER IF EXISTS update_updated_at_trigger ON transactions;
-DROP FUNCTION IF EXISTS update_updated_at_column;
-DROP INDEX IF EXISTS index_order_id;
 DROP TABLE IF EXISTS transactions;
+DROP INDEX IF EXISTS index_transaction_user_id;
+DROP INDEX IF EXISTS index_transaction_order_id;
+
+DROP TRIGGER IF EXISTS update_transactions_updated_at ON transactions CASCADE;
+

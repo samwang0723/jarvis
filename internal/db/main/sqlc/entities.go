@@ -6,12 +6,13 @@ package sqlcdb
 
 import (
 	"github.com/ericlagergren/decimal"
+	uuid "github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type BalanceEvent struct {
-	AggregateID int64
-	ParentID    int64
+	AggregateID uuid.UUID
+	ParentID    uuid.UUID
 	EventType   string
 	Payload     []byte
 	Version     int32
@@ -19,17 +20,17 @@ type BalanceEvent struct {
 }
 
 type BalanceView struct {
-	ID        int64
-	Balance   decimal.Big
-	Available decimal.Big
-	Pending   decimal.Big
+	ID        uuid.UUID
+	Balance   pgtype.Numeric
+	Available pgtype.Numeric
+	Pending   pgtype.Numeric
 	Version   int32
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 }
 
 type DailyClose struct {
-	ID           int64
+	ID           uuid.UUID
 	StockID      string
 	ExchangeDate string
 	TradeShares  *int64
@@ -46,8 +47,8 @@ type DailyClose struct {
 }
 
 type Order struct {
-	ID               int64
-	UserID           int64
+	ID               uuid.UUID
+	UserID           uuid.UUID
 	StockID          string
 	BuyPrice         decimal.Big
 	BuyQuantity      int64
@@ -63,8 +64,8 @@ type Order struct {
 }
 
 type OrderEvent struct {
-	AggregateID int64
-	ParentID    int64
+	AggregateID uuid.UUID
+	ParentID    uuid.UUID
 	EventType   string
 	Payload     []byte
 	Version     int32
@@ -72,8 +73,8 @@ type OrderEvent struct {
 }
 
 type PickedStock struct {
-	ID        int64
-	UserID    int64
+	ID        uuid.UUID
+	UserID    uuid.UUID
 	StockID   string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -81,7 +82,7 @@ type PickedStock struct {
 }
 
 type StakeConcentration struct {
-	ID              int64
+	ID              uuid.UUID
 	StockID         string
 	ExchangeDate    string
 	SumBuyShares    *int64
@@ -99,20 +100,19 @@ type StakeConcentration struct {
 }
 
 type Stock struct {
-	ID        int64
-	StockID   string
+	ID        string
 	Name      string
 	Country   string
 	Site      *string
+	Category  *string
+	Market    *string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
 	DeletedAt pgtype.Timestamp
-	Category  *string
-	Market    *string
 }
 
 type ThreePrimary struct {
-	ID                 int64
+	ID                 uuid.UUID
 	StockID            string
 	ExchangeDate       string
 	ForeignTradeShares *int64
@@ -125,12 +125,12 @@ type ThreePrimary struct {
 }
 
 type Transaction struct {
-	ID           int64
-	UserID       int64
-	OrderID      int64
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	OrderID      uuid.UUID
 	OrderType    string
-	CreditAmount decimal.Big
-	DebitAmount  decimal.Big
+	CreditAmount pgtype.Numeric
+	DebitAmount  pgtype.Numeric
 	Status       string
 	Version      int32
 	CreatedAt    pgtype.Timestamp
@@ -138,8 +138,8 @@ type Transaction struct {
 }
 
 type TransactionEvent struct {
-	AggregateID int64
-	ParentID    int64
+	AggregateID uuid.UUID
+	ParentID    uuid.UUID
 	EventType   string
 	Payload     []byte
 	Version     int32
@@ -147,7 +147,7 @@ type TransactionEvent struct {
 }
 
 type User struct {
-	ID               int64
+	ID               uuid.UUID
 	FirstName        string
 	LastName         string
 	Email            string

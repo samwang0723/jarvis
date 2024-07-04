@@ -1,9 +1,9 @@
 CREATE TABLE balance_events (
-    aggregate_id BIGINT NOT NULL,
-    parent_id BIGINT NOT NULL,
-    event_type VARCHAR(50) NOT NULL,
-    payload JSONB NOT NULL,
-    version INT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    aggregate_id uuid NOT NULL,
+    parent_id uuid NOT NULL,
+    event_type varchar(50) NOT NULL,
+    payload jsonb NOT NULL,
+    version integer NOT NULL,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (aggregate_id, version)
 );

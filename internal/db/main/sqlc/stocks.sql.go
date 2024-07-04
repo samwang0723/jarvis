@@ -12,16 +12,15 @@ import (
 )
 
 const BatchUpsertStocks = `-- name: BatchUpsertStocks :exec
-INSERT INTO stocks (id, stock_id, name, country, category, market)
+INSERT INTO stocks (id, name, country, category, market)
 VALUES (
-    unnest($1::int8[]), 
+    unnest($1::text[]), 
     unnest($2::text[]), 
     unnest($3::text[]), 
-    unnest($4::text[]), 
-    unnest($5::text[]),
-    unnest($6::text[])
+    unnest($4::text[]),
+    unnest($5::text[])
 )
-ON CONFLICT (stock_id) DO UPDATE 
+ON CONFLICT (id) DO UPDATE 
 SET 
     name = EXCLUDED.name,
     country = EXCLUDED.country,
@@ -30,12 +29,11 @@ SET
 `
 
 type BatchUpsertStocksParams struct {
-	Column1 []int64
+	Column1 []string
 	Column2 []string
 	Column3 []string
 	Column4 []string
 	Column5 []string
-	Column6 []string
 }
 
 func (q *Queries) BatchUpsertStocks(ctx context.Context, arg *BatchUpsertStocksParams) error {
@@ -45,7 +43,6 @@ func (q *Queries) BatchUpsertStocks(ctx context.Context, arg *BatchUpsertStocksP
 		arg.Column3,
 		arg.Column4,
 		arg.Column5,
-		arg.Column6,
 	)
 	return err
 }
@@ -54,7 +51,7 @@ const CountStocks = `-- name: CountStocks :one
 SELECT COUNT(*) FROM stocks
 WHERE
     ($1::VARCHAR = '' OR country = $1)
-    AND (stock_id = ANY($2::text[]) OR NOT $3::bool)
+    AND (id = ANY($2::text[]) OR NOT $3::bool)
     AND ($4::VARCHAR = '' OR name ILIKE '%' || $4 || '%')
     AND ($5::VARCHAR = '' OR category = $5)
 `
@@ -81,13 +78,12 @@ func (q *Queries) CountStocks(ctx context.Context, arg *CountStocksParams) (int6
 }
 
 const CreateStock = `-- name: CreateStock :exec
-INSERT INTO stocks (id, stock_id, name, country, category, market)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO stocks (id, name, country, category, market)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateStockParams struct {
-	ID       int64
-	StockID  string
+	ID       string
 	Name     string
 	Country  string
 	Category *string
@@ -97,7 +93,6 @@ type CreateStockParams struct {
 func (q *Queries) CreateStock(ctx context.Context, arg *CreateStockParams) error {
 	_, err := q.db.Exec(ctx, CreateStock,
 		arg.ID,
-		arg.StockID,
 		arg.Name,
 		arg.Country,
 		arg.Category,
@@ -110,20 +105,19 @@ const DeleteStockbyID = `-- name: DeleteStockbyID :exec
 UPDATE stocks SET deleted_at = NOW() WHERE id = $1
 `
 
-func (q *Queries) DeleteStockbyID(ctx context.Context, id int64) error {
+func (q *Queries) DeleteStockbyID(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, DeleteStockbyID, id)
 	return err
 }
 
 const DeleteStockbyStockID = `-- name: DeleteStockbyStockID :one
-SELECT id, stock_id, name, country, category, market, created_at, updated_at, deleted_at
+SELECT id, name, country, category, market, created_at, updated_at, deleted_at
 FROM stocks
-WHERE stock_id = $1 AND deleted_at IS NULL LIMIT 1
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 type DeleteStockbyStockIDRow struct {
-	ID        int64
-	StockID   string
+	ID        string
 	Name      string
 	Country   string
 	Category  *string
@@ -133,12 +127,11 @@ type DeleteStockbyStockIDRow struct {
 	DeletedAt pgtype.Timestamp
 }
 
-func (q *Queries) DeleteStockbyStockID(ctx context.Context, stockID string) (*DeleteStockbyStockIDRow, error) {
-	row := q.db.QueryRow(ctx, DeleteStockbyStockID, stockID)
+func (q *Queries) DeleteStockbyStockID(ctx context.Context, id string) (*DeleteStockbyStockIDRow, error) {
+	row := q.db.QueryRow(ctx, DeleteStockbyStockID, id)
 	var i DeleteStockbyStockIDRow
 	err := row.Scan(
 		&i.ID,
-		&i.StockID,
 		&i.Name,
 		&i.Country,
 		&i.Category,
@@ -175,13 +168,13 @@ func (q *Queries) ListCategories(ctx context.Context) ([]*string, error) {
 }
 
 const ListStocks = `-- name: ListStocks :many
-SELECT id, stock_id, name, country, site, created_at, updated_at, deleted_at, category, market FROM stocks
+SELECT id, name, country, site, category, market, created_at, updated_at, deleted_at FROM stocks
 WHERE
     ($3::VARCHAR = '' OR country = $3)
-    AND (stock_id = ANY($4::text[]) OR NOT $5::bool)
+    AND (id = ANY($4::text[]) OR NOT $5::bool)
     AND ($6::VARCHAR = '' OR name ILIKE '%' || $6 || '%')
     AND ($7::VARCHAR = '' OR category = $7)
-ORDER BY stock_id
+ORDER BY id
 LIMIT $1 OFFSET $2
 `
 
@@ -214,15 +207,14 @@ func (q *Queries) ListStocks(ctx context.Context, arg *ListStocksParams) ([]*Sto
 		var i Stock
 		if err := rows.Scan(
 			&i.ID,
-			&i.StockID,
 			&i.Name,
 			&i.Country,
 			&i.Site,
+			&i.Category,
+			&i.Market,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
-			&i.Category,
-			&i.Market,
 		); err != nil {
 			return nil, err
 		}
@@ -241,11 +233,11 @@ SET
     country = $3,
     category = $4,
     market = $5
-WHERE stock_id = $1
+WHERE id = $1
 `
 
 type UpdateStockParams struct {
-	StockID  string
+	ID       string
 	Name     string
 	Country  string
 	Category *string
@@ -254,7 +246,7 @@ type UpdateStockParams struct {
 
 func (q *Queries) UpdateStock(ctx context.Context, arg *UpdateStockParams) error {
 	_, err := q.db.Exec(ctx, UpdateStock,
-		arg.StockID,
+		arg.ID,
 		arg.Name,
 		arg.Country,
 		arg.Category,
