@@ -45,7 +45,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/johnbellone/grpc-middleware-sentry v0.4.0
-	github.com/rs/cors v1.10.1
+	github.com/rs/cors v1.11.0
 	golang.org/x/crypto v0.21.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
 )
