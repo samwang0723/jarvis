@@ -115,18 +115,20 @@ SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
        t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at
 FROM (
     SELECT daily_closes.id FROM daily_closes
-    WHERE daily_closes.exchange_date >= $1 AND daily_closes.stock_id = $2
+    WHERE daily_closes.exchange_date >= $3 AND daily_closes.stock_id = $4
+    AND ($5 = '' OR daily_closes.exchange_date <= $5)
     ORDER BY daily_closes.exchange_date DESC
-    LIMIT $3 OFFSET $4
+    LIMIT $1 OFFSET $2
 ) q
 JOIN daily_closes t ON t.id = q.id
 `
 
 type ListDailyCloseParams struct {
-	ExchangeDate string
-	StockID      string
-	Limit        int32
-	Offset       int32
+	Limit     int32
+	Offset    int32
+	StartDate string
+	StockID   string
+	EndDate   interface{}
 }
 
 type ListDailyCloseRow struct {
@@ -148,10 +150,11 @@ type ListDailyCloseRow struct {
 
 func (q *Queries) ListDailyClose(ctx context.Context, arg *ListDailyCloseParams) ([]*ListDailyCloseRow, error) {
 	rows, err := q.db.Query(ctx, ListDailyClose,
-		arg.ExchangeDate,
-		arg.StockID,
 		arg.Limit,
 		arg.Offset,
+		arg.StartDate,
+		arg.StockID,
+		arg.EndDate,
 	)
 	if err != nil {
 		return nil, err

@@ -32,9 +32,10 @@ SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
        t.open, t.high, t.close, t.low, t.price_diff, t.created_at, t.updated_at, t.deleted_at
 FROM (
     SELECT daily_closes.id FROM daily_closes
-    WHERE daily_closes.exchange_date >= $1 AND daily_closes.stock_id = $2
+    WHERE daily_closes.exchange_date >= @start_date AND daily_closes.stock_id = @stock_id
+    AND (@end_date = '' OR daily_closes.exchange_date <= @end_date)
     ORDER BY daily_closes.exchange_date DESC
-    LIMIT $3 OFFSET $4
+    LIMIT $1 OFFSET $2
 ) q
 JOIN daily_closes t ON t.id = q.id;
 
