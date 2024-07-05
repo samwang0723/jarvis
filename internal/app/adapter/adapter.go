@@ -10,6 +10,10 @@ import (
 type Adapter interface {
 	ListCategories(ctx context.Context) ([]*string, error)
 	ListStocks(ctx context.Context, arg *domain.ListStocksParams) ([]*domain.Stock, error)
+	ListThreePrimary(
+		ctx context.Context,
+		arg *domain.ListThreePrimaryParams,
+	) ([]*domain.ThreePrimary, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -33,4 +37,11 @@ func (a *Imp) ListStocks(
 	arg *domain.ListStocksParams,
 ) ([]*domain.Stock, error) {
 	return a.repo.ListStocks(ctx, arg)
+}
+
+func (a *Imp) ListThreePrimary(
+	ctx context.Context,
+	arg *domain.ListThreePrimaryParams,
+) ([]*domain.ThreePrimary, error) {
+	return a.repo.ListThreePrimary(ctx, arg)
 }

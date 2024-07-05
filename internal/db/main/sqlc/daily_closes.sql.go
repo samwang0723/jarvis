@@ -59,6 +59,26 @@ func (q *Queries) BatchUpsertDailyClose(ctx context.Context, arg *BatchUpsertDai
 	return err
 }
 
+const CountDailyClose = `-- name: CountDailyClose :one
+SELECT COUNT(daily_closes.*)
+FROM daily_closes
+WHERE daily_closes.stock_id = $1 AND daily_closes.exchange_date >= $2
+AND ($3::text = '' OR daily_closes.exchange_date <= $3::text)
+`
+
+type CountDailyCloseParams struct {
+	StockID   string
+	StartDate string
+	EndDate   string
+}
+
+func (q *Queries) CountDailyClose(ctx context.Context, arg *CountDailyCloseParams) (int64, error) {
+	row := q.db.QueryRow(ctx, CountDailyClose, arg.StockID, arg.StartDate, arg.EndDate)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const CreateDailyClose = `-- name: CreateDailyClose :exec
 INSERT INTO daily_closes (
     stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
@@ -116,7 +136,7 @@ SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
 FROM (
     SELECT daily_closes.id FROM daily_closes
     WHERE daily_closes.exchange_date >= $3 AND daily_closes.stock_id = $4
-    AND ($5 = '' OR daily_closes.exchange_date <= $5)
+    AND ($5::text = '' OR daily_closes.exchange_date <= $5::tex)
     ORDER BY daily_closes.exchange_date DESC
     LIMIT $1 OFFSET $2
 ) q
@@ -128,7 +148,7 @@ type ListDailyCloseParams struct {
 	Offset    int32
 	StartDate string
 	StockID   string
-	EndDate   interface{}
+	EndDate   string
 }
 
 type ListDailyCloseRow struct {

@@ -56,3 +56,53 @@ func fromSqlcStock(stock *sqlcdb.Stock) *domain.Stock {
 		},
 	}
 }
+
+func (repo *Repo) ListThreePrimary(
+	ctx context.Context,
+	arg *domain.ListThreePrimaryParams,
+) ([]*domain.ThreePrimary, error) {
+	res, err := repo.primary().ListThreePrimary(ctx, toSqlcListThreePrimaryParams(arg))
+	if err != nil {
+		return nil, err
+	}
+	return fromSqlcThreePrimarys(res), nil
+}
+
+func toSqlcListThreePrimaryParams(
+	arg *domain.ListThreePrimaryParams,
+) *sqlcdb.ListThreePrimaryParams {
+	return &sqlcdb.ListThreePrimaryParams{
+		Limit:     arg.Limit,
+		Offset:    arg.Offset,
+		StockID:   arg.StockID,
+		StartDate: arg.StartDate,
+		EndDate:   arg.EndDate,
+	}
+}
+
+func fromSqlcThreePrimarys(threePrimary []*sqlcdb.ThreePrimary) []*domain.ThreePrimary {
+	result := make([]*domain.ThreePrimary, 0, len(threePrimary))
+	for _, tp := range threePrimary {
+		result = append(result, fromSqlcThreePrimary(tp))
+	}
+	return result
+}
+
+func fromSqlcThreePrimary(tp *sqlcdb.ThreePrimary) *domain.ThreePrimary {
+	return &domain.ThreePrimary{
+		ID: domain.ID{
+			ID: tp.ID,
+		},
+		StockID:            tp.StockID,
+		ExchangeDate:       tp.ExchangeDate,
+		ForeignTradeShares: tp.ForeignTradeShares,
+		TrustTradeShares:   tp.TrustTradeShares,
+		DealerTradeShares:  tp.DealerTradeShares,
+		HedgingTradeShares: tp.HedgingTradeShares,
+		Time: domain.Time{
+			CreatedAt: &tp.CreatedAt.Time,
+			UpdatedAt: &tp.UpdatedAt.Time,
+			DeletedAt: &tp.DeletedAt.Time,
+		},
+	}
+}

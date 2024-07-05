@@ -33,7 +33,7 @@ SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
 FROM (
     SELECT daily_closes.id FROM daily_closes
     WHERE daily_closes.exchange_date >= @start_date AND daily_closes.stock_id = @stock_id
-    AND (@end_date = '' OR daily_closes.exchange_date <= @end_date)
+    AND (@end_date::text = '' OR daily_closes.exchange_date <= @end_date::tex)
     ORDER BY daily_closes.exchange_date DESC
     LIMIT $1 OFFSET $2
 ) q
@@ -60,4 +60,8 @@ FROM
 WHERE 
     rn = 1;
 
-
+-- name: CountDailyClose :one
+SELECT COUNT(daily_closes.*)
+FROM daily_closes
+WHERE daily_closes.stock_id = @stock_id AND daily_closes.exchange_date >= @start_date
+AND (@end_date::text = '' OR daily_closes.exchange_date <= @end_date::text);
