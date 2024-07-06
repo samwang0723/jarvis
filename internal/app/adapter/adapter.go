@@ -27,6 +27,15 @@ type Adapter interface {
 		arg *domain.ListDailyCloseParams,
 	) ([]*domain.DailyClose, error)
 	ListLatestPrice(ctx context.Context, stockIDs []string) ([]*domain.StockPrice, error)
+	BatchUpsertStakeConcentration(ctx context.Context, objs []*domain.StakeConcentration) error
+	GetStakeConcentrationByStockID(
+		ctx context.Context,
+		stockID, date string,
+	) (*domain.StakeConcentration, error)
+	GetStakeConcentrationsWithVolumes(
+		ctx context.Context,
+		stockID, date string,
+	) ([]*domain.CalculationBase, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -103,4 +112,26 @@ func (a *Imp) ListLatestPrice(
 	stockIDs []string,
 ) ([]*domain.StockPrice, error) {
 	return a.repo.ListLatestPrice(ctx, stockIDs)
+}
+
+func (a *Imp) BatchUpsertStakeConcentration(
+	ctx context.Context,
+	objs []*domain.StakeConcentration,
+) error {
+	return a.repo.BatchUpsertStakeConcentration(ctx, objs)
+}
+
+func (a *Imp) GetStakeConcentrationByStockID(
+	ctx context.Context,
+	stockID,
+	date string,
+) (*domain.StakeConcentration, error) {
+	return a.repo.GetStakeConcentrationByStockID(ctx, stockID, date)
+}
+
+func (a *Imp) GetStakeConcentrationsWithVolumes(
+	ctx context.Context,
+	stockID, date string,
+) ([]*domain.CalculationBase, error) {
+	return a.repo.GetStakeConcentrationsWithVolumes(ctx, stockID, date)
 }

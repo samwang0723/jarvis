@@ -63,8 +63,8 @@ func run() error {
 		Limit:     10,
 		Offset:    0,
 		StockID:   "1101",
-		StartDate: "2024-01-01",
-		EndDate:   "2024-02-12",
+		StartDate: "20240101",
+		EndDate:   "20240212",
 	})
 	if err != nil {
 		return err
@@ -77,9 +77,9 @@ func run() error {
 	dailyClose, err := adapter.ListDailyClose(ctx, &domain.ListDailyCloseParams{
 		Limit:     10,
 		Offset:    0,
-		StartDate: "2024-01-01",
+		StartDate: "20240101",
 		StockID:   "2609",
-		EndDate:   "2024-02-12",
+		EndDate:   "20240212",
 	})
 	if err != nil {
 		return err
@@ -88,6 +88,30 @@ func run() error {
 	for _, dc := range dailyClose {
 		logger.Info().Msgf("DailyClose: %+v", dc)
 	}
+
+	prices, err := adapter.ListLatestPrice(ctx, []string{"1101", "2330"})
+	if err != nil {
+		return err
+	}
+	// print all stock prices
+	for _, price := range prices {
+		logger.Info().Msgf("StockPrice: %+v", price)
+	}
+
+	st, err := adapter.GetStakeConcentrationsWithVolumes(ctx, "1101", "20240705")
+	if err != nil {
+		return err
+	}
+	// print all calculation bases
+	for _, s := range st {
+		logger.Info().Msgf("CalculationBase: %+v", s)
+	}
+
+	c, err := adapter.GetStakeConcentrationByStockID(ctx, "1101", "20240704")
+	if err != nil {
+		return err
+	}
+	logger.Info().Msgf("StakeConcentration: %+v", c)
 
 	return nil
 }

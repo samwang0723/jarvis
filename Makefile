@@ -135,7 +135,9 @@ sqlc: ## gen sqlc code for your app
 	sqlc generate -f ./database/sqlc/sqlc.yaml && \
   sed \
 	-i "" "s/pgtype.Numeric/float64/g" \
-	internal/db/main/sqlc/*.go \
+	internal/db/main/sqlc/*.go && \
+	goimports -w internal/db/main/sqlc/*.go && \
+  gofmt -w internal/db/main/sqlc/*.go \
 	)
 
 ###########
