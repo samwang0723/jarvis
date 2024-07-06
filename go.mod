@@ -41,7 +41,6 @@ require (
 
 require (
 	github.com/cristalhq/jwt/v5 v5.1.0
-	github.com/ericlagergren/decimal v0.0.0-20240411145413-00de7ca16731
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/golang-migrate/migrate/v4 v4.17.1
 	github.com/golang/mock v1.6.0

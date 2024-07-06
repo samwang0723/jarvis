@@ -131,7 +131,12 @@ mock-gen: ## generate mocks
 
 sqlc: ## gen sqlc code for your app
 	@make tool-version-check tool_version_check="sqlc version" tool_version=$(SQLC_VERSION)
-	sqlc generate -f ./database/sqlc/sqlc.yaml
+	@( \
+	sqlc generate -f ./database/sqlc/sqlc.yaml && \
+  sed \
+	-i "" "s/pgtype.Numeric/float64/g" \
+	internal/db/main/sqlc/*.go \
+	)
 
 ###########
 # migrate #

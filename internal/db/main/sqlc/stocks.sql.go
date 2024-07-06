@@ -7,8 +7,6 @@ package sqlcdb
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const BatchUpsertStocks = `-- name: BatchUpsertStocks :exec
@@ -29,52 +27,22 @@ SET
 `
 
 type BatchUpsertStocksParams struct {
-	Column1 []string
-	Column2 []string
-	Column3 []string
-	Column4 []string
-	Column5 []string
+	ID       []string
+	Name     []string
+	Country  []string
+	Category []string
+	Market   []string
 }
 
 func (q *Queries) BatchUpsertStocks(ctx context.Context, arg *BatchUpsertStocksParams) error {
 	_, err := q.db.Exec(ctx, BatchUpsertStocks,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
+		arg.ID,
+		arg.Name,
+		arg.Country,
+		arg.Category,
+		arg.Market,
 	)
 	return err
-}
-
-const CountStocks = `-- name: CountStocks :one
-SELECT COUNT(*) FROM stocks
-WHERE
-    ($1::VARCHAR = '' OR country = $1)
-    AND (id = ANY($2::text[]) OR NOT $3::bool)
-    AND ($4::VARCHAR = '' OR name ILIKE '%' || $4 || '%')
-    AND ($5::VARCHAR = '' OR category = $5)
-`
-
-type CountStocksParams struct {
-	Country         string
-	StockIds        []string
-	FilterByStockID bool
-	Name            string
-	Category        string
-}
-
-func (q *Queries) CountStocks(ctx context.Context, arg *CountStocksParams) (int64, error) {
-	row := q.db.QueryRow(ctx, CountStocks,
-		arg.Country,
-		arg.StockIds,
-		arg.FilterByStockID,
-		arg.Name,
-		arg.Category,
-	)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
 }
 
 const CreateStock = `-- name: CreateStock :exec
@@ -101,46 +69,13 @@ func (q *Queries) CreateStock(ctx context.Context, arg *CreateStockParams) error
 	return err
 }
 
-const DeleteStockbyID = `-- name: DeleteStockbyID :exec
+const DeleteStockByID = `-- name: DeleteStockByID :exec
 UPDATE stocks SET deleted_at = NOW() WHERE id = $1
 `
 
-func (q *Queries) DeleteStockbyID(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, DeleteStockbyID, id)
+func (q *Queries) DeleteStockByID(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, DeleteStockByID, id)
 	return err
-}
-
-const DeleteStockbyStockID = `-- name: DeleteStockbyStockID :one
-SELECT id, name, country, category, market, created_at, updated_at, deleted_at
-FROM stocks
-WHERE id = $1 AND deleted_at IS NULL LIMIT 1
-`
-
-type DeleteStockbyStockIDRow struct {
-	ID        string
-	Name      string
-	Country   string
-	Category  *string
-	Market    *string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	DeletedAt pgtype.Timestamp
-}
-
-func (q *Queries) DeleteStockbyStockID(ctx context.Context, id string) (*DeleteStockbyStockIDRow, error) {
-	row := q.db.QueryRow(ctx, DeleteStockbyStockID, id)
-	var i DeleteStockbyStockIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Country,
-		&i.Category,
-		&i.Market,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return &i, err
 }
 
 const ListCategories = `-- name: ListCategories :many

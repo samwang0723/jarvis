@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
@@ -72,17 +71,22 @@ func run() error {
 	}
 	// print all three primary
 	for _, three := range threePrimary {
-		var dealerTradeSharesStr string
-		if three.DealerTradeShares != nil {
-			dealerTradeSharesStr = strconv.FormatInt(*three.DealerTradeShares, 10)
-		} else {
-			dealerTradeSharesStr = ""
-		}
-		logger.Info().
-			Str("stock_id", three.StockID).
-			Str("exchange_date", three.ExchangeDate).
-			Str("foreign_trade_shares", dealerTradeSharesStr).
-			Msg("ThreePrimary")
+		logger.Info().Msgf("ThreePrimary: %+v", three)
+	}
+
+	dailyClose, err := adapter.ListDailyClose(ctx, &domain.ListDailyCloseParams{
+		Limit:     10,
+		Offset:    0,
+		StartDate: "2024-01-01",
+		StockID:   "2609",
+		EndDate:   "2024-02-12",
+	})
+	if err != nil {
+		return err
+	}
+	// print all daily close
+	for _, dc := range dailyClose {
+		logger.Info().Msgf("DailyClose: %+v", dc)
 	}
 
 	return nil

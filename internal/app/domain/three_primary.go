@@ -4,10 +4,10 @@ type ThreePrimary struct {
 	ID
 	StockID            string
 	ExchangeDate       string
-	ForeignTradeShares *int64
-	TrustTradeShares   *int64
-	DealerTradeShares  *int64
-	HedgingTradeShares *int64
+	ForeignTradeShares int64
+	TrustTradeShares   int64
+	DealerTradeShares  int64
+	HedgingTradeShares int64
 	Time
 }
 

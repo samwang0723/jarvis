@@ -14,11 +14,11 @@ WHERE id = $1;
 -- name: BatchUpsertStocks :exec
 INSERT INTO stocks (id, name, country, category, market)
 VALUES (
-    unnest($1::text[]), 
-    unnest($2::text[]), 
-    unnest($3::text[]), 
-    unnest($4::text[]),
-    unnest($5::text[])
+    unnest(@id::text[]), 
+    unnest(@name::text[]), 
+    unnest(@country::text[]), 
+    unnest(@category::text[]),
+    unnest(@market::text[])
 )
 ON CONFLICT (id) DO UPDATE 
 SET 
@@ -27,21 +27,8 @@ SET
     category = EXCLUDED.category,
     market = EXCLUDED.market;
 
--- name: DeleteStockbyID :exec
+-- name: DeleteStockByID :exec
 UPDATE stocks SET deleted_at = NOW() WHERE id = $1;
-
--- name: DeleteStockbyStockID :one
-SELECT id, name, country, category, market, created_at, updated_at, deleted_at
-FROM stocks
-WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
-
--- name: CountStocks :one
-SELECT COUNT(*) FROM stocks
-WHERE
-    (@country::VARCHAR = '' OR country = @country)
-    AND (id = ANY(@stock_ids::text[]) OR NOT @filter_by_stock_id::bool)
-    AND (@name::VARCHAR = '' OR name ILIKE '%' || @name || '%')
-    AND (@category::VARCHAR = '' OR category = @category);
 
 -- name: ListStocks :many
 SELECT * FROM stocks

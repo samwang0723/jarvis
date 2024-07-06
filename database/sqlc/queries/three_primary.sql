@@ -9,7 +9,12 @@ INSERT INTO three_primary (
 INSERT INTO three_primary (
     stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
-    unnest($1::varchar[]), unnest($2::varchar[]), unnest($3::bigint[]), unnest($4::bigint[]), unnest($5::bigint[]), unnest($6::bigint[])
+    unnest(@stock_id::varchar[]), 
+    unnest(@exchange_date::varchar[]), 
+    unnest(@foreign_trade_shares::bigint[]), 
+    unnest(@trust_trade_shares::bigint[]), 
+    unnest(@dealer_trade_shares::bigint[]),
+    unnest(@hedging_trade_shares::bigint[])
 )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE
 SET
@@ -30,10 +35,3 @@ WITH filtered AS (
 SELECT t.*
 FROM filtered f
 JOIN three_primary t ON t.id = f.id;
-
--- name: CountThreePrimary :one
-SELECT COUNT(three_primary.*)
-FROM three_primary
-WHERE three_primary.stock_id = @stock_id AND three_primary.exchange_date >= @start_date
-AND (@end_date::text = '' OR three_primary.exchange_date <= @end_date::text);
-

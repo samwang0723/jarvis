@@ -5,7 +5,6 @@
 package sqlcdb
 
 import (
-	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -21,9 +20,9 @@ type BalanceEvent struct {
 
 type BalanceView struct {
 	ID        uuid.UUID
-	Balance   pgtype.Numeric
-	Available pgtype.Numeric
-	Pending   pgtype.Numeric
+	Balance   float64
+	Available float64
+	Pending   float64
 	Version   int32
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
@@ -36,11 +35,11 @@ type DailyClose struct {
 	TradeShares  *int64
 	Transactions *int64
 	Turnover     *int64
-	Open         decimal.Big
-	Close        decimal.Big
-	High         decimal.Big
-	Low          decimal.Big
-	PriceDiff    decimal.Big
+	Open         float64
+	Close        float64
+	High         float64
+	Low          float64
+	PriceDiff    float64
 	CreatedAt    pgtype.Timestamp
 	UpdatedAt    pgtype.Timestamp
 	DeletedAt    pgtype.Timestamp
@@ -50,13 +49,13 @@ type Order struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	StockID          string
-	BuyPrice         decimal.Big
+	BuyPrice         float64
 	BuyQuantity      int64
 	BuyExchangeDate  string
-	SellPrice        decimal.Big
+	SellPrice        float64
 	SellQuantity     int64
 	SellExchangeDate string
-	ProfitablePrice  decimal.Big
+	ProfitablePrice  float64
 	Status           string
 	Version          int32
 	CreatedAt        pgtype.Timestamp
@@ -87,13 +86,13 @@ type StakeConcentration struct {
 	ExchangeDate    string
 	SumBuyShares    *int64
 	SumSellShares   *int64
-	AvgBuyPrice     decimal.Big
-	AvgSellPrice    decimal.Big
-	Concentration1  pgtype.Numeric
-	Concentration5  pgtype.Numeric
-	Concentration10 pgtype.Numeric
-	Concentration20 pgtype.Numeric
-	Concentration60 pgtype.Numeric
+	AvgBuyPrice     float64
+	AvgSellPrice    float64
+	Concentration1  float64
+	Concentration5  float64
+	Concentration10 float64
+	Concentration20 float64
+	Concentration60 float64
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
 	DeletedAt       pgtype.Timestamp
@@ -129,8 +128,8 @@ type Transaction struct {
 	UserID       uuid.UUID
 	OrderID      uuid.UUID
 	OrderType    string
-	CreditAmount pgtype.Numeric
-	DebitAmount  pgtype.Numeric
+	CreditAmount float64
+	DebitAmount  float64
 	Status       string
 	Version      int32
 	CreatedAt    pgtype.Timestamp

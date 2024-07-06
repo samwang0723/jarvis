@@ -9,7 +9,16 @@ INSERT INTO daily_closes (
 INSERT INTO daily_closes (
     stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
   ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+    unnest(@stock_id::varchar[]), 
+    unnest(@exchange_date::varchar[]), 
+    unnest(@trade_shares::bigint[]), 
+    unnest(@transactions::bigint[]), 
+    unnest(@turnover::bigint[]),
+    unnest(@open::numeric[]),
+    unnest(@close::numeric[]),
+    unnest(@high::numeric[]),
+    unnest(@low::numeric[]),
+    unnest(@price_diff::numeric[])
   )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE SET
     trade_shares = EXCLUDED.trade_shares,
@@ -22,9 +31,10 @@ ON CONFLICT (stock_id, exchange_date) DO UPDATE SET
     price_diff = EXCLUDED.price_diff;
 
 -- name: HasDailyClose :one
-SELECT stock_id FROM daily_closes
-WHERE exchange_date = $1
-LIMIT 1;
+SELECT EXISTS (
+    SELECT 1 FROM daily_closes
+    WHERE exchange_date = $1
+);
 
 -- name: ListDailyClose :many
 SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
@@ -33,7 +43,7 @@ SELECT t.id, t.stock_id, t.exchange_date, t.transactions,
 FROM (
     SELECT daily_closes.id FROM daily_closes
     WHERE daily_closes.exchange_date >= @start_date AND daily_closes.stock_id = @stock_id
-    AND (@end_date::text = '' OR daily_closes.exchange_date <= @end_date::tex)
+    AND (@end_date::text = '' OR daily_closes.exchange_date <= @end_date::text)
     ORDER BY daily_closes.exchange_date DESC
     LIMIT $1 OFFSET $2
 ) q
@@ -59,9 +69,3 @@ FROM
     RankedCloses
 WHERE 
     rn = 1;
-
--- name: CountDailyClose :one
-SELECT COUNT(daily_closes.*)
-FROM daily_closes
-WHERE daily_closes.stock_id = @stock_id AND daily_closes.exchange_date >= @start_date
-AND (@end_date::text = '' OR daily_closes.exchange_date <= @end_date::text);

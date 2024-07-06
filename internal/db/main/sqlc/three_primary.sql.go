@@ -13,7 +13,12 @@ const BatchUpsertThreePrimary = `-- name: BatchUpsertThreePrimary :exec
 INSERT INTO three_primary (
     stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
-    unnest($1::varchar[]), unnest($2::varchar[]), unnest($3::bigint[]), unnest($4::bigint[]), unnest($5::bigint[]), unnest($6::bigint[])
+    unnest($1::varchar[]), 
+    unnest($2::varchar[]), 
+    unnest($3::bigint[]), 
+    unnest($4::bigint[]), 
+    unnest($5::bigint[]),
+    unnest($6::bigint[])
 )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE
 SET
@@ -24,44 +29,24 @@ SET
 `
 
 type BatchUpsertThreePrimaryParams struct {
-	Column1 []string
-	Column2 []string
-	Column3 []int64
-	Column4 []int64
-	Column5 []int64
-	Column6 []int64
+	StockID            []string
+	ExchangeDate       []string
+	ForeignTradeShares []int64
+	TrustTradeShares   []int64
+	DealerTradeShares  []int64
+	HedgingTradeShares []int64
 }
 
 func (q *Queries) BatchUpsertThreePrimary(ctx context.Context, arg *BatchUpsertThreePrimaryParams) error {
 	_, err := q.db.Exec(ctx, BatchUpsertThreePrimary,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
-		arg.Column5,
-		arg.Column6,
+		arg.StockID,
+		arg.ExchangeDate,
+		arg.ForeignTradeShares,
+		arg.TrustTradeShares,
+		arg.DealerTradeShares,
+		arg.HedgingTradeShares,
 	)
 	return err
-}
-
-const CountThreePrimary = `-- name: CountThreePrimary :one
-SELECT COUNT(three_primary.*)
-FROM three_primary
-WHERE three_primary.stock_id = $1 AND three_primary.exchange_date >= $2
-AND ($3::text = '' OR three_primary.exchange_date <= $3::text)
-`
-
-type CountThreePrimaryParams struct {
-	StockID   string
-	StartDate string
-	EndDate   string
-}
-
-func (q *Queries) CountThreePrimary(ctx context.Context, arg *CountThreePrimaryParams) (int64, error) {
-	row := q.db.QueryRow(ctx, CountThreePrimary, arg.StockID, arg.StartDate, arg.EndDate)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
 }
 
 const CreateThreePrimary = `-- name: CreateThreePrimary :exec
