@@ -47,6 +47,20 @@ func (repo *Repo) GetStakeConcentrationsWithVolumes(
 	return toDomainCalculationBaseList(result), nil
 }
 
+func (repo *Repo) HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error) {
+	return repo.primary().HasStakeConcentration(ctx, exchangeDate)
+}
+
+func (repo *Repo) GetStakeConcentrationLatestDataPoint(
+	ctx context.Context,
+) (string, error) {
+	exchangeDate, err := repo.primary().GetStakeConcentrationLatestDataPoint(ctx)
+	if err != nil {
+		return "", err
+	}
+	return exchangeDate, nil
+}
+
 func toSqlcBatchUpsertStakeConcentrationParams(
 	stakeConcentrations []*domain.StakeConcentration,
 ) *sqlcdb.BatchUpsertStakeConcentrationParams {

@@ -113,6 +113,18 @@ func (q *Queries) GetStakeConcentrationByStockID(ctx context.Context, arg *GetSt
 	return &i, err
 }
 
+const GetStakeConcentrationLatestDataPoint = `-- name: GetStakeConcentrationLatestDataPoint :one
+SELECT exchange_date FROM stake_concentration
+ORDER BY exchange_date DESC LIMIT 1
+`
+
+func (q *Queries) GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error) {
+	row := q.db.QueryRow(ctx, GetStakeConcentrationLatestDataPoint)
+	var exchange_date string
+	err := row.Scan(&exchange_date)
+	return exchange_date, err
+}
+
 const GetStakeConcentrationsWithVolumes = `-- name: GetStakeConcentrationsWithVolumes :many
 SELECT a.trade_shares,
        COALESCE(b.sum_buy_shares, 0)::bigint - COALESCE(b.sum_sell_shares, 0)::bigint AS diff,
@@ -153,4 +165,18 @@ func (q *Queries) GetStakeConcentrationsWithVolumes(ctx context.Context, arg *Ge
 		return nil, err
 	}
 	return items, nil
+}
+
+const HasStakeConcentration = `-- name: HasStakeConcentration :one
+SELECT EXISTS (
+    SELECT 1 FROM stake_concentration
+    WHERE exchange_date = $1
+)
+`
+
+func (q *Queries) HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error) {
+	row := q.db.QueryRow(ctx, HasStakeConcentration, exchangeDate)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }

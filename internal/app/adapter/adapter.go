@@ -37,6 +37,8 @@ type Adapter interface {
 		ctx context.Context,
 		stockID, date string,
 	) ([]*domain.CalculationBase, error)
+	HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error)
+	GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error)
 	CreatePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
 	DeletePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
 	ListPickedStocks(ctx context.Context, userID uuid.UUID) (*[]domain.PickedStock, error)
@@ -138,6 +140,14 @@ func (a *Imp) GetStakeConcentrationsWithVolumes(
 	stockID, date string,
 ) ([]*domain.CalculationBase, error) {
 	return a.repo.GetStakeConcentrationsWithVolumes(ctx, stockID, date)
+}
+
+func (a *Imp) HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error) {
+	return a.repo.HasStakeConcentration(ctx, exchangeDate)
+}
+
+func (a *Imp) GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error) {
+	return a.repo.GetStakeConcentrationLatestDataPoint(ctx)
 }
 
 func (a *Imp) CreatePickedStock(

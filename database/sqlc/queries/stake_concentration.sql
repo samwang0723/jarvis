@@ -51,3 +51,12 @@ WHERE a.stock_id = $1 AND a.exchange_date <= $2
 ORDER BY a.exchange_date DESC
 LIMIT 60;
 
+-- name: HasStakeConcentration :one
+SELECT EXISTS (
+    SELECT 1 FROM stake_concentration
+    WHERE exchange_date = $1
+);
+
+-- name: GetStakeConcentrationLatestDataPoint :one
+SELECT exchange_date FROM stake_concentration
+ORDER BY exchange_date DESC LIMIT 1;
