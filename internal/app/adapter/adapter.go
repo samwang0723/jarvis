@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/adapter/sqlc"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 )
@@ -36,6 +37,9 @@ type Adapter interface {
 		ctx context.Context,
 		stockID, date string,
 	) ([]*domain.CalculationBase, error)
+	CreatePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
+	DeletePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
+	ListPickedStocks(ctx context.Context, userID uuid.UUID) (*[]domain.PickedStock, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -134,4 +138,27 @@ func (a *Imp) GetStakeConcentrationsWithVolumes(
 	stockID, date string,
 ) ([]*domain.CalculationBase, error) {
 	return a.repo.GetStakeConcentrationsWithVolumes(ctx, stockID, date)
+}
+
+func (a *Imp) CreatePickedStock(
+	ctx context.Context,
+	userID uuid.UUID,
+	stockID string,
+) error {
+	return a.repo.CreatePickedStock(ctx, userID, stockID)
+}
+
+func (a *Imp) DeletePickedStock(
+	ctx context.Context,
+	userID uuid.UUID,
+	stockID string,
+) error {
+	return a.repo.DeletePickedStock(ctx, userID, stockID)
+}
+
+func (a *Imp) ListPickedStocks(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*[]domain.PickedStock, error) {
+	return a.repo.ListPickedStocks(ctx, userID)
 }
