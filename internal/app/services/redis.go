@@ -21,7 +21,7 @@ import (
 	"github.com/bsm/redislock"
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"golang.org/x/xerrors"
 )
@@ -51,7 +51,11 @@ func (cfg *RedisConfig) validate() error {
 	return nil
 }
 
-func (s *serviceImpl) ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock {
+func (s *serviceImpl) ObtainLock(
+	ctx context.Context,
+	key string,
+	expire time.Duration,
+) *redislock.Lock {
 	if s.cache == nil {
 		return nil
 	}
@@ -72,13 +76,15 @@ func (s *serviceImpl) StopRedis() error {
 	return nil
 }
 
-func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*businessmodel.Realtime, error) {
+func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*domain.Realtime, error) {
 	today := helper.Today()
-	latestDate, err := s.dal.DataCompletionDate(ctx, today)
-	if err != nil {
-		sentry.CaptureException(err)
 
-		return nil, err
+	var latestDate string
+	hasData, _ := s.dal.HasStakeConcentration(ctx, today)
+	if !hasData {
+		latestDate, _ = s.dal.GetStakeConcentrationLatestDataPoint(ctx)
+	} else {
+		latestDate = today
 	}
 
 	redisRes, err := s.getRealtimeParsedData(ctx, today)
@@ -86,7 +92,7 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*busin
 		s.logger.Warn().Err(err).Msg("no redis cache record")
 	}
 
-	realtimeList := make(map[string]*businessmodel.Realtime)
+	realtimeList := make(map[string]*domain.Realtime)
 
 	// if already had latest stock data from exchange or cannot find redis
 	// realtime cache, using the latest database record.
@@ -99,7 +105,7 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*busin
 			continue
 		}
 
-		realtime := &businessmodel.Realtime{}
+		realtime := &domain.Realtime{}
 		e := realtime.UnmarshalJSON([]byte(raw))
 		if e != nil || realtime.Close == 0.0 {
 			sentry.CaptureException(e)

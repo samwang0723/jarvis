@@ -32,8 +32,6 @@ func Transaction(
 	dbPool *pgxpool.Pool,
 	txFunc func(ctx context.Context, tx pgx.Tx) error,
 ) error {
-	var err error
-
 	pgtx, ok := GetTx(ctx)
 
 	if ok { // already inside a transaction, start nested transaction
@@ -52,7 +50,7 @@ func Transaction(
 	}
 
 	// start a new transaction
-	err = pgx.BeginTxFunc(ctx, dbPool, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, dbPool, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		ctx = WithTx(ctx, tx)
 
 		return txFunc(ctx, tx)

@@ -15,7 +15,6 @@ package dto
 
 import (
 	"github.com/samwang0723/jarvis/internal/app/domain"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 const (
@@ -98,11 +97,11 @@ type ListSelectionRequest struct {
 }
 
 type ListSelectionResponse struct {
-	Entries []*entity.Selection `json:"entries"`
+	Entries []*domain.Selection `json:"entries"`
 }
 
 type ListPickedStocksResponse struct {
-	Entries []*entity.Selection `json:"entries"`
+	Entries []*domain.Selection `json:"entries"`
 }
 
 type InsertPickedStocksRequest struct {
@@ -177,7 +176,7 @@ type CreateUserResponse struct {
 type GetBalanceViewRequest struct{}
 
 type GetBalanceViewResponse struct {
-	Balance *entity.BalanceView `json:"balance"`
+	Balance *domain.BalanceView `json:"balance"`
 }
 
 type CreateTransactionRequest struct {
@@ -220,7 +219,7 @@ type ListOrderRequest struct {
 }
 
 type ListOrderResponse struct {
-	Entries    []*entity.Order `json:"entries"`
+	Entries    []*domain.Order `json:"entries"`
 	Offset     int32           `json:"offset"`
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`

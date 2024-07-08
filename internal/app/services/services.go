@@ -21,12 +21,13 @@ import (
 	"time"
 
 	"github.com/bsm/redislock"
+	"github.com/gofrs/uuid/v5"
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/app/adapter"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
-	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 
@@ -94,12 +95,12 @@ const (
 )
 
 type serviceImpl struct {
-	dal           idal.IDAL
+	dal           adapter.Adapter
 	consumer      ikafka.IKafka
 	cache         cache.Redis
 	cronjob       cronjob.Cronjob
 	logger        *zerolog.Logger
-	currentUserID uint64
+	currentUserID uuid.UUID
 	proxyClient   *http.Client
 }
 

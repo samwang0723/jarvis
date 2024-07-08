@@ -23,13 +23,13 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-const CreateUser = `-- name: CreateUser :one
-INSERT INTO users (first_name, last_name, email, phone, password) 
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id
+const CreateUser = `-- name: CreateUser :exec
+INSERT INTO users (id, first_name, last_name, email, phone, password) 
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateUserParams struct {
+	ID        uuid.UUID
 	FirstName string
 	LastName  string
 	Email     string
@@ -37,17 +37,16 @@ type CreateUserParams struct {
 	Password  string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg *CreateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, CreateUser,
+func (q *Queries) CreateUser(ctx context.Context, arg *CreateUserParams) error {
+	_, err := q.db.Exec(ctx, CreateUser,
+		arg.ID,
 		arg.FirstName,
 		arg.LastName,
 		arg.Email,
 		arg.Phone,
 		arg.Password,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	return err
 }
 
 const DeleteSessionID = `-- name: DeleteSessionID :exec

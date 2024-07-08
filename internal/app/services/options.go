@@ -18,15 +18,15 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/app/adapter"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
-	"github.com/samwang0723/jarvis/internal/database/dal/idal"
 	"github.com/samwang0723/jarvis/internal/kafka"
 )
 
 type Option func(o *serviceImpl)
 
-func WithDAL(dal idal.IDAL) Option {
+func WithDAL(dal adapter.Adapter) Option {
 	return func(i *serviceImpl) {
 		i.dal = dal
 	}

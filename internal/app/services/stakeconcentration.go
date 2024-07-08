@@ -19,8 +19,8 @@ import (
 	"errors"
 	"math"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 const (
@@ -39,15 +39,15 @@ var errCannotCastStakeConcentration = errors.New("cannot cast interface to *dto.
 func (s *serviceImpl) GetStakeConcentration(
 	ctx context.Context,
 	req *dto.GetStakeConcentrationRequest,
-) (*entity.StakeConcentration, error) {
+) (*domain.StakeConcentration, error) {
 	return s.dal.GetStakeConcentrationByStockID(ctx, req.StockID, req.Date)
 }
 
 func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[]any) error {
-	// Replicate the value from interface to *entity.StakeConcentration
-	stakeConcentrations := []*entity.StakeConcentration{}
+	// Replicate the value from interface to *domain.StakeConcentration
+	stakeConcentrations := []*domain.StakeConcentration{}
 	for _, v := range *objs {
-		if val, ok := v.(*entity.StakeConcentration); ok {
+		if val, ok := v.(*domain.StakeConcentration); ok {
 			s.calculateConcentration(ctx, val)
 			stakeConcentrations = append(stakeConcentrations, val)
 		} else {
@@ -59,7 +59,7 @@ func (s *serviceImpl) BatchUpsertStakeConcentration(ctx context.Context, objs *[
 }
 
 //nolint:nolintlint, cyclop
-func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *entity.StakeConcentration) {
+func (s *serviceImpl) calculateConcentration(ctx context.Context, ref *domain.StakeConcentration) {
 	// pull the sum of traded volumes in order to calculate the concentration percentage
 	bases, err := s.dal.GetStakeConcentrationsWithVolumes(ctx, ref.StockID, ref.Date)
 	if err != nil || len(bases) < 60 {

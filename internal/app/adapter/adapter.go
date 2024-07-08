@@ -42,6 +42,8 @@ type Adapter interface {
 	CreatePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
 	DeletePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
 	ListPickedStocks(ctx context.Context, userID uuid.UUID) (*[]domain.PickedStock, error)
+	CreateUser(ctx context.Context, obj *domain.User) error
+	GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -171,4 +173,12 @@ func (a *Imp) ListPickedStocks(
 	userID uuid.UUID,
 ) (*[]domain.PickedStock, error) {
 	return a.repo.ListPickedStocks(ctx, userID)
+}
+
+func (a *Imp) CreateUser(ctx context.Context, obj *domain.User) error {
+	return a.repo.CreateUser(ctx, obj)
+}
+
+func (a *Imp) GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error) {
+	return a.repo.GetBalanceView(ctx, id)
 }

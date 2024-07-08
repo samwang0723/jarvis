@@ -23,7 +23,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/app/businessmodel"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
@@ -69,13 +69,13 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			return nil, err
 		}
 
-		var realtimeList []businessmodel.Realtime
+		var realtimeList []domain.Realtime
 		for _, raw := range redisRes {
 			if raw == "" {
 				continue
 			}
 
-			realtime := &businessmodel.Realtime{}
+			realtime := &domain.Realtime{}
 			e := realtime.UnmarshalJSON([]byte(raw))
 			if e != nil || realtime.Close == 0.0 {
 				sentry.CaptureException(e)

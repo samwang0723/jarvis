@@ -18,7 +18,7 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 	"golang.org/x/xerrors"
 )
@@ -68,9 +68,9 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 				continue
 			}
 
-			ent, err := unmarshalMessageToEntity(msg)
+			ent, err := unmarshalMessageTodomain(msg)
 			if err != nil {
-				s.logger.Error().Msgf("Kafka:unmarshalMessageToEntity error: %s", err.Error())
+				s.logger.Error().Msgf("Kafka:unmarshalMessageTodomain error: %s", err.Error())
 
 				continue
 			}
@@ -124,26 +124,26 @@ func (s *serviceImpl) StopKafka() error {
 	return s.consumer.Close()
 }
 
-func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (any, error) {
+func unmarshalMessageTodomain(msg ikafka.ReceivedMessage) (any, error) {
 	var err error
 
 	var output any
 
 	switch msg.Topic {
 	case ikafka.DailyClosesV1:
-		var obj entity.DailyClose
+		var obj domain.DailyClose
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	case ikafka.StakeConcentrationV1:
-		var obj entity.StakeConcentration
+		var obj domain.StakeConcentration
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	case ikafka.StocksV1:
-		var obj entity.Stock
+		var obj domain.Stock
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	case ikafka.ThreePrimaryV1:
-		var obj entity.ThreePrimary
+		var obj domain.ThreePrimary
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	}

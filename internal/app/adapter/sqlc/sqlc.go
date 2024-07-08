@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/app/domain"
 	esdb "github.com/samwang0723/jarvis/internal/eventsourcing/db"
 
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
@@ -31,15 +30,17 @@ func NewConnection(pool *pgxpool.Pool) *Connection {
 }
 
 type Repo struct {
-	primaryConn *Connection
-	replicaConn *Connection
-	logger      *zerolog.Logger
+	primaryConn       *Connection
+	replicaConn       *Connection
+	logger            *zerolog.Logger
+	balanceRepository *balanceRepository
 }
 
 func NewSqlcRepository(pool *pgxpool.Pool, logger *zerolog.Logger, opts ...Option) *Repo {
 	repo := &Repo{
-		primaryConn: NewConnection(pool),
-		logger:      logger,
+		primaryConn:       NewConnection(pool),
+		logger:            logger,
+		balanceRepository: newBalanceRepository(pool),
 	}
 
 	for _, opt := range opts {
@@ -86,25 +87,6 @@ func (repo *Repo) replicaPgPool() *pgxpool.Pool {
 	}
 
 	return repo.replicaConn.pool
-}
-
-type balanceRepository struct {
-	repo *esdb.AggregateRepository
-}
-
-func NewBalanceRepository(dbPool *pgxpool.Pool) *balanceRepository {
-	loaderSaver := &BalanceLoaderSaver{
-		queries: sqlcdb.New(dbPool),
-	}
-
-	return &balanceRepository{
-		repo: esdb.NewAggregateRepository(
-			&domain.BalanceView{},
-			dbPool,
-			esdb.WithAggregateLoader(loaderSaver),
-			esdb.WithAggregateSaver(loaderSaver),
-		),
-	}
 }
 
 func (repo *Repo) Transaction(ctx context.Context) (*Trans, error) {

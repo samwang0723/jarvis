@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
@@ -79,4 +80,63 @@ func fromSqlcBalanceView(sqlcBalance *sqlcdb.BalanceView) *domain.BalanceView {
 		Pending:   float32(sqlcBalance.Pending),
 		Available: float32(sqlcBalance.Available),
 	}
+}
+
+type balanceRepository struct {
+	repo *esdb.AggregateRepository
+}
+
+func newBalanceRepository(dbPool *pgxpool.Pool) *balanceRepository {
+	loaderSaver := &BalanceLoaderSaver{
+		queries: sqlcdb.New(dbPool),
+	}
+
+	return &balanceRepository{
+		repo: esdb.NewAggregateRepository(
+			&domain.BalanceView{},
+			dbPool,
+			esdb.WithAggregateLoader(loaderSaver),
+			esdb.WithAggregateSaver(loaderSaver),
+		),
+	}
+}
+
+func (br *balanceRepository) Load(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error) {
+	aggregate, err := br.repo.Load(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to balanceRepository.Load: %w", err)
+	}
+
+	balanceView, ok := aggregate.(*domain.BalanceView)
+	if !ok {
+		return nil, &TypeMismatchError{expect: &domain.BalanceView{}, got: aggregate}
+	}
+
+	return balanceView, nil
+}
+
+func (br *balanceRepository) Save(ctx context.Context, balanceView *domain.BalanceView) error {
+	err := br.repo.Save(ctx, balanceView)
+	if err != nil {
+		return fmt.Errorf("failed to balanceRepository.Save: %w", err)
+	}
+
+	return nil
+}
+
+func (repo *Repo) GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error) {
+	return repo.balanceRepository.Load(ctx, id)
+}
+
+func (repo *Repo) CreateBalanceView(
+	ctx context.Context,
+	userID uuid.UUID,
+	initBalance float32,
+) error {
+	balanceView, err := domain.NewBalanceView(userID, initBalance)
+	if err != nil {
+		return fmt.Errorf("failed to apply event to balanceView: %w", err)
+	}
+
+	return repo.balanceRepository.Save(ctx, balanceView)
 }

@@ -18,7 +18,6 @@ import (
 	"math"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -472,7 +471,7 @@ func ListPickedStocksResponseToPB(in *ListPickedStocksResponse) *pb.ListPickedSt
 	}
 }
 
-func SelectionToPB(in *entity.Selection) *pb.Selection {
+func SelectionToPB(in *domain.Selection) *pb.Selection {
 	if in == nil {
 		return nil
 	}
@@ -692,7 +691,7 @@ func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
 	return &GetBalanceViewRequest{}
 }
 
-func BalanceToPB(in *entity.BalanceView) *pb.Balance {
+func BalanceToPB(in *domain.BalanceView) *pb.Balance {
 	if in == nil {
 		return nil
 	}
@@ -705,7 +704,7 @@ func BalanceToPB(in *entity.BalanceView) *pb.Balance {
 	pbUpdatedAt := timestamppb.New(in.UpdatedAt)
 
 	return &pb.Balance{
-		Id:        pbID,
+		Id:        pbID.String(),
 		Balance:   pbBalance,
 		Available: pbAvailable,
 		Pending:   pbPending,
@@ -714,7 +713,7 @@ func BalanceToPB(in *entity.BalanceView) *pb.Balance {
 	}
 }
 
-func GetBalanceResponseToPB(in *entity.BalanceView) *pb.GetBalanceResponse {
+func GetBalanceResponseToPB(in *domain.BalanceView) *pb.GetBalanceResponse {
 	if in == nil {
 		return nil
 	}
@@ -853,7 +852,7 @@ func ListOrderResponseToPB(in *ListOrderResponse) *pb.ListOrderResponse {
 	}
 }
 
-func OrderToPB(in *entity.Order) *pb.Order {
+func OrderToPB(in *domain.Order) *pb.Order {
 	if in == nil {
 		return nil
 	}
@@ -874,7 +873,7 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	pbCurrentPrice := in.CurrentPrice
 
 	return &pb.Order{
-		Id:                pbID,
+		Id:                pbID.String(),
 		StockID:           pbStockID,
 		BuyPrice:          pbBuyPrice,
 		BuyQuantity:       pbBuyQuantity,

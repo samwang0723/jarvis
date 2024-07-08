@@ -3,15 +3,12 @@ package services
 import (
 	"context"
 
-	"github.com/getsentry/sentry-go"
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 )
 
-func (s *serviceImpl) GetBalance(ctx context.Context) (obj *entity.BalanceView, err error) {
-	obj, err = s.dal.GetBalanceViewByUserID(ctx, s.currentUserID)
+func (s *serviceImpl) GetBalance(ctx context.Context) (obj *domain.BalanceView, err error) {
+	obj, err = s.dal.GetBalanceView(ctx, s.currentUserID)
 	if err != nil {
-		sentry.CaptureException(err)
-
 		return nil, err
 	}
 

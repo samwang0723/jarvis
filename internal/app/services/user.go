@@ -18,8 +18,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -28,7 +28,7 @@ var (
 	errUserPasswordNotMatch = errors.New("user password not match")
 )
 
-func (s *serviceImpl) GetUser(ctx context.Context) (obj *entity.User, err error) {
+func (s *serviceImpl) GetUser(ctx context.Context) (obj *domain.User, err error) {
 	obj, err = s.dal.GetUserByID(ctx, s.currentUserID)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (s *serviceImpl) GetUser(ctx context.Context) (obj *entity.User, err error)
 	return obj, nil
 }
 
-func (s *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err error) {
+func (s *serviceImpl) CreateUser(ctx context.Context, obj *domain.User) (err error) {
 	// Hash the password with a default cost of 10
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), bcrypt.DefaultCost)
 	obj.Password = string(hashedPassword)
@@ -61,7 +61,7 @@ func (s *serviceImpl) CreateUser(ctx context.Context, obj *entity.User) (err err
 	return nil
 }
 
-func (s *serviceImpl) UpdateUser(ctx context.Context, obj *entity.User) (err error) {
+func (s *serviceImpl) UpdateUser(ctx context.Context, obj *domain.User) (err error) {
 	err = s.dal.UpdateUser(ctx, obj)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update user")
@@ -84,7 +84,7 @@ func (s *serviceImpl) DeleteUser(ctx context.Context) (err error) {
 func (s *serviceImpl) ListUsers(
 	ctx context.Context,
 	req *dto.ListUsersRequest,
-) (objs []*entity.User, totalCount int64, err error) {
+) (objs []*domain.User, totalCount int64, err error) {
 	objs, totalCount, err = s.dal.ListUsers(ctx, req.Offset, req.Limit)
 	if err != nil {
 		return nil, 0, err
@@ -93,7 +93,10 @@ func (s *serviceImpl) ListUsers(
 	return objs, totalCount, nil
 }
 
-func (s *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error) {
+func (s *serviceImpl) GetUserByEmail(
+	ctx context.Context,
+	email string,
+) (obj *domain.User, err error) {
 	obj, err = s.dal.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
@@ -106,7 +109,10 @@ func (s *serviceImpl) GetUserByEmail(ctx context.Context, email string) (obj *en
 	return obj, nil
 }
 
-func (s *serviceImpl) GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error) {
+func (s *serviceImpl) GetUserByPhone(
+	ctx context.Context,
+	phone string,
+) (obj *domain.User, err error) {
 	obj, err = s.dal.GetUserByPhone(ctx, phone)
 	if err != nil {
 		return nil, err

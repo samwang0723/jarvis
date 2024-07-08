@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -28,7 +28,7 @@ const (
 
 func (s *serviceImpl) BatchUpsertPickedStocks(
 	ctx context.Context,
-	objs []*entity.PickedStock,
+	objs []*domain.PickedStock,
 ) error {
 	for _, obj := range objs {
 		obj.UserID = s.currentUserID
@@ -42,7 +42,7 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string)
 }
 
 //nolint:nolintlint,cyclop,nestif
-func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*entity.Selection, error) {
+func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection, error) {
 	objs, err := s.dal.ListPickedStocks(ctx, s.currentUserID)
 	if err != nil {
 		sentry.CaptureException(err)
