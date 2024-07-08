@@ -176,7 +176,7 @@ message ListDailyCloseSearchParams {
 }
 
 message DailyClose {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   google.protobuf.Timestamp deletedAt = 4;
@@ -213,15 +213,14 @@ message ListStockResponse {
 }
 
 message Stock {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   google.protobuf.Timestamp deletedAt = 4;
-  string stockID = 5;
-  string name = 6;
-  string country = 7;
-  string category = 8;
-  string market = 9;
+  string name = 5;
+  string country = 6;
+  string category = 7;
+  string market = 8;
 }
 
 message ListCategoriesRequest {}
@@ -239,7 +238,7 @@ message GetStakeConcentrationResponse {
 }
 
 message StakeConcentration {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   google.protobuf.Timestamp deletedAt = 4;
@@ -276,7 +275,7 @@ message ListThreePrimaryResponse {
 }
 
 message ThreePrimary {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   google.protobuf.Timestamp deletedAt = 4;
@@ -366,7 +365,7 @@ message CreateUserResponse {
 }
 
 message User {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   google.protobuf.Timestamp deletedAt = 4;
@@ -395,7 +394,7 @@ message GetBalanceResponse {
 }
 
 message Balance {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   float balance = 4;
@@ -416,7 +415,7 @@ message CreateTransactionResponse {
 }
 
 message Transaction {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   string status = 4;
@@ -442,7 +441,7 @@ message CreateOrderResponse {
 }
 
 message Order {
-  uint64 id = 1;
+  string id = 1;
   google.protobuf.Timestamp createdAt = 2;
   google.protobuf.Timestamp updatedAt = 3;
   string status = 4;

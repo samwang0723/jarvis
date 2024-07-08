@@ -1,11 +1,13 @@
 package eventsourcing
 
+import "github.com/gofrs/uuid/v5"
+
 type Aggregate interface {
 	Apply(event Event) error
 	GetChanges() []Event
 	AppendChange(events Event)
-	SetAggregateID(aggregateID uint64)
-	GetAggregateID() uint64
+	SetAggregateID(aggregateID uuid.UUID)
+	GetAggregateID() uuid.UUID
 	GetVersion() int
 	SetVersion(version int)
 	EventTable() string
@@ -14,8 +16,8 @@ type Aggregate interface {
 }
 
 type BaseAggregate struct {
-	ID                uint64 `gorm:"column:id"`
-	Version           int    `gorm:"column:version"` // event version number, used for ordering events
+	ID                uuid.UUID
+	Version           int
 	uncommittedEvents []Event
 }
 
@@ -35,11 +37,11 @@ func (ba *BaseAggregate) SetVersion(version int) {
 	ba.Version = version
 }
 
-func (ba *BaseAggregate) GetAggregateID() uint64 {
+func (ba *BaseAggregate) GetAggregateID() uuid.UUID {
 	return ba.ID
 }
 
-func (ba *BaseAggregate) SetAggregateID(aggregateID uint64) {
+func (ba *BaseAggregate) SetAggregateID(aggregateID uuid.UUID) {
 	ba.ID = aggregateID
 }
 

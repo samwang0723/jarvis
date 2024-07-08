@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 )
@@ -12,8 +13,8 @@ type EventModel struct {
 	CreatedAt   time.Time `gorm:"column:created_at"`
 	EventType   string    `gorm:"column:event_type"`
 	Payload     string    `gorm:"column:payload"`
-	AggregateID uint64    `gorm:"column:aggregate_id"`
-	ParentID    uint64    `gorm:"column:parent_id"`
+	AggregateID uuid.UUID `gorm:"column:aggregate_id"`
+	ParentID    uuid.UUID `gorm:"column:parent_id"`
 	Version     int       `gorm:"column:version"`
 }
 

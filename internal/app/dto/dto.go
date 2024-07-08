@@ -14,6 +14,7 @@
 package dto
 
 import (
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
@@ -37,7 +38,7 @@ type ListDailyCloseRequest struct {
 }
 
 type ListDailyCloseResponse struct {
-	Entries    []*entity.DailyClose `json:"entries"`
+	Entries    []*domain.DailyClose `json:"entries"`
 	Offset     int32                `json:"offset"`
 	Limit      int32                `json:"limit"`
 	TotalCount int64                `json:"totalCount"`
@@ -56,7 +57,7 @@ type ListThreePrimaryRequest struct {
 }
 
 type ListThreePrimaryResponse struct {
-	Entries    []*entity.ThreePrimary `json:"entries"`
+	Entries    []*domain.ThreePrimary `json:"entries"`
 	Offset     int32                  `json:"offset"`
 	Limit      int32                  `json:"limit"`
 	TotalCount int64                  `json:"totalCount"`
@@ -76,7 +77,7 @@ type ListStockRequest struct {
 }
 
 type ListStockResponse struct {
-	Entries    []*entity.Stock `json:"entries"`
+	Entries    []*domain.Stock `json:"entries"`
 	Offset     int32           `json:"offset"`
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`
@@ -132,7 +133,7 @@ type ListUsersRequest struct {
 }
 
 type ListUsersResponse struct {
-	Entries    []*entity.User `json:"entries"`
+	Entries    []*domain.User `json:"entries"`
 	Offset     int32          `json:"offset"`
 	Limit      int32          `json:"limit"`
 	TotalCount int64          `json:"totalCount"`

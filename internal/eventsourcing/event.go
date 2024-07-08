@@ -2,6 +2,8 @@ package eventsourcing
 
 import (
 	"time"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -16,10 +18,10 @@ type EventType string
 
 type Event interface {
 	EventType() EventType
-	GetAggregateID() uint64
-	SetAggregateID(uint64)
-	GetParentID() uint64
-	SetParentID(uint64)
+	GetAggregateID() uuid.UUID
+	SetAggregateID(uuid.UUID)
+	GetParentID() uuid.UUID
+	SetParentID(uuid.UUID)
 	GetVersion() int
 	SetVersion(int)
 	GetCreatedAt() time.Time
@@ -27,18 +29,18 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	ID          uint64
+	ID          uuid.UUID
 	CreatedAt   time.Time
-	AggregateID uint64
-	ParentID    uint64
+	AggregateID uuid.UUID
+	ParentID    uuid.UUID
 	Version     int
 }
 
-func (be *BaseEvent) GetAggregateID() uint64 {
+func (be *BaseEvent) GetAggregateID() uuid.UUID {
 	return be.AggregateID
 }
 
-func (be *BaseEvent) SetAggregateID(id uint64) {
+func (be *BaseEvent) SetAggregateID(id uuid.UUID) {
 	be.AggregateID = id
 }
 
@@ -58,10 +60,10 @@ func (be *BaseEvent) SetCreatedAt(createdAt time.Time) {
 	be.CreatedAt = createdAt
 }
 
-func (be *BaseEvent) GetParentID() uint64 {
+func (be *BaseEvent) GetParentID() uuid.UUID {
 	return be.ParentID
 }
 
-func (be *BaseEvent) SetParentID(parentID uint64) {
+func (be *BaseEvent) SetParentID(parentID uuid.UUID) {
 	be.ParentID = parentID
 }

@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"math"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/entity"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -144,12 +145,12 @@ func MapToProtobufStructUint64(m map[int]uint64) *structpb.Struct {
 	return s
 }
 
-func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
+func DailyCloseToPB(in *domain.DailyClose) *pb.DailyClose {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
 	pbDate := in.Date
 	pbTradeShares := in.TradedShares
@@ -162,27 +163,27 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbDiff := in.PriceDiff
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.DailyClose{
-		Id:           pbID.Uint64(),
+		Id:           pbID.String(),
 		StockID:      pbStockID,
 		Date:         pbDate,
-		TradeShares:  pbTradeShares,
-		Transactions: pbTransactions,
-		Turnover:     pbTurnover,
+		TradeShares:  uint64(pbTradeShares),
+		Transactions: uint64(pbTransactions),
+		Turnover:     uint64(pbTurnover),
 		Open:         pbOpen,
 		Close:        pbClose,
 		High:         pbHigh,
@@ -213,36 +214,34 @@ func ListStockResponseToPB(in *ListStockResponse) *pb.ListStockResponse {
 	}
 }
 
-func StockToPB(in *entity.Stock) *pb.Stock {
+func StockToPB(in *domain.Stock) *pb.Stock {
 	if in == nil {
 		return nil
 	}
 
 	pbID := in.ID
-	pbStockID := in.StockID
 	pbName := in.Name
 	pbCategory := in.Category
 	pbCountry := in.Country
 	pbMarket := in.Market
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.Stock{
-		Id:        pbID.Uint64(),
-		StockID:   pbStockID,
+		Id:        pbID,
 		Name:      pbName,
 		Category:  pbCategory,
 		Country:   pbCountry,
@@ -280,13 +279,13 @@ func GetStakeConcentrationRequestFromPB(
 }
 
 func GetStakeConcentrationResponseToPB(
-	in *entity.StakeConcentration,
+	in *domain.StakeConcentration,
 ) *pb.GetStakeConcentrationResponse {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
 	pbDate := in.Date
 	pbSumBuyShares := in.SumBuyShares
@@ -300,23 +299,23 @@ func GetStakeConcentrationResponseToPB(
 	pbConcentration60 := in.Concentration60
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.GetStakeConcentrationResponse{
 		StakeConcentration: &pb.StakeConcentration{
-			Id:               pbID.Uint64(),
+			Id:               pbID.String(),
 			StockID:          pbStockID,
 			Date:             pbDate,
 			SumBuyShares:     pbSumBuyShares,
@@ -387,36 +386,36 @@ func ListThreePrimaryResponseToPB(in *ListThreePrimaryResponse) *pb.ListThreePri
 	}
 }
 
-func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
+func ThreePrimaryToPB(in *domain.ThreePrimary) *pb.ThreePrimary {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbForeignTradeShares := in.ForeignTradeShares
 	pbTrustTradeShares := in.TrustTradeShares
 	pbDealerTradeShares := in.DealerTradeShares
 	pbHedgingTradeShares := in.HedgingTradeShares
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.ThreePrimary{
-		Id:                 pbID.Uint64(),
+		Id:                 pbID.String(),
 		StockID:            pbStockID,
 		Date:               pbDate,
 		ForeignTradeShares: pbForeignTradeShares,
@@ -647,34 +646,34 @@ func ListUsersResponseToPB(in *ListUsersResponse) *pb.ListUsersResponse {
 	}
 }
 
-func UserToPB(in *entity.User) *pb.User {
+func UserToPB(in *domain.User) *pb.User {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbEmail := in.Email
 	pbPhone := in.Phone
 	pbFirstName := in.FirstName
 	pbLastName := in.LastName
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.User{
-		Id:        pbID.Uint64(),
+		Id:        pbID.String(),
 		Email:     pbEmail,
 		Phone:     pbPhone,
 		FirstName: pbFirstName,

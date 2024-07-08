@@ -4,9 +4,10 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/samwang0723/jarvis/internal/database"
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
-	"gorm.io/gorm"
 )
 
 type AggregateRepository struct {
@@ -34,7 +35,7 @@ func WithAggregateSaver(aggregateSaver eventsourcing.AggregateSaver) AggregateRe
 }
 
 func NewAggregateRepository(
-	aggregate eventsourcing.Aggregate, db *gorm.DB,
+	aggregate eventsourcing.Aggregate, db *pgxpool.Pool,
 	options ...AggregateRepositoryOption,
 ) *AggregateRepository {
 	eventTable := aggregate.EventTable()
@@ -58,7 +59,7 @@ func NewAggregateRepository(
 // If a AggregateLoader is provided, it loads from the AggregateLoader, otherwise
 // it loads from the event store.
 func (ar *AggregateRepository) Load(
-	ctx context.Context, aggregateID uint64,
+	ctx context.Context, aggregateID uuid.UUID,
 ) (eventsourcing.Aggregate, error) {
 	if ar.aggregateLoader != nil {
 		return ar.loadFromAggregateLoader(ctx, aggregateID)
@@ -69,7 +70,7 @@ func (ar *AggregateRepository) Load(
 
 // loadFromEventStore loads a aggregate from AggregateLoader.
 func (ar *AggregateRepository) loadFromAggregateLoader(
-	ctx context.Context, aggregateID uint64,
+	ctx context.Context, aggregateID uuid.UUID,
 ) (eventsourcing.Aggregate, error) {
 	aggregate, err := ar.aggregateLoader.Load(ctx, aggregateID)
 	if err != nil {
@@ -84,7 +85,7 @@ func (ar *AggregateRepository) loadFromAggregateLoader(
 
 // loadFromEventStore loads a aggregate from event store.
 func (ar *AggregateRepository) loadFromEventStore(
-	ctx context.Context, aggregateID uint64,
+	ctx context.Context, aggregateID uuid.UUID,
 ) (eventsourcing.Aggregate, error) {
 	aggregate := ar.NewEmptyAggregate()
 
@@ -117,18 +118,15 @@ func (ar *AggregateRepository) loadFromEventStore(
 // If a AggregateSaver is provided, it also save the aggregate with the AggregateSaver.
 // If any errors happened, all changes will be rollbacked.
 func (ar *AggregateRepository) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
-	dbPool := ar.eventStore.db
-	if tx, ok := database.GetTx(ctx); ok {
-		dbPool = tx
-	}
-
-	return dbPool.Transaction(func(_ *gorm.DB) error {
+	return Transaction(ctx, ar.eventStore.dbPool, func(ctx context.Context, _ pgx.Tx) error {
 		changes := aggregate.GetChanges()
 
+		// save events
 		if err := ar.eventStore.Append(ctx, changes); err != nil {
 			return err
 		}
 
+		// save aggregate
 		if ar.aggregateSaver != nil {
 			if err := ar.aggregateSaver.Save(ctx, aggregate); err != nil {
 				return AggregateSaverError{
