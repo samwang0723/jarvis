@@ -30,17 +30,21 @@ func NewConnection(pool *pgxpool.Pool) *Connection {
 }
 
 type Repo struct {
-	primaryConn       *Connection
-	replicaConn       *Connection
-	logger            *zerolog.Logger
-	balanceRepository *balanceRepository
+	primaryConn           *Connection
+	replicaConn           *Connection
+	logger                *zerolog.Logger
+	balanceRepository     *balanceRepository
+	orderRepository       *orderRepository
+	transactionRepository *transactionRepository
 }
 
 func NewSqlcRepository(pool *pgxpool.Pool, logger *zerolog.Logger, opts ...Option) *Repo {
 	repo := &Repo{
-		primaryConn:       NewConnection(pool),
-		logger:            logger,
-		balanceRepository: newBalanceRepository(pool),
+		primaryConn:           NewConnection(pool),
+		logger:                logger,
+		balanceRepository:     newBalanceRepository(pool),
+		orderRepository:       newOrderRepository(pool),
+		transactionRepository: newTransactionRepository(pool),
 	}
 
 	for _, opt := range opts {

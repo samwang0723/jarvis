@@ -14,11 +14,11 @@ import (
 	esdb "github.com/samwang0723/jarvis/internal/eventsourcing/db"
 )
 
-type BalanceLoaderSaver struct {
+type balanceLoaderSaver struct {
 	queries *sqlcdb.Queries
 }
 
-func (bls *BalanceLoaderSaver) Load(
+func (bls *balanceLoaderSaver) Load(
 	ctx context.Context,
 	id uuid.UUID,
 ) (eventsourcing.Aggregate, error) {
@@ -40,7 +40,7 @@ func (bls *BalanceLoaderSaver) Load(
 	return fromSqlcBalanceView(sqlcBalance), nil
 }
 
-func (bls *BalanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
+func (bls *balanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.Aggregate) error {
 	queries := bls.queries
 
 	if trans, ok := esdb.GetTx(ctx); ok {
@@ -87,7 +87,7 @@ type balanceRepository struct {
 }
 
 func newBalanceRepository(dbPool *pgxpool.Pool) *balanceRepository {
-	loaderSaver := &BalanceLoaderSaver{
+	loaderSaver := &balanceLoaderSaver{
 		queries: sqlcdb.New(dbPool),
 	}
 
@@ -128,7 +128,7 @@ func (repo *Repo) GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.Bal
 	return repo.balanceRepository.Load(ctx, id)
 }
 
-func (repo *Repo) CreateBalanceView(
+func (repo *Repo) createBalance(
 	ctx context.Context,
 	userID uuid.UUID,
 	initBalance float32,

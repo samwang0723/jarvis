@@ -11,14 +11,14 @@ import (
 	uuid "github.com/gofrs/uuid/v5"
 )
 
-const GetOrderView = `-- name: GetOrderView :one
+const GetOrder = `-- name: GetOrder :one
 SELECT id, user_id, stock_id, buy_price, buy_quantity, buy_exchange_date, sell_price, sell_quantity, sell_exchange_date, profitable_price, status, version, created_at, updated_at
 FROM orders
 WHERE id = $1
 `
 
-func (q *Queries) GetOrderView(ctx context.Context, id uuid.UUID) (*Order, error) {
-	row := q.db.QueryRow(ctx, GetOrderView, id)
+func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (*Order, error) {
+	row := q.db.QueryRow(ctx, GetOrder, id)
 	var i Order
 	err := row.Scan(
 		&i.ID,
@@ -39,7 +39,112 @@ func (q *Queries) GetOrderView(ctx context.Context, id uuid.UUID) (*Order, error
 	return &i, err
 }
 
-const UpsertOrderView = `-- name: UpsertOrderView :exec
+const ListOpenOrders = `-- name: ListOpenOrders :many
+SELECT id 
+FROM orders 
+WHERE user_id = $1 
+  AND stock_id = $2 
+  AND status IN ('created', 'changed') 
+  AND (
+    ($3::VARCHAR = 'Sell' AND buy_quantity - sell_quantity > 0) 
+    OR 
+    ($3::VARCHAR = 'Buy' AND sell_quantity - buy_quantity > 0)
+  )
+ORDER BY created_at ASC
+`
+
+type ListOpenOrdersParams struct {
+	UserID    uuid.UUID
+	StockID   string
+	OrderType string
+}
+
+func (q *Queries) ListOpenOrders(ctx context.Context, arg *ListOpenOrdersParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, ListOpenOrders, arg.UserID, arg.StockID, arg.OrderType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const ListOrders = `-- name: ListOrders :many
+SELECT id, user_id, stock_id, buy_price, buy_quantity, buy_exchange_date, sell_price, sell_quantity, sell_exchange_date, profitable_price, status, version, created_at, updated_at
+FROM orders
+WHERE user_id = $1
+  AND (stock_id = ANY($4::text[]) OR NOT $5::bool)
+  AND ($6::VARCHAR = '' OR status = $6)
+  AND ($7::VARCHAR = '' 
+    OR sell_exchange_date LIKE $7::VARCHAR || '%' 
+    OR buy_exchange_date LIKE $7::VARCHAR || '%')
+LIMIT $2 OFFSET $3
+`
+
+type ListOrdersParams struct {
+	UserID          uuid.UUID
+	Limit           int32
+	Offset          int32
+	StockIds        []string
+	FilterByStockID bool
+	Status          string
+	ExchangeMonth   string
+}
+
+func (q *Queries) ListOrders(ctx context.Context, arg *ListOrdersParams) ([]*Order, error) {
+	rows, err := q.db.Query(ctx, ListOrders,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.StockIds,
+		arg.FilterByStockID,
+		arg.Status,
+		arg.ExchangeMonth,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.StockID,
+			&i.BuyPrice,
+			&i.BuyQuantity,
+			&i.BuyExchangeDate,
+			&i.SellPrice,
+			&i.SellQuantity,
+			&i.SellExchangeDate,
+			&i.ProfitablePrice,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const UpsertOrder = `-- name: UpsertOrder :exec
 INSERT INTO orders (id, user_id, stock_id, buy_price, buy_quantity,
 buy_exchange_date, sell_price, sell_quantity, sell_exchange_date, profitable_price,
 status, version)
@@ -58,7 +163,7 @@ SET user_id = EXCLUDED.user_id,
   version = EXCLUDED.version
 `
 
-type UpsertOrderViewParams struct {
+type UpsertOrderParams struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	StockID          string
@@ -73,8 +178,8 @@ type UpsertOrderViewParams struct {
 	Version          int32
 }
 
-func (q *Queries) UpsertOrderView(ctx context.Context, arg *UpsertOrderViewParams) error {
-	_, err := q.db.Exec(ctx, UpsertOrderView,
+func (q *Queries) UpsertOrder(ctx context.Context, arg *UpsertOrderParams) error {
+	_, err := q.db.Exec(ctx, UpsertOrder,
 		arg.ID,
 		arg.UserID,
 		arg.StockID,

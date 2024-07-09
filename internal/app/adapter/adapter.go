@@ -62,6 +62,19 @@ type Adapter interface {
 	) ([]*domain.Selection, error)
 	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
 	GetLatestChip(ctx context.Context) ([]*domain.Selection, error)
+	ListOrders(ctx context.Context, arg *domain.ListOrdersParams) ([]*domain.Order, error)
+	ListOpenOrders(
+		ctx context.Context,
+		userID uuid.UUID,
+		stockID string,
+		orderType string,
+	) ([]*domain.Order, error)
+	CreateOrder(
+		ctx context.Context,
+		orders []*domain.Order,
+		transactions []*domain.Transaction,
+	) error
+	CreateTransaction(ctx context.Context, transaction *domain.Transaction) error
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -259,4 +272,32 @@ func (a *Imp) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
 
 func (a *Imp) GetLatestChip(ctx context.Context) ([]*domain.Selection, error) {
 	return a.repo.GetLatestChip(ctx)
+}
+
+func (a *Imp) ListOrders(
+	ctx context.Context,
+	arg *domain.ListOrdersParams,
+) ([]*domain.Order, error) {
+	return a.repo.ListOrders(ctx, arg)
+}
+
+func (a *Imp) ListOpenOrders(
+	ctx context.Context,
+	userID uuid.UUID,
+	stockID string,
+	orderType string,
+) ([]*domain.Order, error) {
+	return a.repo.ListOpenOrders(ctx, userID, stockID, orderType)
+}
+
+func (a *Imp) CreateOrder(
+	ctx context.Context,
+	orders []*domain.Order,
+	transactions []*domain.Transaction,
+) error {
+	return a.repo.CreateOrder(ctx, orders, transactions)
+}
+
+func (a *Imp) CreateTransaction(ctx context.Context, transaction *domain.Transaction) error {
+	return a.repo.CreateTransaction(ctx, transaction)
 }

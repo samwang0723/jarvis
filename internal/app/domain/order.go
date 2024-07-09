@@ -52,12 +52,17 @@ type Order struct {
 	BuyPrice          float32
 }
 
+type ListOrdersParams struct {
+	UserID        uuid.UUID
+	Limit         int32
+	Offset        int32
+	StockIDs      []string
+	Status        string
+	ExchangeMonth string
+}
+
 // ensure Transaction implements Aggregate interface
 var _ eventsourcing.Aggregate = &Order{}
-
-func (Order) TableName() string {
-	return "orders"
-}
 
 func (order *Order) EventTable() string {
 	return "order_events"

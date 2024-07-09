@@ -17,19 +17,19 @@ package handlers
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 func (h *handlerImpl) GetStakeConcentration(
 	ctx context.Context,
 	req *dto.GetStakeConcentrationRequest,
-) (*entity.StakeConcentration, error) {
+) (*domain.StakeConcentration, error) {
 	res, err := h.dataService.GetStakeConcentration(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	stakeConcentration := &entity.StakeConcentration{
+	stakeConcentration := &domain.StakeConcentration{
 		StockID:         res.StockID,
 		Date:            res.Date,
 		SumBuyShares:    res.SumBuyShares,

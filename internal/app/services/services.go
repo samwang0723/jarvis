@@ -40,7 +40,7 @@ type IService interface {
 	HasDailyClose(ctx context.Context, date string) bool
 	BatchUpsertStocks(ctx context.Context, objs *[]any) error
 	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*domain.Stock, int64, error)
-	ListCategories(ctx context.Context) (objs []string, err error)
+	ListCategories(ctx context.Context) (objs []*string, err error)
 	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*domain.Selection, error)
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]any) error
 	ListThreePrimary(

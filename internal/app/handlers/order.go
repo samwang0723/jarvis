@@ -3,15 +3,15 @@ package handlers
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 func (h *handlerImpl) CreateOrder(
 	ctx context.Context,
 	req *dto.CreateOrderRequest,
 ) (*dto.CreateOrderResponse, error) {
-	if req.OrderType != entity.OrderTypeBuy && req.OrderType != entity.OrderTypeSell {
+	if req.OrderType != domain.OrderTypeBuy && req.OrderType != domain.OrderTypeSell {
 		h.logger.Error().Err(errOrderTypeNotAllowed).Msg("invalid order type")
 
 		return &dto.CreateOrderResponse{
@@ -42,7 +42,10 @@ func (h *handlerImpl) CreateOrder(
 	}, nil
 }
 
-func (h *handlerImpl) ListOrders(ctx context.Context, req *dto.ListOrderRequest) (*dto.ListOrderResponse, error) {
+func (h *handlerImpl) ListOrders(
+	ctx context.Context,
+	req *dto.ListOrderRequest,
+) (*dto.ListOrderResponse, error) {
 	orders, totalCount, err := h.dataService.WithUserID(ctx).ListOrders(ctx, req)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to list orders")

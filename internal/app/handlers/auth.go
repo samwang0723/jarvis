@@ -5,7 +5,6 @@ import (
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.LoginResponse {
@@ -35,7 +34,7 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		ID:        user.SessionID,
 		ExpiresAt: jwt.NewNumericDate(*user.SessionExpiredAt),
 		Issuer:    user.Email,
-		Subject:   helper.Uint64ToString(user.ID.Uint64()),
+		Subject:   user.ID.ID.String(),
 	}
 
 	// create a Builder

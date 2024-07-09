@@ -3,11 +3,9 @@ package services
 import (
 	"context"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/services/convert"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -29,17 +27,23 @@ func (s *serviceImpl) ListOrders(
 	ctx context.Context,
 	req *dto.ListOrderRequest,
 ) (objs []*domain.Order, totalCount int64, err error) {
-	searchParams := convert.ListOrderSearchParamsDTOToDAL(req.SearchParams)
-	searchParams.UserID = s.currentUserID
-	objs, totalCount, err = s.dal.ListOrders(
-		ctx,
-		req.Offset,
-		req.Limit,
-		searchParams,
-	)
-	if err != nil {
-		sentry.CaptureException(err)
+	params := &domain.ListOrdersParams{
+		UserID: s.currentUserID,
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+	if req.SearchParams.ExchangeMonth != nil {
+		params.ExchangeMonth = *req.SearchParams.ExchangeMonth
+	}
+	if req.SearchParams.Status != nil {
+		params.Status = *req.SearchParams.Status
+	}
+	if req.SearchParams.StockIDs != nil {
+		params.StockIDs = *req.SearchParams.StockIDs
+	}
 
+	objs, err = s.dal.ListOrders(ctx, params)
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -69,7 +73,7 @@ func (s *serviceImpl) ListOrders(
 	// calculate settled profit loss
 	for _, order := range objs {
 		for _, stock := range stocks {
-			if stock.StockID == order.StockID {
+			if stock.ID == order.StockID {
 				order.StockName = stock.Name
 
 				break
@@ -92,7 +96,7 @@ func (s *serviceImpl) ListOrders(
 		return nil, 0, err
 	}
 
-	return objs, totalCount, nil
+	return objs, int64(len(objs)), nil
 }
 
 func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*domain.Order) error {

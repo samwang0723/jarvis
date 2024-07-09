@@ -1,9 +1,9 @@
--- name: GetTransactionView :one
+-- name: GetTransaction :one
 SELECT *
 FROM transactions
 WHERE id = $1;
 
--- name: UpsertTransactionView :exec
+-- name: UpsertTransaction :exec
 INSERT INTO transactions (id, user_id, order_id, order_type, credit_amount, debit_amount, status, version)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (id) DO UPDATE

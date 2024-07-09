@@ -7,6 +7,18 @@ import (
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 )
 
+type NotEnoughBalanceError struct {
+	Err error
+}
+
+func (e *NotEnoughBalanceError) Error() string {
+	return fmt.Sprintf("not enough balance", e.Err)
+}
+
+func (e *NotEnoughBalanceError) Unwrap() error {
+	return e.Err
+}
+
 type RecordNotFoundError struct {
 	Err error
 }

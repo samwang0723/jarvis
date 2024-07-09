@@ -17,12 +17,15 @@ package handlers
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (h *handlerImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
-	user := &entity.User{
+func (h *handlerImpl) CreateUser(
+	ctx context.Context,
+	req *dto.CreateUserRequest,
+) (*dto.CreateUserResponse, error) {
+	user := &domain.User{
 		Email:     req.Email,
 		Phone:     req.Phone,
 		FirstName: req.FirstName,
@@ -48,7 +51,10 @@ func (h *handlerImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	}, nil
 }
 
-func (h *handlerImpl) ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
+func (h *handlerImpl) ListUsers(
+	ctx context.Context,
+	req *dto.ListUsersRequest,
+) (*dto.ListUsersResponse, error) {
 	entries, totalCount, err := h.dataService.WithUserID(ctx).ListUsers(ctx, req)
 	if err != nil {
 		return nil, err

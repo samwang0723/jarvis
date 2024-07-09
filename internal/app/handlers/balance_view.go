@@ -17,10 +17,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 )
 
-func (h *handlerImpl) GetBalance(ctx context.Context) (*entity.BalanceView, error) {
+func (h *handlerImpl) GetBalance(ctx context.Context) (*domain.BalanceView, error) {
 	balanceView, err := h.dataService.WithUserID(ctx).GetBalance(ctx)
 	if err != nil {
 		return nil, err

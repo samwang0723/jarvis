@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 )
 
 func (s *serviceImpl) CreateTransaction(
@@ -11,7 +11,7 @@ func (s *serviceImpl) CreateTransaction(
 	orderType string,
 	creditAmount, debitAmount float32,
 ) error {
-	transaction, err := entity.NewTransaction(
+	transaction, err := domain.NewTransaction(
 		s.currentUserID,
 		orderType,
 		creditAmount,
@@ -21,7 +21,5 @@ func (s *serviceImpl) CreateTransaction(
 		return err
 	}
 
-	transactions := []*entity.Transaction{transaction}
-
-	return s.dal.CreateChainTransactions(ctx, transactions)
+	return s.dal.CreateTransaction(ctx, transaction)
 }

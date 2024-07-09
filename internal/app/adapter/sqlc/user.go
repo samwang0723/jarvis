@@ -24,7 +24,7 @@ func (repo *Repo) CreateUser(ctx context.Context, obj *domain.User) error {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
 
-		err = repo.CreateBalanceView(ctx, obj.ID.ID, 0.0)
+		err = repo.createBalance(ctx, obj.ID.ID, 0.0)
 		if err != nil {
 			return err
 		}

@@ -11,14 +11,14 @@ import (
 	uuid "github.com/gofrs/uuid/v5"
 )
 
-const GetTransactionView = `-- name: GetTransactionView :one
+const GetTransaction = `-- name: GetTransaction :one
 SELECT id, user_id, order_id, order_type, credit_amount, debit_amount, status, version, created_at, updated_at
 FROM transactions
 WHERE id = $1
 `
 
-func (q *Queries) GetTransactionView(ctx context.Context, id uuid.UUID) (*Transaction, error) {
-	row := q.db.QueryRow(ctx, GetTransactionView, id)
+func (q *Queries) GetTransaction(ctx context.Context, id uuid.UUID) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, GetTransaction, id)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,
@@ -35,7 +35,7 @@ func (q *Queries) GetTransactionView(ctx context.Context, id uuid.UUID) (*Transa
 	return &i, err
 }
 
-const UpsertTransactionView = `-- name: UpsertTransactionView :exec
+const UpsertTransaction = `-- name: UpsertTransaction :exec
 INSERT INTO transactions (id, user_id, order_id, order_type, credit_amount, debit_amount, status, version)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (id) DO UPDATE
@@ -48,7 +48,7 @@ SET user_id = EXCLUDED.user_id,
   version = EXCLUDED.version
 `
 
-type UpsertTransactionViewParams struct {
+type UpsertTransactionParams struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
 	OrderID      uuid.UUID
@@ -59,8 +59,8 @@ type UpsertTransactionViewParams struct {
 	Version      int32
 }
 
-func (q *Queries) UpsertTransactionView(ctx context.Context, arg *UpsertTransactionViewParams) error {
-	_, err := q.db.Exec(ctx, UpsertTransactionView,
+func (q *Queries) UpsertTransaction(ctx context.Context, arg *UpsertTransactionParams) error {
+	_, err := q.db.Exec(ctx, UpsertTransaction,
 		arg.ID,
 		arg.UserID,
 		arg.OrderID,
