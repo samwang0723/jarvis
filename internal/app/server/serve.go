@@ -27,22 +27,22 @@ import (
 	"syscall"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/app/adapter"
+	"github.com/samwang0723/jarvis/internal/app/adapter/sqlc"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	"github.com/samwang0723/jarvis/internal/app/middleware"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
-	"github.com/samwang0723/jarvis/internal/database"
-	"github.com/samwang0723/jarvis/internal/database/dal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -75,15 +75,22 @@ type server struct {
 
 //nolint:gosec //skip tls verification
 func Serve(cfg *config.Config, logger *zerolog.Logger) {
+	ctx := context.Background()
 	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
 	// initialize DAL layer
-	dbPool := database.GormFactory(cfg)
-	dalService := dal.New(
-		dal.WithDB(dbPool),
-		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
-		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
-		dal.WithOrderRepository(dal.NewOrderRepository(dbPool)),
-	)
+	connString := "postgres://jarvis_app:abcd1234@localhost:5432/jarvis_main"
+	config, err := pgxpool.ParseConfig(connString)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Unable to parse connection string")
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Unable to create connection pool")
+	}
+
+	repo := sqlc.NewSqlcRepository(pool, logger)
+	adapter := adapter.NewAdapterImp(repo)
 
 	// Initialize a HTTP client with proxy
 	smartProxy := ""
@@ -104,7 +111,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 
 	// bind DAL layer with service
 	dataService := services.New(
-		services.WithDAL(dalService),
+		services.WithDAL(adapter),
 		services.WithKafka(services.KafkaConfig{
 			GroupID: cfg.Kafka.GroupID,
 			Brokers: cfg.Kafka.Brokers,
@@ -132,17 +139,11 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 				auth.StreamServerInterceptor(middleware.Authenticate),
 				selector.MatchFunc(middleware.AuthRoutes),
 			),
-			grpc_middleware.ChainStreamServer(
-				grpc_sentry.StreamServerInterceptor(),
-			),
 		),
 		grpc.ChainUnaryInterceptor(
 			selector.UnaryServerInterceptor(
 				auth.UnaryServerInterceptor(middleware.Authenticate),
 				selector.MatchFunc(middleware.AuthRoutes),
-			),
-			grpc_middleware.ChainUnaryServer(
-				grpc_sentry.UnaryServerInterceptor(),
 			),
 		),
 	)
@@ -162,14 +163,11 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	)
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
-	genericDB, dbErr := dbPool.DB()
-	if dbErr != nil {
-		logger.Fatal().Err(dbErr).Msg("failed to get db")
-	}
-
+	// Convert pgxpool.Pool to *sql.DB
+	sqlDB := stdlib.OpenDB(*config.ConnConfig)
 	health.AddReadinessCheck(
 		"database",
-		healthcheck.DatabasePingCheck(genericDB, databasePingTimeout),
+		healthcheck.DatabasePingCheck(sqlDB, databasePingTimeout),
 	)
 
 	s := newServer(
@@ -195,17 +193,13 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 			if err != nil {
 				logger.Error().Err(err).Msg("StopKafka error")
 			}
-			sqlDB, err := dbPool.DB()
-			if err != nil {
-				return err
-			}
-			defer sqlDB.Close()
+			defer pool.Close()
 
 			return nil
 		}),
 	)
 
-	err := s.Run(context.Background())
+	err = s.Run(ctx)
 	if err != nil {
 		s.Logger().Error().Err(err).Msg("server run failed")
 	}

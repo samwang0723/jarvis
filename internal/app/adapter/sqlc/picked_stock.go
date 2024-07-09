@@ -8,14 +8,18 @@ import (
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 )
 
-func (repo *Repo) CreatePickedStock(
-	ctx context.Context,
-	userID uuid.UUID,
-	stockID string,
-) error {
-	return repo.primary().CreatePickedStock(ctx, &sqlcdb.CreatePickedStockParams{
-		UserID:  userID,
-		StockID: stockID,
+func (repo *Repo) CreatePickedStocks(ctx context.Context, objs []*domain.PickedStock) error {
+	userIDs := make([]uuid.UUID, 0, len(objs))
+	stockIDs := make([]string, 0, len(objs))
+
+	for _, obj := range objs {
+		userIDs = append(userIDs, obj.UserID)
+		stockIDs = append(stockIDs, obj.StockID)
+	}
+
+	return repo.primary().CreatePickedStocks(ctx, &sqlcdb.CreatePickedStocksParams{
+		UserIds:  userIDs,
+		StockIds: stockIDs,
 	})
 }
 
@@ -33,7 +37,7 @@ func (repo *Repo) DeletePickedStock(
 func (repo *Repo) ListPickedStocks(
 	ctx context.Context,
 	userID uuid.UUID,
-) (*[]domain.PickedStock, error) {
+) ([]domain.PickedStock, error) {
 	pickedStocks, err := repo.primary().ListPickedStocks(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -51,5 +55,5 @@ func (repo *Repo) ListPickedStocks(
 			},
 		})
 	}
-	return &result, nil
+	return result, nil
 }

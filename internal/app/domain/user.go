@@ -2,6 +2,8 @@ package domain
 
 import (
 	"time"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 type User struct {
@@ -14,4 +16,10 @@ type User struct {
 	SessionID        string
 	SessionExpiredAt *time.Time
 	Time
+}
+
+type UpdateSessionIDParams struct {
+	SessionID        string
+	SessionExpiredAt time.Time
+	ID               uuid.UUID
 }

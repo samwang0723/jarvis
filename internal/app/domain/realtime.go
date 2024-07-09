@@ -23,6 +23,11 @@ type Realtime struct {
 	Volume    uint64  `json:"volume"`
 }
 
+type RealtimeList struct {
+	StockID string
+	Market  string
+}
+
 type rawData struct {
 	MessageAry []rawBody `json:"msgArray"`
 }

@@ -39,11 +39,29 @@ type Adapter interface {
 	) ([]*domain.CalculationBase, error)
 	HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error)
 	GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error)
-	CreatePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
+	CreatePickedStocks(ctx context.Context, objs []*domain.PickedStock) error
 	DeletePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
-	ListPickedStocks(ctx context.Context, userID uuid.UUID) (*[]domain.PickedStock, error)
+	ListPickedStocks(ctx context.Context, userID uuid.UUID) ([]domain.PickedStock, error)
 	CreateUser(ctx context.Context, obj *domain.User) error
+	UpdateUser(ctx context.Context, obj *domain.User) error
+	UpdateSessionID(ctx context.Context, params *domain.UpdateSessionIDParams) error
+	DeleteSessionID(ctx context.Context, userID uuid.UUID) error
+	DeleteUserByID(ctx context.Context, userID uuid.UUID) error
+	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
+	GetUserByPhone(ctx context.Context, phone string) (*domain.User, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, error)
+	ListUsers(ctx context.Context, limit int32, offset int32) ([]*domain.User, error)
 	GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error)
+	ListSelections(ctx context.Context, date string, strict bool) ([]*domain.Selection, error)
+	ListSelectionsFromPicked(ctx context.Context, userID uuid.UUID) ([]*domain.Selection, error)
+	AdvancedFiltering(
+		ctx context.Context,
+		objs []*domain.Selection,
+		strict bool,
+		opts ...string,
+	) ([]*domain.Selection, error)
+	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
+	GetLatestChip(ctx context.Context) ([]*domain.Selection, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -152,12 +170,8 @@ func (a *Imp) GetStakeConcentrationLatestDataPoint(ctx context.Context) (string,
 	return a.repo.GetStakeConcentrationLatestDataPoint(ctx)
 }
 
-func (a *Imp) CreatePickedStock(
-	ctx context.Context,
-	userID uuid.UUID,
-	stockID string,
-) error {
-	return a.repo.CreatePickedStock(ctx, userID, stockID)
+func (a *Imp) CreatePickedStocks(ctx context.Context, objs []*domain.PickedStock) error {
+	return a.repo.CreatePickedStocks(ctx, objs)
 }
 
 func (a *Imp) DeletePickedStock(
@@ -171,7 +185,7 @@ func (a *Imp) DeletePickedStock(
 func (a *Imp) ListPickedStocks(
 	ctx context.Context,
 	userID uuid.UUID,
-) (*[]domain.PickedStock, error) {
+) ([]domain.PickedStock, error) {
 	return a.repo.ListPickedStocks(ctx, userID)
 }
 
@@ -179,6 +193,70 @@ func (a *Imp) CreateUser(ctx context.Context, obj *domain.User) error {
 	return a.repo.CreateUser(ctx, obj)
 }
 
+func (a *Imp) UpdateUser(ctx context.Context, obj *domain.User) error {
+	return a.repo.UpdateUser(ctx, obj)
+}
+
+func (a *Imp) UpdateSessionID(ctx context.Context, params *domain.UpdateSessionIDParams) error {
+	return a.repo.UpdateSessionID(ctx, params)
+}
+
+func (a *Imp) DeleteSessionID(ctx context.Context, userID uuid.UUID) error {
+	return a.repo.DeleteSessionID(ctx, userID)
+}
+
+func (a *Imp) DeleteUserByID(ctx context.Context, userID uuid.UUID) error {
+	return a.repo.DeleteUserByID(ctx, userID)
+}
+
+func (a *Imp) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	return a.repo.GetUserByEmail(ctx, email)
+}
+
+func (a *Imp) GetUserByPhone(ctx context.Context, phone string) (*domain.User, error) {
+	return a.repo.GetUserByPhone(ctx, phone)
+}
+
+func (a *Imp) GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
+	return a.repo.GetUserByID(ctx, userID)
+}
+
+func (a *Imp) ListUsers(ctx context.Context, limit int32, offset int32) ([]*domain.User, error) {
+	return a.repo.ListUsers(ctx, limit, offset)
+}
+
 func (a *Imp) GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error) {
 	return a.repo.GetBalanceView(ctx, id)
+}
+
+func (a *Imp) ListSelections(
+	ctx context.Context,
+	date string,
+	strict bool,
+) ([]*domain.Selection, error) {
+	return a.repo.ListSelections(ctx, date, strict)
+}
+
+func (a *Imp) ListSelectionsFromPicked(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]*domain.Selection, error) {
+	return a.repo.ListSelectionsFromPicked(ctx, userID)
+}
+
+func (a *Imp) AdvancedFiltering(
+	ctx context.Context,
+	objs []*domain.Selection,
+	strict bool,
+	opts ...string,
+) ([]*domain.Selection, error) {
+	return a.repo.AdvancedFiltering(ctx, objs, strict, opts...)
+}
+
+func (a *Imp) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
+	return a.repo.GetRealTimeMonitoringKeys(ctx)
+}
+
+func (a *Imp) GetLatestChip(ctx context.Context) ([]*domain.Selection, error) {
+	return a.repo.GetLatestChip(ctx)
 }

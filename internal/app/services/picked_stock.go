@@ -17,13 +17,13 @@ package services
 import (
 	"context"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 const (
 	RoundDecimalTwo = 100
+	percent         = -100
 )
 
 func (s *serviceImpl) BatchUpsertPickedStocks(
@@ -34,28 +34,32 @@ func (s *serviceImpl) BatchUpsertPickedStocks(
 		obj.UserID = s.currentUserID
 	}
 
-	return s.dal.BatchUpsertPickedStock(ctx, objs)
+	return s.dal.CreatePickedStocks(ctx, objs)
 }
 
 func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string) error {
-	return s.dal.DeletePickedStockByID(ctx, s.currentUserID, stockID)
+	return s.dal.DeletePickedStock(ctx, s.currentUserID, stockID)
 }
 
 //nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection, error) {
-	objs, err := s.dal.ListPickedStocks(ctx, s.currentUserID)
-	if err != nil {
-		sentry.CaptureException(err)
-
-		return nil, err
-	}
-
 	realtimeList, err := s.fetchRealtimePrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, obj := range objs {
+	selections, err := s.dal.ListSelectionsFromPicked(ctx, s.currentUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, obj := range selections {
+		obj.QuoteChange = helper.RoundDecimalTwo(
+			(1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent,
+		)
+	}
+
+	for _, obj := range selections {
 		// override realtime data with history record.
 		realtime, ok := realtimeList[obj.StockID]
 		if !ok {
@@ -72,5 +76,5 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection,
 		obj.Date = realtime.Date
 	}
 
-	return objs, nil
+	return selections, nil
 }

@@ -1,5 +1,6 @@
--- name: CreatePickedStock :exec
-INSERT INTO picked_stocks (user_id, stock_id) VALUES ($1, $2);
+-- name: CreatePickedStocks :exec
+INSERT INTO picked_stocks (user_id, stock_id)
+SELECT unnest(@user_ids::uuid[]), unnest(@stock_ids::text[]);
 
 -- name: DeletePickedStock :exec
 UPDATE picked_stocks SET deleted_at = NOW() 

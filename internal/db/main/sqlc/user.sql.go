@@ -12,17 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const CountUsers = `-- name: CountUsers :one
-SELECT COUNT(*) FROM users WHERE deleted_at IS NULL
-`
-
-func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, CountUsers)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const CreateUser = `-- name: CreateUser :exec
 INSERT INTO users (id, first_name, last_name, email, phone, password) 
 VALUES ($1, $2, $3, $4, $5, $6)

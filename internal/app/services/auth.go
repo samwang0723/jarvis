@@ -2,12 +2,17 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/middleware"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	sessionExpiredDays = 5
 )
 
 func (s *serviceImpl) Login(
@@ -25,7 +30,11 @@ func (s *serviceImpl) Login(
 	}
 
 	// generate session_id
-	err = s.dal.UpdateSessionID(ctx, obj)
+	err = s.dal.UpdateSessionID(ctx, &domain.UpdateSessionIDParams{
+		ID:               obj.ID.ID,
+		SessionID:        uuid.Must(uuid.NewV4()).String(),
+		SessionExpiredAt: time.Now().AddDate(0, 0, sessionExpiredDays),
+	})
 	if err != nil {
 		return nil, err
 	}

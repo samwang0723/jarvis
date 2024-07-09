@@ -11,17 +11,18 @@ import (
 	uuid "github.com/gofrs/uuid/v5"
 )
 
-const CreatePickedStock = `-- name: CreatePickedStock :exec
-INSERT INTO picked_stocks (user_id, stock_id) VALUES ($1, $2)
+const CreatePickedStocks = `-- name: CreatePickedStocks :exec
+INSERT INTO picked_stocks (user_id, stock_id)
+SELECT unnest($1::uuid[]), unnest($2::text[])
 `
 
-type CreatePickedStockParams struct {
-	UserID  uuid.UUID
-	StockID string
+type CreatePickedStocksParams struct {
+	UserIds  []uuid.UUID
+	StockIds []string
 }
 
-func (q *Queries) CreatePickedStock(ctx context.Context, arg *CreatePickedStockParams) error {
-	_, err := q.db.Exec(ctx, CreatePickedStock, arg.UserID, arg.StockID)
+func (q *Queries) CreatePickedStocks(ctx context.Context, arg *CreatePickedStocksParams) error {
+	_, err := q.db.Exec(ctx, CreatePickedStocks, arg.UserIds, arg.StockIds)
 	return err
 }
 

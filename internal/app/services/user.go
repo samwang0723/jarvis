@@ -85,12 +85,12 @@ func (s *serviceImpl) ListUsers(
 	ctx context.Context,
 	req *dto.ListUsersRequest,
 ) (objs []*domain.User, totalCount int64, err error) {
-	objs, totalCount, err = s.dal.ListUsers(ctx, req.Offset, req.Limit)
+	objs, err = s.dal.ListUsers(ctx, req.Limit, req.Offset)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return objs, totalCount, nil
+	return objs, int64(len(objs)), nil
 }
 
 func (s *serviceImpl) GetUserByEmail(

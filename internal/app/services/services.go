@@ -24,8 +24,8 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/adapter"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 	"github.com/samwang0723/jarvis/internal/cache"
 	"github.com/samwang0723/jarvis/internal/cronjob"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
@@ -36,21 +36,21 @@ type IService interface {
 	ListDailyClose(
 		ctx context.Context,
 		req *dto.ListDailyCloseRequest,
-	) ([]*entity.DailyClose, int64, error)
+	) ([]*domain.DailyClose, int64, error)
 	HasDailyClose(ctx context.Context, date string) bool
 	BatchUpsertStocks(ctx context.Context, objs *[]any) error
-	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*entity.Stock, int64, error)
+	ListStock(ctx context.Context, req *dto.ListStockRequest) ([]*domain.Stock, int64, error)
 	ListCategories(ctx context.Context) (objs []string, err error)
-	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*entity.Selection, error)
+	ListSelections(ctx context.Context, req *dto.ListSelectionRequest) ([]*domain.Selection, error)
 	BatchUpsertThreePrimary(ctx context.Context, objs *[]any) error
 	ListThreePrimary(
 		ctx context.Context,
 		req *dto.ListThreePrimaryRequest,
-	) ([]*entity.ThreePrimary, int64, error)
+	) ([]*domain.ThreePrimary, int64, error)
 	GetStakeConcentration(
 		ctx context.Context,
 		req *dto.GetStakeConcentrationRequest,
-	) (*entity.StakeConcentration, error)
+	) (*domain.StakeConcentration, error)
 	BatchUpsertStakeConcentration(ctx context.Context, objs *[]any) error
 	ListeningKafkaInput(ctx context.Context)
 	StopKafka() error
@@ -60,23 +60,23 @@ type IService interface {
 	AddJob(ctx context.Context, spec string, job func()) error
 	CronjobPresetRealtimeMonitoringKeys(ctx context.Context) error
 	CrawlingRealTimePrice(ctx context.Context) error
-	BatchUpsertPickedStocks(ctx context.Context, objs []*entity.PickedStock) error
+	BatchUpsertPickedStocks(ctx context.Context, objs []*domain.PickedStock) error
 	DeletePickedStockByID(ctx context.Context, stockID string) error
-	ListPickedStock(ctx context.Context) ([]*entity.Selection, error)
+	ListPickedStock(ctx context.Context) ([]*domain.Selection, error)
 	ObtainLock(ctx context.Context, key string, expire time.Duration) *redislock.Lock
 	ListUsers(
 		ctx context.Context,
 		req *dto.ListUsersRequest,
-	) (objs []*entity.User, totalCount int64, err error)
-	GetUser(ctx context.Context) (obj *entity.User, err error)
-	CreateUser(ctx context.Context, obj *entity.User) (err error)
-	UpdateUser(ctx context.Context, obj *entity.User) (err error)
-	Login(ctx context.Context, email, password string) (obj *entity.User, err error)
+	) (objs []*domain.User, totalCount int64, err error)
+	GetUser(ctx context.Context) (obj *domain.User, err error)
+	CreateUser(ctx context.Context, obj *domain.User) (err error)
+	UpdateUser(ctx context.Context, obj *domain.User) (err error)
+	Login(ctx context.Context, email, password string) (obj *domain.User, err error)
 	Logout(ctx context.Context) error
 	DeleteUser(ctx context.Context) (err error)
-	GetUserByEmail(ctx context.Context, email string) (obj *entity.User, err error)
-	GetUserByPhone(ctx context.Context, phone string) (obj *entity.User, err error)
-	GetBalance(ctx context.Context) (obj *entity.BalanceView, err error)
+	GetUserByEmail(ctx context.Context, email string) (obj *domain.User, err error)
+	GetUserByPhone(ctx context.Context, phone string) (obj *domain.User, err error)
+	GetBalance(ctx context.Context) (obj *domain.BalanceView, err error)
 	CreateTransaction(
 		ctx context.Context,
 		orderType string,
@@ -86,7 +86,7 @@ type IService interface {
 	ListOrders(
 		ctx context.Context,
 		req *dto.ListOrderRequest,
-	) (objs []*entity.Order, totalCount int64, err error)
+	) (objs []*domain.Order, totalCount int64, err error)
 	WithUserID(ctx context.Context) IService
 }
 
