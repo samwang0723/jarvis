@@ -210,13 +210,24 @@ proto: ## generate proto files
 docker-build: lint test docker-m1 ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
 
+docker-local:
+	@echo "[docker build] build local docker image on Mac M1"
+	@docker build \
+		-t samwang0723/$(APP_NAME):$(VERSION) \
+		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
+		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
+		--build-arg ENVIRONMENT=local \
+		-f build/docker/app/Dockerfile .
+	@docker push samwang0723/$(APP_NAME):$(VERSION)
+
 docker-m1:
 	@echo "[docker build] build local docker image on Mac M1"
 	@docker build \
 		-t samwang0723/$(APP_NAME):$(VERSION) \
 		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
 		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
-		-f build/docker/app/Dockerfile.local .
+		--build-arg ENVIRONMENT=dev \
+		-f build/docker/app/Dockerfile .
 	@docker push samwang0723/$(APP_NAME):$(VERSION)
 
 docker-amd64-deps:
@@ -233,6 +244,7 @@ docker-amd64:
 		-t samwang0723/$(APP_NAME):$(VERSION) \
 		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
 		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
+		--build-arg ENVIRONMENT=prod \
 		-f build/docker/app/Dockerfile .
 
 ##################

@@ -33,6 +33,7 @@ type Options struct {
 
 	// Before funcs
 	BeforeStart []func() error
+	AfterStart  []func() error
 	BeforeStop  []func() error
 
 	ProfilingEnabled bool
@@ -43,6 +44,12 @@ type Option func(o *Options)
 func BeforeStart(fn func() error) Option {
 	return func(o *Options) {
 		o.BeforeStart = append(o.BeforeStart, fn)
+	}
+}
+
+func AfterStart(fn func() error) Option {
+	return func(o *Options) {
+		o.AfterStart = append(o.AfterStart, fn)
 	}
 }
 

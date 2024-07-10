@@ -2,6 +2,7 @@ package sqlc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
@@ -92,6 +93,7 @@ func fromSqlcStocks(stocks []*sqlcdb.Stock) []*domain.Stock {
 }
 
 func fromSqlcStock(stock *sqlcdb.Stock) *domain.Stock {
+	fmt.Printf("stock: %+v\n", stock)
 	return &domain.Stock{
 		ID:       stock.ID,
 		Name:     stock.Name,

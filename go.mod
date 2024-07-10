@@ -2,10 +2,7 @@ module github.com/samwang0723/jarvis
 
 go 1.22
 
-require (
-	github.com/getsentry/sentry-go v0.27.0
-	golang.org/x/net v0.23.0 // indirect
-)
+require golang.org/x/net v0.23.0 // indirect
 
 require (
 	github.com/bsm/redislock v0.7.2

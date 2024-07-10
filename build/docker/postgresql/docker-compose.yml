@@ -1,14 +1,22 @@
 version: '3.9'
+
 services:
   postgresql:
     image: docker.io/bitnami/postgresql:16
+    TZ: "Asia/Taipei"
     ports:
       - '5432:5432'
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
     environment:
       - 'ALLOW_EMPTY_PASSWORD=yes'
+    networks:
+      - jarvis-infra
 
 volumes:
   postgresql_data:
     driver: local
+
+networks:
+  jarvis-infra:
+    driver: bridge

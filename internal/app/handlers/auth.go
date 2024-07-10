@@ -28,7 +28,7 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		}
 	}
 
-	// create claims (you can create your own, see: ExampleBuilder_withUserClaims)
+	// create claims
 	claims := &jwt.RegisteredClaims{
 		Audience:  []string{"jarvis"},
 		ID:        user.SessionID,

@@ -14,18 +14,25 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"sync"
 
-	"github.com/samwang0723/jarvis/internal/helper"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	SecretUsername = "SECRET_USERNAME"
-	SecretPassword = "SECRET_PASSWORD"
-	RedisPassword  = "REDIS_PASSWD"
-	SentryDSN      = "SENTRY_DSN"
+	DbUsername    = "DB_USERNAME"
+	DbPassword    = "DB_PASSWD"
+	RedisPassword = "REDIS_PASSWD"
+	SmartProxy    = "SMART_PROXY"
+	JwtSecret     = "JWT_SECRET"
+	EnvCoreKey    = "ENVIRONMENT"
+	EnvLocal      = "local"
+	EnvDev        = "dev"
+	EnvStaging    = "staging"
+	EnvProd       = "prod"
 )
 
 type Config struct {
@@ -43,10 +50,6 @@ type Config struct {
 		Brokers []string `yaml:"brokers"`
 		Topics  []string `yaml:"topics"`
 	} `yaml:"kafka"`
-	Sentry struct {
-		DSN   string `yaml:"dsn"`
-		Debug bool   `yaml:"debug"`
-	} `yaml:"sentry"`
 	Server struct {
 		Name     string `yaml:"name"`
 		Host     string `yaml:"host"`
@@ -66,7 +69,7 @@ type Config struct {
 		Database     string `yaml:"database"`
 		Port         int    `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
-		MaxIdleConns int    `yaml:"maxIdleConns"`
+		MinIdleConns int    `yaml:"minIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"database"`
 	Replica struct {
@@ -76,16 +79,53 @@ type Config struct {
 		Database     string `yaml:"database"`
 		Port         int    `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
-		MaxIdleConns int    `yaml:"maxIdleConns"`
+		MinIdleConns int    `yaml:"minIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
 }
 
 //nolint:nolintlint, gochecknoglobals
-var instance Config
+var (
+	instance  Config
+	env       string
+	dbuser    string
+	dbpasswd  string
+	jwtsecret string
+	envOnce   sync.Once
+)
+
+func GetCurrentEnv() string {
+	envOnce.Do(func() {
+		inputEnv := os.Getenv(EnvCoreKey)
+		if env == "" {
+			flag.StringVar(&inputEnv, "env", "local", "environment you want start the server")
+			flag.StringVar(&dbuser, "dbuser", "", "database username")
+			flag.StringVar(&jwtsecret, "jwtsecret", "", "jwt secret key")
+			flag.StringVar(&dbpasswd, "dbpasswd", "", "database password")
+
+			flag.Parse()
+		}
+		env = EnvLocal
+
+		switch inputEnv {
+		case "dev":
+			env = EnvDev
+		case "staging":
+			env = EnvStaging
+		case "prod":
+			env = EnvProd
+		}
+	})
+
+	return env
+}
+
+func GetJwtSecret() string {
+	return jwtsecret
+}
 
 func Load() {
-	env := helper.GetCurrentEnv()
+	env := GetCurrentEnv()
 	yamlFile := fmt.Sprintf("./configs/config.%s.yaml", env)
 
 	configFile, err := os.Open(yamlFile)
@@ -101,25 +141,36 @@ func Load() {
 		panic(err)
 	}
 
-	if user := os.Getenv(SecretUsername); user != "" {
+	if user := os.Getenv(DbUsername); user != "" {
 		instance.Database.User = user
 		instance.Replica.User = user
+	} else {
+		instance.Database.User = dbuser
+		instance.Replica.User = dbuser
 	}
 
-	if passwd := os.Getenv(SecretPassword); passwd != "" {
+	if passwd := os.Getenv(DbPassword); passwd != "" {
 		instance.Database.Password = passwd
 		instance.Replica.Password = passwd
+	} else {
+		instance.Database.Password = dbpasswd
+		instance.Replica.Password = dbpasswd
 	}
 
 	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
 	}
 
-	if dsn := os.Getenv(SentryDSN); dsn != "" {
-		instance.Sentry.DSN = dsn
-	}
-
 	instance.Environment = env
+}
+
+func (cfg *Config) DBConnectionString() string {
+	return fmt.Sprintf("postgresql://%s:%s@%s:%d/%s",
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.Database)
 }
 
 func GetCurrentConfig() *Config {

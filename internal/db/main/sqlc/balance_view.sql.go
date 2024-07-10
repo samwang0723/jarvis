@@ -9,17 +9,32 @@ import (
 	"context"
 
 	uuid "github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const GetBalanceView = `-- name: GetBalanceView :one
-SELECT id, balance, available, pending, version, created_at, updated_at
+SELECT id, 
+  regexp_replace(balance::text, '[^\d.-]', '', 'g')::numeric as balance, 
+  regexp_replace(available::text, '[^\d.-]', '', 'g')::numeric as available, 
+  regexp_replace(pending::text, '[^\d.-]', '', 'g')::numeric as pending, 
+  version, created_at, updated_at
 FROM balance_views
 WHERE id = $1
 `
 
-func (q *Queries) GetBalanceView(ctx context.Context, id uuid.UUID) (*BalanceView, error) {
+type GetBalanceViewRow struct {
+	ID        uuid.UUID
+	Balance   float64
+	Available float64
+	Pending   float64
+	Version   int32
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
+func (q *Queries) GetBalanceView(ctx context.Context, id uuid.UUID) (*GetBalanceViewRow, error) {
 	row := q.db.QueryRow(ctx, GetBalanceView, id)
-	var i BalanceView
+	var i GetBalanceViewRow
 	err := row.Scan(
 		&i.ID,
 		&i.Balance,

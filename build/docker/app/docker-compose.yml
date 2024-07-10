@@ -7,18 +7,12 @@ services:
       - "8080:8080"
       - "8081:8081"
     env_file:
-      - ../../../.env
+      - .env
     networks:
       - default
-      - kafka_jarvis-infra
-      - mysql_jarvis-infra
-      - redis_jarvis-infra
+      - postgresql_jarvis-infra
 networks:
   default:
     driver: bridge
-  kafka_jarvis-infra:
-    external: true
-  mysql_jarvis-infra:
-    external: true
-  redis_jarvis-infra:
+  postgresql_jarvis-infra:
     external: true

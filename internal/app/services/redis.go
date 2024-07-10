@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/bsm/redislock"
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -108,8 +107,6 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*domai
 		realtime := &domain.Realtime{}
 		e := realtime.UnmarshalJSON([]byte(raw))
 		if e != nil || realtime.Close == 0.0 {
-			sentry.CaptureException(e)
-
 			s.logger.Error().Err(e).Msgf("unmarshal realtime error: %s", raw)
 
 			continue
@@ -124,8 +121,6 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*domai
 func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {
 	keys, err := s.cache.SMembers(ctx, getRealtimeMonitoringKeys())
 	if err != nil {
-		sentry.CaptureException(err)
-
 		return nil, err
 	}
 
@@ -136,8 +131,6 @@ func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([
 
 	res, err := s.cache.MGet(ctx, mgetKeys...)
 	if err != nil {
-		sentry.CaptureException(err)
-
 		return nil, err
 	}
 
@@ -147,8 +140,6 @@ func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([
 func (s *serviceImpl) checkHoliday(ctx context.Context) error {
 	skipDates, err := s.cache.SMembers(ctx, skipHeader)
 	if err != nil {
-		sentry.CaptureException(err)
-
 		return err
 	}
 

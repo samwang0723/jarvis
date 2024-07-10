@@ -1,5 +1,9 @@
 -- name: GetBalanceView :one
-SELECT *
+SELECT id, 
+  regexp_replace(balance::text, '[^\d.-]', '', 'g')::numeric as balance, 
+  regexp_replace(available::text, '[^\d.-]', '', 'g')::numeric as available, 
+  regexp_replace(pending::text, '[^\d.-]', '', 'g')::numeric as pending, 
+  version, created_at, updated_at
 FROM balance_views
 WHERE id = $1;
 

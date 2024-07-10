@@ -15,6 +15,8 @@ type User struct {
 	Password         string
 	SessionID        string
 	SessionExpiredAt *time.Time
+	PhoneConfirmedAt *time.Time
+	EmailConfirmedAt *time.Time
 	Time
 }
 

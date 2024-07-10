@@ -15,9 +15,9 @@ package handlers
 
 import (
 	"context"
-	"os"
 
 	"github.com/rs/zerolog"
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/app/services"
@@ -77,7 +77,7 @@ func New(dataService services.IService, logger *zerolog.Logger) IHandler {
 	res := &handlerImpl{
 		dataService: dataService,
 		logger:      logger,
-		jwtSecret:   []byte(os.Getenv("JWT_SECRET")),
+		jwtSecret:   []byte(config.GetJwtSecret()),
 	}
 
 	return res

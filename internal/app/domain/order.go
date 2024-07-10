@@ -245,12 +245,12 @@ func NewOrder(
 	tradePrice float32,
 	quantity uint64,
 ) (*Order, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate id: %w", err)
+	id := uuid.Must(uuid.NewV4())
+	order := &Order{
+		BaseAggregate: eventsourcing.BaseAggregate{
+			ID: id,
+		},
 	}
-
-	order := &Order{}
 	event := &OrderCreated{
 		OrderType:    orderType,
 		StockID:      stockID,

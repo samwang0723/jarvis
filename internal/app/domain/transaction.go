@@ -112,12 +112,12 @@ func NewTransaction(
 	debitAmount float32,
 	orderID ...uuid.UUID,
 ) (*Transaction, error) {
-	id, err := uuid.NewV4()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate id: %w", err)
+	id := uuid.Must(uuid.NewV4())
+	tran := &Transaction{
+		BaseAggregate: eventsourcing.BaseAggregate{
+			ID: id,
+		},
 	}
-
-	tran := &Transaction{}
 	event := &TransactionCreated{
 		CreditAmount: creditAmount,
 		DebitAmount:  debitAmount,

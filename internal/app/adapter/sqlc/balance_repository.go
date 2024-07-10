@@ -68,7 +68,7 @@ func (bls *balanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 	return nil
 }
 
-func fromSqlcBalanceView(sqlcBalance *sqlcdb.BalanceView) *domain.BalanceView {
+func fromSqlcBalanceView(sqlcBalance *sqlcdb.GetBalanceViewRow) *domain.BalanceView {
 	return &domain.BalanceView{
 		CreatedAt: sqlcBalance.CreatedAt.Time,
 		UpdatedAt: sqlcBalance.UpdatedAt.Time,

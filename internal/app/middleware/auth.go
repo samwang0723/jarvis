@@ -3,13 +3,13 @@ package middleware
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/grpc/codes"
@@ -23,13 +23,10 @@ func (c contextKey) String() string {
 }
 
 //nolint:gochecknoglobals // for jwt secret encryption/decryption
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-//nolint:gochecknoglobals // for jwt secret encryption/decryption
 var JwtClaimsKey = contextKey("jwtClaims")
 
 func parseToken(token string) (*jwt.RegisteredClaims, error) {
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, jwtSecret)
+	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(config.GetJwtSecret()))
 	if err != nil {
 		return nil, err
 	}

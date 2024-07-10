@@ -55,7 +55,6 @@ const (
 	readTimeout            = 5 * time.Second
 	writeTimeout           = 10 * time.Second
 	defaultHTTPTimeout     = 10 * time.Second
-	smartproxy             = "SMART_PROXY"
 )
 
 type IServer interface {
@@ -76,15 +75,18 @@ type server struct {
 //nolint:gosec //skip tls verification
 func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	ctx := context.Background()
-	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
+	env := config.GetCurrentEnv()
+	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> pgxpool
 	// initialize DAL layer
-	connString := "postgres://jarvis_app:abcd1234@localhost:5432/jarvis_main"
-	config, err := pgxpool.ParseConfig(connString)
+	pgConfig, err := pgxpool.ParseConfig(cfg.DBConnectionString())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Unable to parse connection string")
 	}
+	pgConfig.MaxConnLifetime = time.Duration(cfg.Database.MaxLifetime) * time.Second
+	pgConfig.MaxConns = int32(cfg.Database.MaxOpenConns)
+	pgConfig.MinConns = int32(cfg.Database.MinIdleConns)
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(ctx, pgConfig)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Unable to create connection pool")
 	}
@@ -92,44 +94,53 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	repo := sqlc.NewSqlcRepository(pool, logger)
 	adapter := adapter.NewAdapterImp(repo)
 
-	// Initialize a HTTP client with proxy
-	smartProxy := ""
-	if proxy := os.Getenv(smartproxy); proxy != "" {
-		smartProxy = proxy
-	}
-	proxyURL, pErr := url.Parse(smartProxy)
-	if pErr != nil {
-		logger.Fatal().Err(pErr).Msg("failed to parse proxy url")
-	}
-	proxy := &http.Client{
-		Timeout: defaultHTTPTimeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			Proxy:           http.ProxyURL(proxyURL),
-		},
+	// Common service options
+	options := []services.Option{
+		services.WithDAL(adapter),
+		services.WithLogger(logger),
 	}
 
-	// bind DAL layer with service
-	dataService := services.New(
-		services.WithDAL(adapter),
-		services.WithKafka(services.KafkaConfig{
+	// Conditionally add the WithKafka option if the environment is not local
+	if env != config.EnvLocal {
+		options = append(options, services.WithKafka(services.KafkaConfig{
 			GroupID: cfg.Kafka.GroupID,
 			Brokers: cfg.Kafka.Brokers,
 			Topics:  cfg.Kafka.Topics,
 			Logger:  logger,
-		}),
-		services.WithRedis(services.RedisConfig{
+		}))
+
+		options = append(options, services.WithRedis(services.RedisConfig{
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
 			Logger:        logger,
 			Password:      cfg.RedisCache.Password,
-		}),
-		services.WithCronJob(services.CronjobConfig{
+		}))
+
+		options = append(options, services.WithCronJob(services.CronjobConfig{
 			Logger: logger,
-		}),
-		services.WithLogger(logger),
-		services.WithProxy(proxy),
-	)
+		}))
+
+		// Initialize a HTTP client with proxy
+		smartProxy := ""
+		if proxy := os.Getenv(config.SmartProxy); proxy != "" {
+			smartProxy = proxy
+		}
+		proxyURL, pErr := url.Parse(smartProxy)
+		if pErr != nil {
+			logger.Fatal().Err(pErr).Msg("failed to parse proxy url")
+		}
+		proxy := &http.Client{
+			Timeout: defaultHTTPTimeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				Proxy:           http.ProxyURL(proxyURL),
+			},
+		}
+		options = append(options, services.WithProxy(proxy))
+	}
+
+	// bind DAL layer with service
+	dataService := services.New(options...)
 	// associate service with handler
 	handler := handlers.New(dataService, logger)
 
@@ -164,7 +175,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	// Convert pgxpool.Pool to *sql.DB
-	sqlDB := stdlib.OpenDB(*config.ConnConfig)
+	sqlDB := stdlib.OpenDB(*pgConfig.ConnConfig)
 	health.AddReadinessCheck(
 		"database",
 		healthcheck.DatabasePingCheck(sqlDB, databasePingTimeout),
@@ -178,20 +189,32 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
 		BeforeStart(func() error {
-			dataService.StartCron()
+			if env != config.EnvLocal {
+				dataService.StartCron()
+			}
+
+			return nil
+		}),
+		AfterStart(func() error {
+			if env != config.EnvLocal {
+				// listening kafka
+				handler.ListeningKafkaInput(ctx)
+			}
 
 			return nil
 		}),
 		BeforeStop(func() error {
-			dataService.StopCron()
-			err := dataService.StopRedis()
-			if err != nil {
-				return fmt.Errorf("stop_redis: failed, reason: %w", err)
-			}
+			if env != config.EnvLocal {
+				dataService.StopCron()
+				err = dataService.StopRedis()
+				if err != nil {
+					return fmt.Errorf("stop_redis: failed, reason: %w", err)
+				}
 
-			err = dataService.StopKafka()
-			if err != nil {
-				logger.Error().Err(err).Msg("StopKafka error")
+				err = dataService.StopKafka()
+				if err != nil {
+					logger.Error().Err(err).Msg("StopKafka error")
+				}
 			}
 			defer pool.Close()
 
@@ -249,8 +272,11 @@ func (s *server) Start(ctx context.Context) error {
 		}
 	}()
 
-	// listening kafka
-	s.Handler().ListeningKafkaInput(ctx)
+	for _, fn := range s.opts.AfterStart {
+		if err = fn(); err != nil {
+			return err
+		}
+	}
 
 	return err
 }

@@ -59,29 +59,19 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         - name: ENVIRONMENT
-          value: "development"
+          value: "dev"
         - name: START_CRON
           value: "true"
-        - name: SECRET_USERNAME
+        - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
               name: database-secret
               key: username
-        - name: SECRET_PASSWORD
+        - name: DB_PASSWD
           valueFrom:
             secretKeyRef:
               name: database-secret
               key: password
-        - name: WEB_SCRAPING
-          valueFrom:
-            secretKeyRef:
-              name: proxy-secret-webscraping
-              key: token
-        - name: WEB_SCRAPING_BACKUP
-          valueFrom:
-            secretKeyRef:
-              name: proxy-secret-proxycrawl
-              key: token
         - name: SMART_PROXY
           valueFrom:
             secretKeyRef:
@@ -92,11 +82,6 @@ spec:
             secretKeyRef:
               name: redis-secret
               key: redis-password
-        - name: SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              name: sentry-dsn
-              key: dsn
         - name: JWT_SECRET
           valueFrom:
               secretKeyRef:

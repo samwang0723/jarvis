@@ -12,7 +12,8 @@ import (
 
 func (repo *Repo) CreateUser(ctx context.Context, obj *domain.User) error {
 	return repo.RunInTransaction(ctx, func(ctx context.Context) error {
-		err := repo.primaryConn.queries.CreateUser(ctx, &sqlcdb.CreateUserParams{
+		obj.ID.ID = uuid.Must(uuid.NewV4())
+		err := repo.primary().CreateUser(ctx, &sqlcdb.CreateUserParams{
 			ID:        obj.ID.ID,
 			FirstName: obj.FirstName,
 			LastName:  obj.LastName,
@@ -34,7 +35,7 @@ func (repo *Repo) CreateUser(ctx context.Context, obj *domain.User) error {
 }
 
 func (repo *Repo) UpdateUser(ctx context.Context, obj *domain.User) error {
-	return repo.primaryConn.queries.UpdateUser(ctx, &sqlcdb.UpdateUserParams{
+	return repo.primary().UpdateUser(ctx, &sqlcdb.UpdateUserParams{
 		ID:        obj.ID.ID,
 		FirstName: obj.FirstName,
 		LastName:  obj.LastName,
@@ -45,25 +46,26 @@ func (repo *Repo) UpdateUser(ctx context.Context, obj *domain.User) error {
 }
 
 func (repo *Repo) UpdateSessionID(ctx context.Context, params *domain.UpdateSessionIDParams) error {
-	return repo.primaryConn.queries.UpdateSessionID(ctx, &sqlcdb.UpdateSessionIDParams{
+	return repo.primary().UpdateSessionID(ctx, &sqlcdb.UpdateSessionIDParams{
 		SessionID: &params.SessionID,
 		SessionExpiredAt: pgtype.Timestamp{
-			Time: params.SessionExpiredAt,
+			Time:  params.SessionExpiredAt,
+			Valid: true,
 		},
 		ID: params.ID,
 	})
 }
 
 func (repo *Repo) DeleteSessionID(ctx context.Context, userID uuid.UUID) error {
-	return repo.primaryConn.queries.DeleteSessionID(ctx, userID)
+	return repo.primary().DeleteSessionID(ctx, userID)
 }
 
 func (repo *Repo) DeleteUserByID(ctx context.Context, userID uuid.UUID) error {
-	return repo.primaryConn.queries.DeleteUserByID(ctx, userID)
+	return repo.primary().DeleteUserByID(ctx, userID)
 }
 
 func (repo *Repo) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
-	row, err := repo.primaryConn.queries.GetUserByEmail(ctx, email)
+	row, err := repo.primary().GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func (repo *Repo) GetUserByEmail(ctx context.Context, email string) (*domain.Use
 }
 
 func (repo *Repo) GetUserByPhone(ctx context.Context, phone string) (*domain.User, error) {
-	row, err := repo.primaryConn.queries.GetUserByPhone(ctx, phone)
+	row, err := repo.primary().GetUserByPhone(ctx, phone)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +81,7 @@ func (repo *Repo) GetUserByPhone(ctx context.Context, phone string) (*domain.Use
 }
 
 func (repo *Repo) GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
-	row, err := repo.primaryConn.queries.GetUserByID(ctx, userID)
+	row, err := repo.primary().GetUserByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +93,7 @@ func (repo *Repo) ListUsers(
 	limit int32,
 	offset int32,
 ) ([]*domain.User, error) {
-	result, err := repo.primaryConn.queries.ListUsers(ctx, &sqlcdb.ListUsersParams{
+	result, err := repo.primary().ListUsers(ctx, &sqlcdb.ListUsersParams{
 		Limit:  limit,
 		Offset: offset,
 	})
@@ -111,12 +113,15 @@ func toDomainUserList(rows []*sqlcdb.User) []*domain.User {
 
 func toDomainUser(row *sqlcdb.User) *domain.User {
 	return &domain.User{
-		ID:        domain.ID{ID: row.ID},
-		FirstName: row.FirstName,
-		LastName:  row.LastName,
-		Email:     row.Email,
-		Phone:     row.Phone,
-		Password:  row.Password,
+		ID:               domain.ID{ID: row.ID},
+		FirstName:        row.FirstName,
+		LastName:         row.LastName,
+		Email:            row.Email,
+		Phone:            row.Phone,
+		Password:         row.Password,
+		SessionExpiredAt: &row.SessionExpiredAt.Time,
+		PhoneConfirmedAt: &row.PhoneConfirmedAt.Time,
+		EmailConfirmedAt: &row.EmailConfirmedAt.Time,
 		Time: domain.Time{
 			CreatedAt: &row.CreatedAt.Time,
 			UpdatedAt: &row.UpdatedAt.Time,

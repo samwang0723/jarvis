@@ -12,7 +12,7 @@ database:
   port: 3307
   database: "jarvis"
   maxLifetime:  10
-  maxIdleConns: 20
+  minIdleConns: 20
   maxOpenConns: 200
 
 replica:
@@ -28,9 +28,6 @@ kafka:
   topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
   groupId: "jarvis"
 
-sentry:
-  debug: true
-
 # Logging
 log:
-  level: "DEBUG"
+  level: "error"

@@ -59,6 +59,7 @@ func (ols *transactionLoaderSaver) Save(
 	}
 
 	if err := queries.UpsertTransaction(ctx, &sqlcdb.UpsertTransactionParams{
+		ID:           trans.ID,
 		UserID:       trans.UserID,
 		OrderID:      trans.OrderID,
 		OrderType:    trans.OrderType,
@@ -135,20 +136,8 @@ func (tr *transactionRepository) Save(ctx context.Context, order *domain.Transac
 }
 
 func (repo *Repo) CreateTransaction(ctx context.Context, transaction *domain.Transaction) error {
-	balanceView, err := repo.balanceRepository.Load(ctx, transaction.UserID)
-	if err != nil {
-		return fmt.Errorf("failed to CreateTransaction: %w", err)
-	}
-
-	// immediately completed the transaction as no external vendor dependency
-	if err := transaction.Complete(); err != nil {
-		return err
-	}
-	if err := repo.transactionRepository.Save(ctx, transaction); err != nil {
-		return err
-	}
-
-	return moveFund(balanceView, transaction)
+	trasactions := []*domain.Transaction{transaction}
+	return repo.createChainTransactions(ctx, trasactions)
 }
 
 func (repo *Repo) createChainTransactions(
@@ -174,7 +163,7 @@ func (repo *Repo) createChainTransactions(
 		}
 	}
 
-	return nil
+	return repo.balanceRepository.Save(ctx, balanceView)
 }
 
 func moveFund(balanceView *domain.BalanceView, transaction *domain.Transaction) error {

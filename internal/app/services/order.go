@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid/v5"
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -91,9 +92,12 @@ func (s *serviceImpl) ListOrders(
 		}
 	}
 
-	err = s.fillRealtimePrice(ctx, objs)
-	if err != nil {
-		return nil, 0, err
+	// skip redis fetch if just local development
+	if config.GetCurrentEnv() != config.EnvLocal {
+		err = s.fillRealtimePrice(ctx, objs)
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return objs, int64(len(objs)), nil

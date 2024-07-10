@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 )
 
@@ -40,8 +39,6 @@ func (s *serviceImpl) StopCron() {
 func (s *serviceImpl) AddJob(ctx context.Context, spec string, job func()) error {
 	err := s.cronjob.AddJob(ctx, spec, job)
 	if err != nil {
-		sentry.CaptureException(err)
-
 		return fmt.Errorf("service.cron: add_job_failed, reason: %w", err)
 	}
 

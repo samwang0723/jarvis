@@ -56,6 +56,7 @@ func (ols *orderLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.A
 	}
 
 	if err := queries.UpsertOrder(ctx, &sqlcdb.UpsertOrderParams{
+		ID:               order.ID,
 		UserID:           order.UserID,
 		StockID:          order.StockID,
 		BuyPrice:         float64(order.BuyPrice),

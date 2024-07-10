@@ -15,7 +15,6 @@ package helper
 
 import (
 	"math"
-	"os"
 	"reflect"
 	"strconv"
 	"time"
@@ -29,24 +28,6 @@ const (
 	uintFormat  = 64
 	uintBase    = 10
 )
-
-func GetCurrentEnv() string {
-	env := os.Getenv("ENVIRONMENT")
-	output := "dev"
-
-	switch env {
-	case "local":
-		output = "local"
-	case "development":
-		output = "dev"
-	case "staging":
-		output = "staging"
-	case "production":
-		output = "prod"
-	}
-
-	return output
-}
 
 func Bytes2String(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))

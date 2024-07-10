@@ -13,7 +13,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/helper"
+	config "github.com/samwang0723/jarvis/configs"
 
 	database "github.com/samwang0723/jarvis/database"
 )
@@ -34,14 +34,10 @@ func main() {
 }
 
 func run() {
-	env := helper.GetCurrentEnv()
+	env := config.GetCurrentEnv()
 
 	// logger
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-
-	flag.StringVar(&env, "env", "local", "environment you want this test data to be inserted")
-	flag.Parse()
-
 	if env != "local" {
 		os.Setenv("APP_ENV", env)
 	}
