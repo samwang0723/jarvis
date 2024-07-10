@@ -3,13 +3,13 @@ version: '3.9'
 services:
   postgresql:
     image: docker.io/bitnami/postgresql:16
-    TZ: "Asia/Taipei"
     ports:
       - '5432:5432'
     volumes:
       - 'postgresql_data:/bitnami/postgresql'
     environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: unless-stopped
     networks:
       - jarvis-infra
 
