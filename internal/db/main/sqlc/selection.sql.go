@@ -405,7 +405,7 @@ from stake_concentration s
 left join stocks c on c.id = s.stock_id
 left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = $1)
 left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = $1)
-where s.stock_id in ($2::text[])
+where s.stock_id = ANY($2::text[])
 and s.exchange_date = $1
 order by s.stock_id
 `
@@ -578,7 +578,7 @@ floor(trust_trade_shares/1000) as trust_trade_shares,
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
 from three_primary where exchange_date >= $1
-and exchange_date < $2 and stock_id IN ($3::text[]) 
+and exchange_date < $2 and stock_id = Any($3::text[]) 
 order by stock_id, exchange_date desc
 `
 
@@ -631,7 +631,7 @@ floor(trust_trade_shares/1000) as trust_trade_shares,
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
 from three_primary where exchange_date >= $1
-and exchange_date <= $2 and stock_id IN ($3::text[]) 
+and exchange_date <= $2 and stock_id = Any($3::text[]) 
 order by stock_id, exchange_date desc
 `
 
