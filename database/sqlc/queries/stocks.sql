@@ -31,12 +31,13 @@ SET
 UPDATE stocks SET deleted_at = NOW() WHERE id = $1;
 
 -- name: ListStocks :many
-SELECT * FROM stocks
+SELECT id, name, country, site, category, market, created_at, updated_at, deleted_at FROM stocks
 WHERE
     (@country::VARCHAR = '' OR country = @country)
     AND (id = ANY(@stock_ids::text[]) OR NOT @filter_by_stock_id::bool)
     AND (@name::VARCHAR = '' OR name ILIKE '%' || @name || '%')
     AND (@category::VARCHAR = '' OR category = @category)
+    AND deleted_at IS NULL
 ORDER BY id
 LIMIT $1 OFFSET $2;
 

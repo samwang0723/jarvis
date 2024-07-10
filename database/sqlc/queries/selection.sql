@@ -22,7 +22,7 @@ SELECT
 FROM 
     stake_concentration s
 LEFT JOIN 
-    stocks c ON c.stock_id = s.stock_id
+    stocks c ON c.id = s.stock_id
 LEFT JOIN 
     daily_closes d ON (d.stock_id = s.stock_id AND d.exchange_date = $1)
 LEFT JOIN 
@@ -43,7 +43,7 @@ ORDER BY
 -- name: GetEligibleStocksFromDate :many
 select s.stock_id, c.market
 from stake_concentration s
-left join stocks c on c.stock_id = s.stock_id
+left join stocks c on c.id = s.stock_id
 left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = $1)
 where (
    CASE WHEN s.concentration_1 > 0 THEN 1 ELSE 0 END +
@@ -58,13 +58,13 @@ and d.trade_shares >= 1000000;
 -- name: GetEligibleStocksFromPicked :many
 select p.stock_id, c.market
 from picked_stocks p
-left join stocks c on c.stock_id = p.stock_id 
+left join stocks c on c.id = p.stock_id 
 where p.deleted_at is null;
 
 -- name: GetEligibleStocksFromOrder :many
 select o.stock_id, c.market
 from orders o
-left join stocks c on c.stock_id = o.stock_id 
+left join stocks c on c.id = o.stock_id 
 where o.status != 'closed';
 
 -- name: ListSelectionsFromPicked :many
@@ -75,7 +75,7 @@ floor(t.foreign_trade_shares/1000) as foreignc,
 floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
 floor(t.dealer_trade_shares/1000) as dealer
 from stake_concentration s
-left join stocks c on c.stock_id = s.stock_id
+left join stocks c on c.id = s.stock_id
 left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = $1)
 left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = $1)
 where s.stock_id in (@stock_ids::text[])
@@ -90,8 +90,8 @@ WITH average AS (
     FROM 
         daily_closes
     WHERE 
-        exchange_date BETWEEN TO_CHAR($1::date - INTERVAL '5 days', 'YYYYMMDD') 
-          AND TO_CHAR($1::date - INTERVAL '1 day', 'YYYYMMDD')
+        exchange_date BETWEEN TO_CHAR(TO_DATE($1, 'YYYYMMDD') - INTERVAL '5' day, 'YYYYMMDD') 
+          AND TO_CHAR(TO_DATE($1, 'YYYYMMDD') - INTERVAL '1' day, 'YYYYMMDD')
     GROUP BY 
         stock_id
 )
@@ -118,7 +118,7 @@ SELECT
     a.avg_volume
 FROM 
     stake_concentration s
-LEFT JOIN stocks c ON c.stock_id = s.stock_id
+LEFT JOIN stocks c ON c.id = s.stock_id
 LEFT JOIN daily_closes d ON (d.stock_id = s.stock_id AND d.exchange_date = $1)
 LEFT JOIN three_primary t ON (t.stock_id = s.stock_id AND t.exchange_date = $1)
 LEFT JOIN average a ON a.stock_id = s.stock_id
@@ -129,7 +129,7 @@ WHERE (
    CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
    CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
 ) >= 4
-AND s.exchange_date = $1::date
+AND s.exchange_date = $1
 AND d.trade_shares >= 3000000
 AND a.avg_volume >= 1000000
 ORDER BY s.stock_id;

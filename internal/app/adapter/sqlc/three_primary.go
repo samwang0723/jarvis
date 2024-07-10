@@ -83,6 +83,13 @@ func fromSqlcThreePrimarys(threePrimary []*sqlcdb.ThreePrimary) []*domain.ThreeP
 }
 
 func fromSqlcThreePrimary(tp *sqlcdb.ThreePrimary) *domain.ThreePrimary {
+	time := domain.Time{
+		CreatedAt: &tp.CreatedAt.Time,
+		UpdatedAt: &tp.UpdatedAt.Time,
+	}
+	if tp.DeletedAt.Valid {
+		time.DeletedAt = &tp.DeletedAt.Time
+	}
 	return &domain.ThreePrimary{
 		ID: domain.ID{
 			ID: tp.ID,
@@ -93,10 +100,6 @@ func fromSqlcThreePrimary(tp *sqlcdb.ThreePrimary) *domain.ThreePrimary {
 		TrustTradeShares:   *tp.TrustTradeShares,
 		DealerTradeShares:  *tp.DealerTradeShares,
 		HedgingTradeShares: *tp.HedgingTradeShares,
-		Time: domain.Time{
-			CreatedAt: &tp.CreatedAt.Time,
-			UpdatedAt: &tp.UpdatedAt.Time,
-			DeletedAt: &tp.DeletedAt.Time,
-		},
+		Time:               time,
 	}
 }

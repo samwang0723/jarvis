@@ -44,15 +44,18 @@ func (repo *Repo) ListPickedStocks(
 	}
 	result := make([]domain.PickedStock, 0, len(pickedStocks))
 	for _, pickedStock := range pickedStocks {
+		time := domain.Time{
+			CreatedAt: &pickedStock.CreatedAt.Time,
+			UpdatedAt: &pickedStock.UpdatedAt.Time,
+		}
+		if pickedStock.DeletedAt.Valid {
+			time.DeletedAt = &pickedStock.DeletedAt.Time
+		}
 		result = append(result, domain.PickedStock{
 			ID:      domain.ID{ID: pickedStock.ID},
 			UserID:  pickedStock.UserID,
 			StockID: pickedStock.StockID,
-			Time: domain.Time{
-				CreatedAt: &pickedStock.CreatedAt.Time,
-				UpdatedAt: &pickedStock.UpdatedAt.Time,
-				DeletedAt: &pickedStock.DeletedAt.Time,
-			},
+			Time:    time,
 		})
 	}
 	return result, nil

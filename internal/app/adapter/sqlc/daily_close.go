@@ -98,6 +98,13 @@ func toSqlcBatchUpsertDailyCloseParams(
 func toDomainDailyCloseList(res []*sqlcdb.ListDailyCloseRow) []*domain.DailyClose {
 	result := make([]*domain.DailyClose, 0, len(res))
 	for _, r := range res {
+		time := domain.Time{
+			CreatedAt: &r.CreatedAt.Time,
+			UpdatedAt: &r.UpdatedAt.Time,
+		}
+		if r.DeletedAt.Valid {
+			time.DeletedAt = &r.DeletedAt.Time
+		}
 		result = append(result, &domain.DailyClose{
 			ID: domain.ID{
 				ID: r.ID,
@@ -112,11 +119,7 @@ func toDomainDailyCloseList(res []*sqlcdb.ListDailyCloseRow) []*domain.DailyClos
 			High:         float32(r.High),
 			Low:          float32(r.Low),
 			PriceDiff:    float32(r.PriceDiff),
-			Time: domain.Time{
-				CreatedAt: &r.CreatedAt.Time,
-				UpdatedAt: &r.UpdatedAt.Time,
-				DeletedAt: &r.DeletedAt.Time,
-			},
+			Time:         time,
 		})
 	}
 	return result

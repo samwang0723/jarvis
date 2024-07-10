@@ -95,6 +95,13 @@ func toSqlcBatchUpsertStakeConcentrationParams(
 }
 
 func toDomainStakeConcentration(res *sqlcdb.StakeConcentration) *domain.StakeConcentration {
+	time := domain.Time{
+		CreatedAt: &res.CreatedAt.Time,
+		UpdatedAt: &res.UpdatedAt.Time,
+	}
+	if res.DeletedAt.Valid {
+		time.DeletedAt = &res.DeletedAt.Time
+	}
 	return &domain.StakeConcentration{
 		ID: domain.ID{
 			ID: res.ID,
@@ -110,11 +117,7 @@ func toDomainStakeConcentration(res *sqlcdb.StakeConcentration) *domain.StakeCon
 		Concentration10: float32(res.Concentration10),
 		Concentration20: float32(res.Concentration20),
 		Concentration60: float32(res.Concentration60),
-		Time: domain.Time{
-			CreatedAt: &res.CreatedAt.Time,
-			UpdatedAt: &res.UpdatedAt.Time,
-			DeletedAt: &res.DeletedAt.Time,
-		},
+		Time:            time,
 	}
 }
 

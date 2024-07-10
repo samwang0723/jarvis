@@ -109,6 +109,7 @@ WHERE
     AND (id = ANY($4::text[]) OR NOT $5::bool)
     AND ($6::VARCHAR = '' OR name ILIKE '%' || $6 || '%')
     AND ($7::VARCHAR = '' OR category = $7)
+    AND deleted_at IS NULL
 ORDER BY id
 LIMIT $1 OFFSET $2
 `
