@@ -113,6 +113,10 @@ func registerTypes(ctx context.Context, types []string, conn *pgx.Conn) error {
 	return nil
 }
 
+func (pgi *PGInit) ConnConfig() *pgx.ConnConfig {
+	return pgi.pgxConf.ConnConfig
+}
+
 // ConnPool initiates connection to database and return a pgxpool.Pool.
 func (pgi *PGInit) ConnPool(ctx context.Context) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.NewWithConfig(ctx, pgi.pgxConf)

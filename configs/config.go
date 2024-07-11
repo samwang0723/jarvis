@@ -44,8 +44,7 @@ type Config struct {
 	Log struct {
 		Level string `yaml:"level"`
 	} `yaml:"log"`
-	Environment string
-	Kafka       struct {
+	Kafka struct {
 		GroupID string   `yaml:"groupId"`
 		Brokers []string `yaml:"brokers"`
 		Topics  []string `yaml:"topics"`
@@ -67,9 +66,9 @@ type Config struct {
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
 		Database     string `yaml:"database"`
-		Port         int    `yaml:"port"`
+		Port         string `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
-		MinIdleConns int    `yaml:"minIdleConns"`
+		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"database"`
 	Replica struct {
@@ -160,17 +159,6 @@ func Load() {
 	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
 	}
-
-	instance.Environment = env
-}
-
-func (cfg *Config) DBConnectionString() string {
-	return fmt.Sprintf("postgresql://%s:%s@%s:%d/%s",
-		cfg.Database.User,
-		cfg.Database.Password,
-		cfg.Database.Host,
-		cfg.Database.Port,
-		cfg.Database.Database)
 }
 
 func GetCurrentConfig() *Config {

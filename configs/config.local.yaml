@@ -9,10 +9,10 @@ server:
 # Database credentials
 database:
   host: "localhost"
-  port: 5432
+  port: "5432"
   database: "jarvis_main"
   maxLifetime:  10
-  minIdleConns: 10
+  maxIdleConns: 10
   maxOpenConns: 30
 
 # Logging

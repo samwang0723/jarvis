@@ -31,7 +31,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
@@ -43,6 +42,7 @@ import (
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
+	"github.com/samwang0723/jarvis/internal/db/pginit"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -75,20 +75,30 @@ type server struct {
 //nolint:gosec //skip tls verification
 func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	ctx := context.Background()
-	env := config.GetCurrentEnv()
-	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> pgxpool
-	// initialize DAL layer
-	pgConfig, err := pgxpool.ParseConfig(cfg.DBConnectionString())
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Unable to parse connection string")
-	}
-	pgConfig.MaxConnLifetime = time.Duration(cfg.Database.MaxLifetime) * time.Second
-	pgConfig.MaxConns = int32(cfg.Database.MaxOpenConns)
-	pgConfig.MinConns = int32(cfg.Database.MinIdleConns)
 
-	pool, err := pgxpool.NewWithConfig(ctx, pgConfig)
+	// sequence: handler(proto to dto) -> service(dto to dao) -> DAL(dao) -> pgxpool
+	// initialize DAL layer
+	pgConfig := &pginit.Config{
+		User:         cfg.Database.User,
+		Password:     cfg.Database.Password,
+		Host:         cfg.Database.Host,
+		Port:         cfg.Database.Port,
+		Database:     cfg.Database.Database,
+		MaxConns:     int32(cfg.Database.MaxOpenConns),
+		MaxIdleConns: int32(cfg.Database.MaxIdleConns),
+		MaxLifeTime:  time.Duration(cfg.Database.MaxLifetime) * time.Second,
+	}
+	pgi, err := pginit.New(pgConfig,
+		pginit.WithLogLevel(zerolog.WarnLevel),
+		pginit.WithLogger(logger, "request-id"),
+		pginit.WithUUIDType(),
+	)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("Unable to create connection pool")
+		logger.Fatal().Err(err).Msg("could not init database")
+	}
+	pool, err := pgi.ConnPool(ctx)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("unable to create connection pool")
 	}
 
 	repo := sqlc.NewSqlcRepository(pool, logger)
@@ -101,14 +111,16 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	}
 
 	// Conditionally add the WithKafka option if the environment is not local
-	if env != config.EnvLocal {
+	if cfg.Kafka.GroupID != "" {
 		options = append(options, services.WithKafka(services.KafkaConfig{
 			GroupID: cfg.Kafka.GroupID,
 			Brokers: cfg.Kafka.Brokers,
 			Topics:  cfg.Kafka.Topics,
 			Logger:  logger,
 		}))
+	}
 
+	if cfg.RedisCache.Master != "" {
 		options = append(options, services.WithRedis(services.RedisConfig{
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
@@ -143,7 +155,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	dataService := services.New(options...)
 	// associate service with handler
 	handler := handlers.New(dataService, logger)
-
+	// configure gRPC-gateway with middleware
 	gRPCServer := grpc.NewServer(
 		grpc.ChainStreamInterceptor(
 			selector.StreamServerInterceptor(
@@ -161,7 +173,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 
 	// health check
 	health := healthcheck.NewHandler()
-	// Our app is not happy if we've got more than 100 goroutines running.
+	// Our app is not happy if we've got more than 10000 goroutines running.
 	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(maxGoRoutines))
 	// Our app is not ready if we can't resolve our upstream dependency in DNS.
 	health.AddReadinessCheck(
@@ -172,12 +184,11 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		"upstream-database-write-dns",
 		healthcheck.DNSResolveCheck(cfg.Database.Host, dnsResolveTimeout),
 	)
-
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	// Convert pgxpool.Pool to *sql.DB
-	sqlDB := stdlib.OpenDB(*pgConfig.ConnConfig)
+	sqlDB := stdlib.OpenDB(*pgi.ConnConfig())
 	health.AddReadinessCheck(
-		"database",
+		"database-connection",
 		healthcheck.DatabasePingCheck(sqlDB, databasePingTimeout),
 	)
 
@@ -189,14 +200,14 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
 		BeforeStart(func() error {
-			if env != config.EnvLocal {
+			if cfg.RedisCache.Master != "" {
 				dataService.StartCron()
 			}
 
 			return nil
 		}),
 		AfterStart(func() error {
-			if env != config.EnvLocal {
+			if cfg.Kafka.GroupID != "" {
 				// listening kafka
 				handler.ListeningKafkaInput(ctx)
 			}
@@ -204,16 +215,18 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 			return nil
 		}),
 		BeforeStop(func() error {
-			if env != config.EnvLocal {
+			if cfg.RedisCache.Master != "" {
 				dataService.StopCron()
 				err = dataService.StopRedis()
 				if err != nil {
 					return fmt.Errorf("stop_redis: failed, reason: %w", err)
 				}
+			}
 
+			if cfg.Kafka.GroupID != "" {
 				err = dataService.StopKafka()
 				if err != nil {
-					logger.Error().Err(err).Msg("StopKafka error")
+					return fmt.Errorf("StopKafka error: %w", err)
 				}
 			}
 			defer pool.Close()
@@ -249,7 +262,8 @@ func (s *server) Start(ctx context.Context) error {
 	// print server start message with name, version and env
 	s.Logger().
 		Info().
-		Msgf("Server [%s] started. Version: (%s). Environment: (%s)", s.Name(), s.Config().Server.Version, s.Config().Environment)
+		Msgf("Server [%s] started. Version: (%s). Environment: (%s)",
+			s.Name(), s.Config().Server.Version, config.GetCurrentEnv())
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
@@ -308,7 +322,7 @@ func (s *server) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	if s.Config().Environment != "local" {
+	if config.GetCurrentConfig().RedisCache.Master != "" {
 		// schedule to preset the stocks met expectation condition yesterday for realtime tracking
 		var waitGroup sync.WaitGroup
 		waitGroup.Add(1)

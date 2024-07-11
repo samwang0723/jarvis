@@ -21,6 +21,7 @@ where (
    CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
    CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
 ) >= 4
+AND c.name IS NOT NULL
 and s.exchange_date = $1
 and d.trade_shares >= 1000000
 `
@@ -124,9 +125,9 @@ GROUP BY stock_id
 `
 
 type GetHighestPriceParams struct {
-	ExchangeDate   string
-	ExchangeDate_2 string
-	StockIds       []string
+	StartDate string
+	EndDate   string
+	StockIds  []string
 }
 
 type GetHighestPriceRow struct {
@@ -135,7 +136,7 @@ type GetHighestPriceRow struct {
 }
 
 func (q *Queries) GetHighestPrice(ctx context.Context, arg *GetHighestPriceParams) ([]*GetHighestPriceRow, error) {
-	rows, err := q.db.Query(ctx, GetHighestPrice, arg.ExchangeDate, arg.ExchangeDate_2, arg.StockIds)
+	rows, err := q.db.Query(ctx, GetHighestPrice, arg.StartDate, arg.EndDate, arg.StockIds)
 	if err != nil {
 		return nil, err
 	}
@@ -171,10 +172,10 @@ SELECT
     s.concentration_20, 
     s.concentration_60, 
     floor(d.trade_shares/1000) as volume, 
-    floor(t.foreign_trade_shares/1000) as foreignc,
-    floor(t.trust_trade_shares/1000) as trust, 
-    floor(t.hedging_trade_shares/1000) as hedging,
-    floor(t.dealer_trade_shares/1000) as dealer
+    floor(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+    floor(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+    floor(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+    floor(COALESCE(t.dealer_trade_shares,0)/1000) as dealer
 FROM 
     stake_concentration s
 LEFT JOIN 
@@ -191,6 +192,7 @@ WHERE
         CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
         CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
     ) >= 4
+    AND c.name IS NOT NULL
     AND s.exchange_date = $1
     AND d.trade_shares >= 1000000
 ORDER BY 
@@ -263,15 +265,16 @@ const GetStartDate = `-- name: GetStartDate :one
 SELECT MIN(a.exchange_date)::text 
 FROM (
     SELECT exchange_date 
-    FROM stake_concentration 
+    FROM stake_concentration
+    WHERE exchange_date <= $1 
     GROUP BY exchange_date 
     ORDER BY exchange_date DESC 
     LIMIT 120
 ) AS a
 `
 
-func (q *Queries) GetStartDate(ctx context.Context) (string, error) {
-	row := q.db.QueryRow(ctx, GetStartDate)
+func (q *Queries) GetStartDate(ctx context.Context, exchangeDate string) (string, error) {
+	row := q.db.QueryRow(ctx, GetStartDate, exchangeDate)
 	var column_1 string
 	err := row.Scan(&column_1)
 	return column_1, err
@@ -306,10 +309,10 @@ SELECT
     s.concentration_20, 
     s.concentration_60, 
     FLOOR(d.trade_shares/1000) as volume, 
-    FLOOR(t.foreign_trade_shares/1000) as foreignc,
-    FLOOR(t.trust_trade_shares/1000) as trust, 
-    FLOOR(t.hedging_trade_shares/1000) as hedging,
-    FLOOR(t.dealer_trade_shares/1000) as dealer,
+    FLOOR(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+    FLOOR(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+    FLOOR(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+    FLOOR(COALESCE(t.dealer_trade_shares,0)/1000) as dealer,
     a.avg_volume
 FROM 
     stake_concentration s
@@ -324,6 +327,7 @@ WHERE (
    CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
    CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
 ) >= 4
+AND c.name IS NOT NULL
 AND s.exchange_date = $1
 AND d.trade_shares >= 3000000
 AND a.avg_volume >= 1000000
@@ -395,17 +399,32 @@ func (q *Queries) ListSelections(ctx context.Context, exchangeDate string) ([]*L
 }
 
 const ListSelectionsFromPicked = `-- name: ListSelectionsFromPicked :many
-select s.stock_id, c.name, (c.category || '.' || c.market)::text AS category, s.exchange_date, d.open, 
-d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
-s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
-floor(t.foreign_trade_shares/1000) as foreignc,
-floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
-floor(t.dealer_trade_shares/1000) as dealer
+select 
+  s.stock_id, 
+  c.name, 
+  (c.category || '.' || c.market)::text AS category, 
+  s.exchange_date, 
+  d.open, 
+  d.close, 
+  d.high, 
+  d.low, 
+  d.price_diff,
+  s.concentration_1, 
+  s.concentration_5, 
+  s.concentration_10, 
+  s.concentration_20, 
+  s.concentration_60, 
+  floor(d.trade_shares/1000) as volume, 
+  floor(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+  floor(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+  floor(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+  floor(COALESCE(t.dealer_trade_shares,0)/1000) as dealer
 from stake_concentration s
 left join stocks c on c.id = s.stock_id
 left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = $1)
 left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = $1)
 where s.stock_id = ANY($2::text[])
+AND c.name IS NOT NULL
 and s.exchange_date = $1
 order by s.stock_id
 `
@@ -481,15 +500,15 @@ const RetrieveDailyCloseHistory = `-- name: RetrieveDailyCloseHistory :many
 SELECT stock_id, exchange_date, close, trade_shares 
 FROM daily_closes 
 WHERE exchange_date >= $1 
-  AND exchange_date < $2 
+AND exchange_date < $2
   AND stock_id = ANY($3::text[]) 
 ORDER BY stock_id, exchange_date DESC
 `
 
 type RetrieveDailyCloseHistoryParams struct {
-	ExchangeDate   string
-	ExchangeDate_2 string
-	StockIds       []string
+	StartDate string
+	EndDate   string
+	StockIds  []string
 }
 
 type RetrieveDailyCloseHistoryRow struct {
@@ -500,7 +519,7 @@ type RetrieveDailyCloseHistoryRow struct {
 }
 
 func (q *Queries) RetrieveDailyCloseHistory(ctx context.Context, arg *RetrieveDailyCloseHistoryParams) ([]*RetrieveDailyCloseHistoryRow, error) {
-	rows, err := q.db.Query(ctx, RetrieveDailyCloseHistory, arg.ExchangeDate, arg.ExchangeDate_2, arg.StockIds)
+	rows, err := q.db.Query(ctx, RetrieveDailyCloseHistory, arg.StartDate, arg.EndDate, arg.StockIds)
 	if err != nil {
 		return nil, err
 	}
@@ -534,9 +553,9 @@ ORDER BY stock_id, exchange_date DESC
 `
 
 type RetrieveDailyCloseHistoryWithDateParams struct {
-	ExchangeDate   string
-	ExchangeDate_2 string
-	StockIds       []string
+	StartDate string
+	EndDate   string
+	StockIds  []string
 }
 
 type RetrieveDailyCloseHistoryWithDateRow struct {
@@ -547,7 +566,7 @@ type RetrieveDailyCloseHistoryWithDateRow struct {
 }
 
 func (q *Queries) RetrieveDailyCloseHistoryWithDate(ctx context.Context, arg *RetrieveDailyCloseHistoryWithDateParams) ([]*RetrieveDailyCloseHistoryWithDateRow, error) {
-	rows, err := q.db.Query(ctx, RetrieveDailyCloseHistoryWithDate, arg.ExchangeDate, arg.ExchangeDate_2, arg.StockIds)
+	rows, err := q.db.Query(ctx, RetrieveDailyCloseHistoryWithDate, arg.StartDate, arg.EndDate, arg.StockIds)
 	if err != nil {
 		return nil, err
 	}
@@ -583,9 +602,9 @@ order by stock_id, exchange_date desc
 `
 
 type RetrieveThreePrimaryHistoryParams struct {
-	ExchangeDate   string
-	ExchangeDate_2 string
-	StockIds       []string
+	StartDate string
+	EndDate   string
+	StockIds  []string
 }
 
 type RetrieveThreePrimaryHistoryRow struct {
@@ -598,7 +617,7 @@ type RetrieveThreePrimaryHistoryRow struct {
 }
 
 func (q *Queries) RetrieveThreePrimaryHistory(ctx context.Context, arg *RetrieveThreePrimaryHistoryParams) ([]*RetrieveThreePrimaryHistoryRow, error) {
-	rows, err := q.db.Query(ctx, RetrieveThreePrimaryHistory, arg.ExchangeDate, arg.ExchangeDate_2, arg.StockIds)
+	rows, err := q.db.Query(ctx, RetrieveThreePrimaryHistory, arg.StartDate, arg.EndDate, arg.StockIds)
 	if err != nil {
 		return nil, err
 	}
@@ -636,9 +655,9 @@ order by stock_id, exchange_date desc
 `
 
 type RetrieveThreePrimaryHistoryWithDateParams struct {
-	ExchangeDate   string
-	ExchangeDate_2 string
-	StockIds       []string
+	StartDate string
+	EndDate   string
+	StockIds  []string
 }
 
 type RetrieveThreePrimaryHistoryWithDateRow struct {
@@ -651,7 +670,7 @@ type RetrieveThreePrimaryHistoryWithDateRow struct {
 }
 
 func (q *Queries) RetrieveThreePrimaryHistoryWithDate(ctx context.Context, arg *RetrieveThreePrimaryHistoryWithDateParams) ([]*RetrieveThreePrimaryHistoryWithDateRow, error) {
-	rows, err := q.db.Query(ctx, RetrieveThreePrimaryHistoryWithDate, arg.ExchangeDate, arg.ExchangeDate_2, arg.StockIds)
+	rows, err := q.db.Query(ctx, RetrieveThreePrimaryHistoryWithDate, arg.StartDate, arg.EndDate, arg.StockIds)
 	if err != nil {
 		return nil, err
 	}

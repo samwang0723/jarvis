@@ -15,10 +15,10 @@ SELECT
     s.concentration_20, 
     s.concentration_60, 
     floor(d.trade_shares/1000) as volume, 
-    floor(t.foreign_trade_shares/1000) as foreignc,
-    floor(t.trust_trade_shares/1000) as trust, 
-    floor(t.hedging_trade_shares/1000) as hedging,
-    floor(t.dealer_trade_shares/1000) as dealer
+    floor(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+    floor(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+    floor(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+    floor(COALESCE(t.dealer_trade_shares,0)/1000) as dealer
 FROM 
     stake_concentration s
 LEFT JOIN 
@@ -35,6 +35,7 @@ WHERE
         CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
         CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
     ) >= 4
+    AND c.name IS NOT NULL
     AND s.exchange_date = $1
     AND d.trade_shares >= 1000000
 ORDER BY 
@@ -52,6 +53,7 @@ where (
    CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
    CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
 ) >= 4
+AND c.name IS NOT NULL
 and s.exchange_date = $1
 and d.trade_shares >= 1000000;
 
@@ -68,17 +70,32 @@ left join stocks c on c.id = o.stock_id
 where o.status != 'closed';
 
 -- name: ListSelectionsFromPicked :many
-select s.stock_id, c.name, (c.category || '.' || c.market)::text AS category, s.exchange_date, d.open, 
-d.close, d.high, d.low, d.price_diff,s.concentration_1, s.concentration_5, s.concentration_10, 
-s.concentration_20, s.concentration_60, floor(d.trade_shares/1000) as volume, 
-floor(t.foreign_trade_shares/1000) as foreignc,
-floor(t.trust_trade_shares/1000) as trust, floor(t.hedging_trade_shares/1000) as hedging,
-floor(t.dealer_trade_shares/1000) as dealer
+select 
+  s.stock_id, 
+  c.name, 
+  (c.category || '.' || c.market)::text AS category, 
+  s.exchange_date, 
+  d.open, 
+  d.close, 
+  d.high, 
+  d.low, 
+  d.price_diff,
+  s.concentration_1, 
+  s.concentration_5, 
+  s.concentration_10, 
+  s.concentration_20, 
+  s.concentration_60, 
+  floor(d.trade_shares/1000) as volume, 
+  floor(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+  floor(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+  floor(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+  floor(COALESCE(t.dealer_trade_shares,0)/1000) as dealer
 from stake_concentration s
 left join stocks c on c.id = s.stock_id
 left join daily_closes d on (d.stock_id = s.stock_id and d.exchange_date = $1)
 left join three_primary t on (t.stock_id = s.stock_id and t.exchange_date = $1)
 where s.stock_id = ANY(@stock_ids::text[])
+AND c.name IS NOT NULL
 and s.exchange_date = $1
 order by s.stock_id;
 
@@ -111,10 +128,10 @@ SELECT
     s.concentration_20, 
     s.concentration_60, 
     FLOOR(d.trade_shares/1000) as volume, 
-    FLOOR(t.foreign_trade_shares/1000) as foreignc,
-    FLOOR(t.trust_trade_shares/1000) as trust, 
-    FLOOR(t.hedging_trade_shares/1000) as hedging,
-    FLOOR(t.dealer_trade_shares/1000) as dealer,
+    FLOOR(COALESCE(t.foreign_trade_shares,0)/1000) as foreignc,
+    FLOOR(COALESCE(t.trust_trade_shares,0)/1000) as trust, 
+    FLOOR(COALESCE(t.hedging_trade_shares,0)/1000) as hedging,
+    FLOOR(COALESCE(t.dealer_trade_shares,0)/1000) as dealer,
     a.avg_volume
 FROM 
     stake_concentration s
@@ -129,6 +146,7 @@ WHERE (
    CASE WHEN s.concentration_20 > 0 THEN 1 ELSE 0 END +
    CASE WHEN s.concentration_60 > 0 THEN 1 ELSE 0 END
 ) >= 4
+AND c.name IS NOT NULL
 AND s.exchange_date = $1
 AND d.trade_shares >= 3000000
 AND a.avg_volume >= 1000000
@@ -138,7 +156,8 @@ ORDER BY s.stock_id;
 SELECT MIN(a.exchange_date)::text 
 FROM (
     SELECT exchange_date 
-    FROM stake_concentration 
+    FROM stake_concentration
+    WHERE exchange_date <= $1 
     GROUP BY exchange_date 
     ORDER BY exchange_date DESC 
     LIMIT 120
@@ -147,24 +166,24 @@ FROM (
 -- name: GetHighestPrice :many
 SELECT stock_id, MAX(high)::numeric AS high 
 FROM daily_closes 
-WHERE exchange_date >= $1 
-  AND exchange_date < $2 
+WHERE exchange_date >= @start_date 
+  AND exchange_date < @end_date 
   AND stock_id = ANY(@stock_ids::text[]) 
 GROUP BY stock_id;
 
 -- name: RetrieveDailyCloseHistoryWithDate :many
 SELECT stock_id, exchange_date, close, trade_shares 
 FROM daily_closes 
-WHERE exchange_date >= $1 
-  AND exchange_date <= $2 
+WHERE exchange_date >= @start_date 
+  AND exchange_date <= @end_date 
   AND stock_id = ANY(@stock_ids::text[]) 
 ORDER BY stock_id, exchange_date DESC;
 
 -- name: RetrieveDailyCloseHistory :many
 SELECT stock_id, exchange_date, close, trade_shares 
 FROM daily_closes 
-WHERE exchange_date >= $1 
-  AND exchange_date < $2 
+WHERE exchange_date >= @start_date 
+AND exchange_date < @end_date
   AND stock_id = ANY(@stock_ids::text[]) 
 ORDER BY stock_id, exchange_date DESC;
 
@@ -174,8 +193,8 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= $1
-and exchange_date <= $2 and stock_id = Any(@stock_ids::text[]) 
+from three_primary where exchange_date >= @start_date
+and exchange_date <= @end_date and stock_id = Any(@stock_ids::text[]) 
 order by stock_id, exchange_date desc;
 
 -- name: RetrieveThreePrimaryHistory :many
@@ -184,6 +203,6 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= $1
-and exchange_date < $2 and stock_id = Any(@stock_ids::text[]) 
+from three_primary where exchange_date >= @start_date
+and exchange_date < @end_date and stock_id = Any(@stock_ids::text[]) 
 order by stock_id, exchange_date desc;

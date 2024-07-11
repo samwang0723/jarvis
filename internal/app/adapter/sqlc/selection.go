@@ -111,7 +111,7 @@ func (repo *Repo) GetHighestPrice(
 	rewindWeek int,
 ) (map[string]float32, error) {
 	highestPriceMap := make(map[string]float32, len(stockIDs))
-	startDate, err := repo.primary().GetStartDate(ctx)
+	startDate, err := repo.primary().GetStartDate(ctx, date)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +122,9 @@ func (repo *Repo) GetHighestPrice(
 	}
 
 	highest, err := repo.primary().GetHighestPrice(ctx, &sqlcdb.GetHighestPriceParams{
-		StockIds:       stockIDs,
-		ExchangeDate:   startDate,
-		ExchangeDate_2: endDate,
+		StockIds:  stockIDs,
+		StartDate: startDate,
+		EndDate:   endDate,
 	})
 	if err != nil {
 		return nil, err
@@ -145,25 +145,25 @@ func (repo *Repo) RetrieveDailyCloseHistory(
 	var startDate string
 	var err error
 
-	startDate, err = repo.primary().GetStartDate(ctx)
+	startDate, err = repo.primary().GetStartDate(ctx, opts[0])
 	if err != nil {
 		return nil, err
 	}
-	searchDate := repo.getSearchDate(ctx, opts[0])
-	if searchDate == "" {
+	endDate := repo.endDate(ctx, opts[0])
+	if endDate == "" {
 		res, _ := repo.primary().
 			RetrieveDailyCloseHistory(ctx, &sqlcdb.RetrieveDailyCloseHistoryParams{
-				ExchangeDate:   startDate,
-				ExchangeDate_2: searchDate,
-				StockIds:       stockIDs,
+				StartDate: startDate,
+				EndDate:   endDate,
+				StockIds:  stockIDs,
 			})
 		return domain.ConvertDailyCloseList(res), nil
 	}
 	res, _ := repo.primary().
 		RetrieveDailyCloseHistoryWithDate(ctx, &sqlcdb.RetrieveDailyCloseHistoryWithDateParams{
-			ExchangeDate:   startDate,
-			ExchangeDate_2: searchDate,
-			StockIds:       stockIDs,
+			StartDate: startDate,
+			EndDate:   endDate,
+			StockIds:  stockIDs,
 		})
 	return domain.ConvertDailyCloseList(res), nil
 }
@@ -173,41 +173,41 @@ func (repo *Repo) RetrieveThreePrimaryHistory(
 	stockIDs []string,
 	opts ...string,
 ) ([]*domain.ThreePrimary, error) {
-	startDate, err := repo.primary().GetStartDate(ctx)
+	startDate, err := repo.primary().GetStartDate(ctx, opts[0])
 	if err != nil {
 		return nil, err
 	}
 
-	searchDate := repo.getSearchDate(ctx, opts[0])
-	if searchDate == "" {
+	endDate := repo.endDate(ctx, opts[0])
+	if endDate == "" {
 		res, _ := repo.primary().
 			RetrieveThreePrimaryHistory(ctx, &sqlcdb.RetrieveThreePrimaryHistoryParams{
-				ExchangeDate:   startDate,
-				ExchangeDate_2: searchDate,
-				StockIds:       stockIDs,
+				StartDate: startDate,
+				EndDate:   endDate,
+				StockIds:  stockIDs,
 			})
 		return domain.ConvertThreePrimaryList(res), nil
 	}
 	res, _ := repo.primary().
 		RetrieveThreePrimaryHistoryWithDate(ctx, &sqlcdb.RetrieveThreePrimaryHistoryWithDateParams{
-			ExchangeDate:   startDate,
-			ExchangeDate_2: searchDate,
-			StockIds:       stockIDs,
+			StartDate: startDate,
+			EndDate:   endDate,
+			StockIds:  stockIDs,
 		})
 	return domain.ConvertThreePrimaryList(res), nil
 }
 
-func (repo *Repo) getSearchDate(ctx context.Context, date string) string {
-	var searchDate string
+func (repo *Repo) endDate(ctx context.Context, date string) string {
+	var endDate string
 	if date != "" {
 		has, _ := repo.HasStakeConcentration(ctx, date)
 		if has {
-			searchDate = date
+			endDate = date
 		}
 	} else {
 		date, _ := repo.GetStakeConcentrationLatestDataPoint(ctx)
-		searchDate = date
+		endDate = date
 	}
 
-	return searchDate
+	return endDate
 }

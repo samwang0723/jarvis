@@ -536,7 +536,7 @@ func TestConnPool_mapCustomTypes_CRUD(t *testing.T) {
 				uuid uuid.UUID
 			}{}
 
-			if err := row.Scan(&r.uuid); err != nil { //nolint:govet // inline err is within scope
+			if err = row.Scan(&r.uuid); err != nil { //nolint:govet // inline err is within scope
 				t.Errorf("expected no error but got: %v, (%+v)", err, row)
 			}
 
@@ -557,7 +557,7 @@ func TestConnPool_mapCustomTypes_CRUD(t *testing.T) {
 			}
 
 			for rows.Next() {
-				r := struct { //nolint:govet // r is within loop scope
+				r = struct { //nolint:govet // r is within loop scope
 					uuid uuid.UUID
 				}{}
 
@@ -666,8 +666,8 @@ func TestConnPool_WithCustomTypes(t *testing.T) {
 	}
 
 	type record struct {
-		ID    int
 		State lightState
+		ID    int
 	}
 
 	scanRows := func(t *testing.T, rows pgx.Rows) []record {
@@ -690,9 +690,9 @@ func TestConnPool_WithCustomTypes(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		wantErr        bool
 		expectedResult []record
 		typeNames      []string
+		wantErr        bool
 	}{
 		{
 			name:           "without custom types options",
