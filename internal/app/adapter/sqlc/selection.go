@@ -64,11 +64,11 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		return nil, err
 	}
 
-	var objs []*domain.RealtimeList
 	res, err := repo.primary().GetEligibleStocksFromDate(ctx, exchangeDate)
 	if err != nil {
 		return nil, err
 	}
+	objs := make([]*domain.RealtimeList, 0, len(res))
 	for _, stock := range res {
 		objs = append(objs, &domain.RealtimeList{
 			StockID: stock.StockID,
@@ -76,11 +76,11 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		})
 	}
 
-	var picked []*domain.RealtimeList
 	resPicked, err := repo.primary().GetEligibleStocksFromPicked(ctx)
 	if err != nil {
 		return nil, err
 	}
+	picked := make([]*domain.RealtimeList, 0, len(resPicked))
 	for _, stock := range resPicked {
 		picked = append(picked, &domain.RealtimeList{
 			StockID: stock.StockID,
@@ -189,50 +189,12 @@ func (repo *Repo) AdvancedFiltering(
 	var err error
 
 	go func() {
-		param := &sqlcdb.RetrieveDailyCloseHistoryParams{
-			ExchangeDate: opts[0],
-			StockIds:     stockIDs,
-		}
-		if len(opts) > 1 {
-			param.ExchangeDate_2 = opts[1]
-		}
-
-		var resD []*sqlcdb.RetrieveDailyCloseHistoryRow
-		resD, err = repo.primary().RetrieveDailyCloseHistory(ctx, param)
-		for _, d := range resD {
-			pList = append(pList, &domain.DailyClose{
-				StockID:      d.StockID,
-				Date:         d.ExchangeDate,
-				Close:        float32(d.Close),
-				TradedShares: *d.TradeShares,
-			})
-		}
-
+		pList, err = repo.retrieveDailyCloseHistory(ctx, stockIDs, opts...)
 		wg.Done()
 	}()
 
 	go func() {
-		param := &sqlcdb.RetrieveThreePrimaryHistoryParams{
-			ExchangeDate: opts[0],
-			StockIds:     stockIDs,
-		}
-		if len(opts) > 1 {
-			param.ExchangeDate_2 = opts[1]
-		}
-
-		var resT []*sqlcdb.RetrieveThreePrimaryHistoryRow
-		resT, err = repo.primary().RetrieveThreePrimaryHistory(ctx, param)
-		for _, t := range resT {
-			tList = append(tList, &domain.ThreePrimary{
-				StockID:            t.StockID,
-				ExchangeDate:       t.ExchangeDate,
-				ForeignTradeShares: int64(t.ForeignTradeShares),
-				TrustTradeShares:   int64(t.TrustTradeShares),
-				DealerTradeShares:  int64(t.DealerTradeShares),
-				HedgingTradeShares: int64(t.HedgingTradeShares),
-			})
-		}
-
+		tList, err = repo.retrieveThreePrimaryHistory(ctx, stockIDs, opts...)
 		wg.Done()
 	}()
 
@@ -429,6 +391,7 @@ func toDomainSelectionList(sel any) []*domain.Selection {
 		for _, s := range v {
 			result = append(result, &domain.Selection{
 				Name:            *s.Name,
+				StockID:         s.StockID,
 				Category:        s.Category,
 				Date:            s.ExchangeDate,
 				Open:            float32(s.Open),
@@ -453,6 +416,7 @@ func toDomainSelectionList(sel any) []*domain.Selection {
 		for _, s := range v {
 			result = append(result, &domain.Selection{
 				Name:            *s.Name,
+				StockID:         s.StockID,
 				Category:        s.Category,
 				Date:            s.ExchangeDate,
 				Open:            float32(s.Open),
@@ -477,6 +441,7 @@ func toDomainSelectionList(sel any) []*domain.Selection {
 		for _, s := range v {
 			result = append(result, &domain.Selection{
 				Name:            *s.Name,
+				StockID:         s.StockID,
 				Category:        s.Category,
 				Date:            s.ExchangeDate,
 				Open:            float32(s.Open),

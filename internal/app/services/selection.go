@@ -41,6 +41,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 
 	if req.Date != today || latestDate != "" {
 		objs, err = s.dal.ListSelections(ctx, req.Date, req.Strict)
+		s.logger.Info().Msgf("ListSelections: %v, %v, %v", objs, err, req.Date)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("list selections")
 
