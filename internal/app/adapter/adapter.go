@@ -53,12 +53,10 @@ type Adapter interface {
 	ListUsers(ctx context.Context, limit int32, offset int32) ([]*domain.User, error)
 	GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error)
 	ListSelections(ctx context.Context, date string, strict bool) ([]*domain.Selection, error)
-	ListSelectionsFromPicked(ctx context.Context, userID uuid.UUID) ([]*domain.Selection, error)
-	AdvancedFiltering(
+	ListSelectionsFromPicked(
 		ctx context.Context,
-		objs []*domain.Selection,
-		strict bool,
-		opts ...string,
+		stockIDs []string,
+		exchangeDate string,
 	) ([]*domain.Selection, error)
 	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
 	GetLatestChip(ctx context.Context) ([]*domain.Selection, error)
@@ -75,6 +73,22 @@ type Adapter interface {
 		transactions []*domain.Transaction,
 	) error
 	CreateTransaction(ctx context.Context, transaction *domain.Transaction) error
+	RetrieveDailyCloseHistory(
+		ctx context.Context,
+		stockIDs []string,
+		opts ...string,
+	) ([]*domain.DailyClose, error)
+	RetrieveThreePrimaryHistory(
+		ctx context.Context,
+		stockIDs []string,
+		opts ...string,
+	) ([]*domain.ThreePrimary, error)
+	GetHighestPrice(
+		ctx context.Context,
+		stockIDs []string,
+		date string,
+		rewindWeek int,
+	) (map[string]float32, error)
 }
 
 var _ Adapter = (*Imp)(nil)
@@ -252,18 +266,10 @@ func (a *Imp) ListSelections(
 
 func (a *Imp) ListSelectionsFromPicked(
 	ctx context.Context,
-	userID uuid.UUID,
+	stockIDs []string,
+	exchangeDate string,
 ) ([]*domain.Selection, error) {
-	return a.repo.ListSelectionsFromPicked(ctx, userID)
-}
-
-func (a *Imp) AdvancedFiltering(
-	ctx context.Context,
-	objs []*domain.Selection,
-	strict bool,
-	opts ...string,
-) ([]*domain.Selection, error) {
-	return a.repo.AdvancedFiltering(ctx, objs, strict, opts...)
+	return a.repo.ListSelectionsFromPicked(ctx, stockIDs, exchangeDate)
 }
 
 func (a *Imp) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
@@ -300,4 +306,29 @@ func (a *Imp) CreateOrder(
 
 func (a *Imp) CreateTransaction(ctx context.Context, transaction *domain.Transaction) error {
 	return a.repo.CreateTransaction(ctx, transaction)
+}
+
+func (a *Imp) RetrieveDailyCloseHistory(
+	ctx context.Context,
+	stockIDs []string,
+	opts ...string,
+) ([]*domain.DailyClose, error) {
+	return a.repo.RetrieveDailyCloseHistory(ctx, stockIDs, opts...)
+}
+
+func (a *Imp) RetrieveThreePrimaryHistory(
+	ctx context.Context,
+	stockIDs []string,
+	opts ...string,
+) ([]*domain.ThreePrimary, error) {
+	return a.repo.RetrieveThreePrimaryHistory(ctx, stockIDs, opts...)
+}
+
+func (a *Imp) GetHighestPrice(
+	ctx context.Context,
+	stockIDs []string,
+	date string,
+	rewindWeek int,
+) (map[string]float32, error) {
+	return a.repo.GetHighestPrice(ctx, stockIDs, date, rewindWeek)
 }

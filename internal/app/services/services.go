@@ -100,8 +100,8 @@ type serviceImpl struct {
 	cache         cache.Redis
 	cronjob       cronjob.Cronjob
 	logger        *zerolog.Logger
-	currentUserID uuid.UUID
 	proxyClient   *http.Client
+	currentUserID uuid.UUID
 }
 
 //nolint:gosec // skip tls verification

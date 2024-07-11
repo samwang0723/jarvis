@@ -20,7 +20,7 @@ func (repo *Repo) CreateDailyClose(
 ) error {
 	return repo.primary().CreateDailyClose(ctx, &sqlcdb.CreateDailyCloseParams{
 		StockID:      obj.StockID,
-		ExchangeDate: obj.Date,
+		ExchangeDate: obj.ExchangeDate,
 		TradeShares:  &obj.TradedShares,
 		Transactions: &obj.Transactions,
 		Turnover:     &obj.Turnover,
@@ -81,7 +81,7 @@ func toSqlcBatchUpsertDailyCloseParams(
 	}
 	for _, dc := range dailyClose {
 		result.StockID = append(result.StockID, dc.StockID)
-		result.ExchangeDate = append(result.ExchangeDate, dc.Date)
+		result.ExchangeDate = append(result.ExchangeDate, dc.ExchangeDate)
 		result.TradeShares = append(result.TradeShares, dc.TradedShares)
 		result.Transactions = append(result.Transactions, dc.Transactions)
 		result.Turnover = append(result.Turnover, dc.Turnover)
@@ -110,7 +110,7 @@ func toDomainDailyCloseList(res []*sqlcdb.ListDailyCloseRow) []*domain.DailyClos
 				ID: r.ID,
 			},
 			StockID:      r.StockID,
-			Date:         r.ExchangeDate,
+			ExchangeDate: r.ExchangeDate,
 			TradedShares: int64(r.TradeShares),
 			Transactions: *r.Transactions,
 			Turnover:     int64(r.Turnover),

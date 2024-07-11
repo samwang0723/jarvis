@@ -3,49 +3,11 @@ package sqlc
 import (
 	"context"
 	"fmt"
-	"math"
-	"reflect"
-	"sort"
-	"sync"
 
-	"github.com/gofrs/uuid/v5"
-	"github.com/mitchellh/mapstructure"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
-
-const (
-	minDailyVolume           = 3000000
-	minWeeklyVolume          = 1000000
-	highestRangePercent      = 0.04
-	dailyHighestRangePercent = 0.96
-	yesterday                = 1
-	yesterdayAfterClosed     = 2
-	priceMA8                 = 8
-	priceMA21                = 21
-	priceMA55                = 55
-	volumeMV5                = 5
-	volumeMV13               = 13
-	volumeMV34               = 34
-	threePrimarySumCount     = 10
-	percent                  = -100
-	rewindWeek               = -5
-)
-
-type analysis struct {
-	MA8       float32
-	MA21      float32
-	MA55      float32
-	LastClose float32
-	MV5       uint64
-	MV13      uint64
-	MV34      uint64
-	Foreign   int64
-	Trust     int64
-	Hedging   int64
-	Dealer    int64
-}
 
 func (repo *Repo) GetLatestChip(ctx context.Context) ([]*domain.Selection, error) {
 	exchangeDate, err := repo.GetStakeConcentrationLatestDataPoint(ctx)
@@ -57,7 +19,7 @@ func (repo *Repo) GetLatestChip(ctx context.Context) ([]*domain.Selection, error
 	if err != nil {
 		return nil, err
 	}
-	return toDomainSelectionList(res), nil
+	return domain.ConvertSelectionList(res), nil
 }
 
 func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
@@ -102,8 +64,8 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 		})
 	}
 
-	mergedList := merge(objs, picked)
-	mergedList = merge(mergedList, ordered)
+	mergedList := domain.Merge(objs, picked)
+	mergedList = domain.Merge(mergedList, ordered)
 
 	stockSymbols := make([]string, len(mergedList))
 	for idx, obj := range mergedList {
@@ -115,22 +77,9 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 
 func (repo *Repo) ListSelectionsFromPicked(
 	ctx context.Context,
-	userID uuid.UUID,
+	stockIDs []string,
+	exchangeDate string,
 ) ([]*domain.Selection, error) {
-	exchangeDate, err := repo.GetStakeConcentrationLatestDataPoint(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	pickedStocks, err := repo.ListPickedStocks(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	stockIDs := make([]string, 0, len(pickedStocks))
-	for _, pickedStock := range pickedStocks {
-		stockIDs = append(stockIDs, pickedStock.StockID)
-	}
-
 	result, err := repo.primary().
 		ListSelectionsFromPicked(ctx, &sqlcdb.ListSelectionsFromPickedParams{
 			StockIds:     stockIDs,
@@ -140,13 +89,7 @@ func (repo *Repo) ListSelectionsFromPicked(
 		return nil, err
 	}
 
-	selections := toDomainSelectionList(result)
-	output, err := repo.concentrationBackfill(ctx, selections, stockIDs, exchangeDate)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return domain.ConvertSelectionList(result), nil
 }
 
 func (repo *Repo) ListSelections(
@@ -158,203 +101,14 @@ func (repo *Repo) ListSelections(
 	if err != nil {
 		return nil, err
 	}
-	selections := toDomainSelectionList(sel)
-
-	// doing analysis
-	output, err := repo.AdvancedFiltering(ctx, selections, strict, date)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return domain.ConvertSelectionList(sel), nil
 }
 
-func (repo *Repo) AdvancedFiltering(
-	ctx context.Context,
-	objs []*domain.Selection,
-	strict bool,
-	opts ...string,
-) ([]*domain.Selection, error) {
-	selectionMap := make(map[string]*domain.Selection)
-	stockIDs := make([]string, len(objs))
-	for idx, obj := range objs {
-		stockIDs[idx] = obj.StockID
-		selectionMap[obj.StockID] = obj
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(3)
-
-	var pList []*domain.DailyClose
-	var tList []*domain.ThreePrimary
-	var highestPriceMap map[string]float32
-	var err error
-
-	go func() {
-		pList, err = repo.retrieveDailyCloseHistory(ctx, stockIDs, opts...)
-		wg.Done()
-	}()
-
-	go func() {
-		tList, err = repo.retrieveThreePrimaryHistory(ctx, stockIDs, opts...)
-		wg.Done()
-	}()
-
-	go func() {
-		if len(objs) > 0 {
-			highestPriceMap, err = repo.getHighestPrice(ctx, stockIDs, objs[0].Date)
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	if err != nil {
-		return nil, err
-	}
-
-	// fulfill analysis materials
-	analysisMap := mappingMovingAverageConcentration(pList, tList, len(stockIDs), opts...)
-
-	// filtering based on selection conditions
-	output := filter(selectionMap, highestPriceMap, analysisMap, strict, opts...)
-	sort.Slice(output, func(i, j int) bool {
-		return output[i].StockID < output[j].StockID
-	})
-
-	return output, nil
-}
-
-//nolint:nolintlint,gocognit,cyclop
-func mappingMovingAverageConcentration(
-	pList []*domain.DailyClose,
-	tList []*domain.ThreePrimary,
-	size int,
-	opts ...string,
-) map[string]*analysis {
-	analysisMap := make(map[string]*analysis, size)
-	currentIdx := 0
-	currentPriceSum := float32(0)
-	currentVolumeSum := uint64(0)
-
-	for _, p := range pList {
-		if _, ok := analysisMap[p.StockID]; !ok {
-			currentIdx = 0
-			currentPriceSum = 0
-			currentVolumeSum = 0
-
-			analysisMap[p.StockID] = &analysis{}
-		}
-
-		currentIdx++
-		currentPriceSum += p.Close
-		currentVolumeSum += uint64(p.TradedShares)
-
-		lastClose := yesterdayAfterClosed
-		if len(opts) > 0 {
-			lastClose = yesterday
-		}
-
-		switch currentIdx {
-		case lastClose:
-			analysisMap[p.StockID].LastClose = p.Close
-		case volumeMV5:
-			analysisMap[p.StockID].MV5 = currentVolumeSum / volumeMV5
-		case volumeMV13:
-			analysisMap[p.StockID].MV13 = currentVolumeSum / volumeMV13
-		case volumeMV34:
-			analysisMap[p.StockID].MV34 = currentVolumeSum / volumeMV34
-		case priceMA8:
-			analysisMap[p.StockID].MA8 = currentPriceSum / priceMA8
-		case priceMA21:
-			analysisMap[p.StockID].MA21 = currentPriceSum / priceMA21
-		case priceMA55:
-			analysisMap[p.StockID].MA55 = currentPriceSum / priceMA55
-		}
-	}
-
-	// fulfill concentration data
-	currentStockID := ""
-	currentIdx = 0
-	currentTrustSum := int64(0)
-	currentForeignSum := int64(0)
-	for _, t := range tList {
-		if currentStockID != t.StockID {
-			currentStockID = t.StockID
-			currentIdx = 0
-			currentTrustSum = 0
-			currentForeignSum = 0
-		}
-
-		currentIdx++
-		currentTrustSum += t.TrustTradeShares
-		currentForeignSum += t.ForeignTradeShares
-
-		if currentIdx == threePrimarySumCount {
-			analysisMap[currentStockID].Trust = currentTrustSum
-			analysisMap[currentStockID].Foreign = currentForeignSum
-		}
-	}
-
-	return analysisMap
-}
-
-//nolint:nolintlint,gocognit,cyclop
-func filter(
-	source map[string]*domain.Selection,
-	highestPriceMap map[string]float32,
-	analysisMap map[string]*analysis,
-	strict bool,
-	opts ...string,
-) []*domain.Selection {
-	output := []*domain.Selection{}
-
-	for k, v := range analysisMap {
-		ref := source[k]
-		selected := false
-
-		// if today's realtime value and not within max high range, skip
-		if len(opts) > 0 && float64(ref.Close/ref.High) < dailyHighestRangePercent {
-			continue
-		}
-
-		// checking half-year high is closed enough
-		// checking volume is above weekly volume (3000)
-		// checking MA8, MA21, MA55 is below today's close
-		if math.Abs(1.0-float64(ref.Close/highestPriceMap[ref.StockID])) <= highestRangePercent &&
-			v.MV5 >= minWeeklyVolume &&
-			ref.Close > v.MA8 &&
-			ref.Close > v.MA21 &&
-			ref.Close > v.MA55 {
-			selected = true
-		}
-
-		selectedStrict := false
-		if strict &&
-			v.MV5 > v.MV13 &&
-			v.MV13 > v.MV34 &&
-			v.MA8 > v.MA21 &&
-			v.MA21 > v.MA55 {
-			selectedStrict = true
-		}
-
-		if (selected && !strict) || (selected && selectedStrict) {
-			ref.Trust10 = int(v.Trust)
-			ref.Foreign10 = int(v.Foreign)
-			ref.QuoteChange = helper.RoundDecimalTwo(
-				(1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent,
-			)
-			output = append(output, ref)
-		}
-	}
-
-	return output
-}
-
-func (repo *Repo) getHighestPrice(
+func (repo *Repo) GetHighestPrice(
 	ctx context.Context,
 	stockIDs []string,
 	date string,
+	rewindWeek int,
 ) (map[string]float32, error) {
 	highestPriceMap := make(map[string]float32, len(stockIDs))
 	startDate, err := repo.primary().GetStartDate(ctx)
@@ -383,74 +137,7 @@ func (repo *Repo) getHighestPrice(
 	return highestPriceMap, nil
 }
 
-func mapToDomainSelection(s any) (*domain.Selection, error) {
-	var selection domain.Selection
-	err := mapstructure.Decode(s, &selection)
-	if err != nil {
-		return nil, err
-	}
-
-	// Manually handle the conversion of specific fields
-	val := reflect.ValueOf(s).Elem()
-	selection.Name = *val.FieldByName("Name").Interface().(*string)
-	selection.StockID = val.FieldByName("StockID").String()
-	selection.Category = val.FieldByName("Category").String()
-	selection.Date = val.FieldByName("Date").String()
-	selection.Open = float32(val.FieldByName("Open").Float())
-	selection.High = float32(val.FieldByName("High").Float())
-	selection.Low = float32(val.FieldByName("Low").Float())
-	selection.Close = float32(val.FieldByName("Close").Float())
-	selection.PriceDiff = float32(val.FieldByName("PriceDiff").Float())
-	selection.Concentration1 = float32(val.FieldByName("Concentration1").Float())
-	selection.Concentration5 = float32(val.FieldByName("Concentration5").Float())
-	selection.Concentration10 = float32(val.FieldByName("Concentration10").Float())
-	selection.Concentration20 = float32(val.FieldByName("Concentration20").Float())
-	selection.Concentration60 = float32(val.FieldByName("Concentration60").Float())
-	selection.Volume = int(val.FieldByName("Volume").Float())
-	selection.Trust = int(val.FieldByName("Trust").Float())
-	selection.Foreign = int(val.FieldByName("Foreignc").Float())
-	selection.Hedging = int(val.FieldByName("Hedging").Float())
-	selection.Dealer = int(val.FieldByName("Dealer").Float())
-
-	return &selection, nil
-}
-
-func toDomainSelectionList(sel any) []*domain.Selection {
-	var result []*domain.Selection
-
-	slice := reflect.ValueOf(sel)
-	if slice.Kind() != reflect.Slice {
-		panic("unsupported type")
-	}
-
-	for i := 0; i < slice.Len(); i++ {
-		s := slice.Index(i).Interface()
-		selection, err := mapToDomainSelection(s)
-		if err != nil {
-			panic(err)
-		}
-		result = append(result, selection)
-	}
-
-	return result
-}
-
-func (repo *Repo) getSearchDate(ctx context.Context, date string) string {
-	var searchDate string
-	if date != "" {
-		has, _ := repo.HasStakeConcentration(ctx, date)
-		if has {
-			searchDate = date
-		}
-	} else {
-		date, _ := repo.GetStakeConcentrationLatestDataPoint(ctx)
-		searchDate = date
-	}
-
-	return searchDate
-}
-
-func (repo *Repo) retrieveDailyCloseHistory(
+func (repo *Repo) RetrieveDailyCloseHistory(
 	ctx context.Context,
 	stockIDs []string,
 	opts ...string,
@@ -470,7 +157,7 @@ func (repo *Repo) retrieveDailyCloseHistory(
 				ExchangeDate_2: searchDate,
 				StockIds:       stockIDs,
 			})
-		return toDomainDailyClose(res), nil
+		return domain.ConvertDailyCloseList(res), nil
 	}
 	res, _ := repo.primary().
 		RetrieveDailyCloseHistoryWithDate(ctx, &sqlcdb.RetrieveDailyCloseHistoryWithDateParams{
@@ -478,38 +165,10 @@ func (repo *Repo) retrieveDailyCloseHistory(
 			ExchangeDate_2: searchDate,
 			StockIds:       stockIDs,
 		})
-	return toDomainDailCloseWithDate(res), nil
+	return domain.ConvertDailyCloseList(res), nil
 }
 
-func toDomainDailyClose(objs []*sqlcdb.RetrieveDailyCloseHistoryRow) []*domain.DailyClose {
-	result := make([]*domain.DailyClose, 0, len(objs))
-	for _, obj := range objs {
-		result = append(result, &domain.DailyClose{
-			StockID:      obj.StockID,
-			Date:         obj.ExchangeDate,
-			TradedShares: *obj.TradeShares,
-			Close:        float32(obj.Close),
-		})
-	}
-	return result
-}
-
-func toDomainDailCloseWithDate(
-	objs []*sqlcdb.RetrieveDailyCloseHistoryWithDateRow,
-) []*domain.DailyClose {
-	result := make([]*domain.DailyClose, 0, len(objs))
-	for _, obj := range objs {
-		result = append(result, &domain.DailyClose{
-			StockID:      obj.StockID,
-			Date:         obj.ExchangeDate,
-			TradedShares: *obj.TradeShares,
-			Close:        float32(obj.Close),
-		})
-	}
-	return result
-}
-
-func (repo *Repo) retrieveThreePrimaryHistory(
+func (repo *Repo) RetrieveThreePrimaryHistory(
 	ctx context.Context,
 	stockIDs []string,
 	opts ...string,
@@ -527,7 +186,7 @@ func (repo *Repo) retrieveThreePrimaryHistory(
 				ExchangeDate_2: searchDate,
 				StockIds:       stockIDs,
 			})
-		return toDomainThreePrimary(res), nil
+		return domain.ConvertThreePrimaryList(res), nil
 	}
 	res, _ := repo.primary().
 		RetrieveThreePrimaryHistoryWithDate(ctx, &sqlcdb.RetrieveThreePrimaryHistoryWithDateParams{
@@ -535,105 +194,20 @@ func (repo *Repo) retrieveThreePrimaryHistory(
 			ExchangeDate_2: searchDate,
 			StockIds:       stockIDs,
 		})
-	return toDomainThreePrimaryWithDate(res), nil
+	return domain.ConvertThreePrimaryList(res), nil
 }
 
-func toDomainThreePrimary(objs []*sqlcdb.RetrieveThreePrimaryHistoryRow) []*domain.ThreePrimary {
-	result := make([]*domain.ThreePrimary, 0, len(objs))
-	for _, obj := range objs {
-		result = append(result, &domain.ThreePrimary{
-			StockID:            obj.StockID,
-			ExchangeDate:       obj.ExchangeDate,
-			ForeignTradeShares: int64(obj.ForeignTradeShares),
-			TrustTradeShares:   int64(obj.TrustTradeShares),
-			DealerTradeShares:  int64(obj.DealerTradeShares),
-			HedgingTradeShares: int64(obj.HedgingTradeShares),
-		})
-	}
-	return result
-}
-
-func toDomainThreePrimaryWithDate(
-	objs []*sqlcdb.RetrieveThreePrimaryHistoryWithDateRow,
-) []*domain.ThreePrimary {
-	result := make([]*domain.ThreePrimary, 0, len(objs))
-	for _, obj := range objs {
-		result = append(result, &domain.ThreePrimary{
-			StockID:            obj.StockID,
-			ExchangeDate:       obj.ExchangeDate,
-			ForeignTradeShares: int64(obj.ForeignTradeShares),
-			TrustTradeShares:   int64(obj.TrustTradeShares),
-			DealerTradeShares:  int64(obj.DealerTradeShares),
-			HedgingTradeShares: int64(obj.HedgingTradeShares),
-		})
-	}
-	return result
-}
-
-func (repo *Repo) concentrationBackfill(
-	ctx context.Context,
-	objs []*domain.Selection,
-	stockIDs []string,
-	date string,
-) ([]*domain.Selection, error) {
-	tList, err := repo.retrieveThreePrimaryHistory(ctx, stockIDs, date)
-	if err != nil {
-		return nil, err
-	}
-
-	currentStockID := ""
-	currentIdx := 0
-	currentTrustSum := int64(0)
-	currentForeignSum := int64(0)
-	for _, t := range tList {
-		if currentStockID != t.StockID {
-			currentStockID = t.StockID
-			currentIdx = 0
-			currentTrustSum = 0
-			currentForeignSum = 0
+func (repo *Repo) getSearchDate(ctx context.Context, date string) string {
+	var searchDate string
+	if date != "" {
+		has, _ := repo.HasStakeConcentration(ctx, date)
+		if has {
+			searchDate = date
 		}
-
-		currentIdx++
-
-		currentTrustSum += t.TrustTradeShares
-		currentForeignSum += t.ForeignTradeShares
-
-		if currentIdx == threePrimarySumCount {
-			for _, obj := range objs {
-				if obj.StockID == currentStockID {
-					obj.Trust10 = int(currentTrustSum)
-					obj.Foreign10 = int(currentForeignSum)
-					obj.QuoteChange = helper.RoundDecimalTwo(
-						(1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent,
-					)
-				}
-			}
-		}
+	} else {
+		date, _ := repo.GetStakeConcentrationLatestDataPoint(ctx)
+		searchDate = date
 	}
 
-	return objs, nil
-}
-
-func merge(objs, picked []*domain.RealtimeList) []*domain.RealtimeList {
-	// Create a map to keep track of seen StockIDs
-	seen := make(map[string]bool)
-
-	// Iterate over the objs list and add each object to the merged list if its StockID has not been seen before
-	var merged []*domain.RealtimeList
-	for _, obj := range objs {
-		if _, ok := seen[obj.StockID]; !ok {
-			merged = append(merged, obj)
-			seen[obj.StockID] = true
-		}
-	}
-
-	// Iterate over the picked list and add each object to the merged list if its StockID has not been seen before
-	for _, obj := range picked {
-		if _, ok := seen[obj.StockID]; !ok {
-			merged = append(merged, obj)
-			seen[obj.StockID] = true
-		}
-	}
-
-	return merged
+	return searchDate
 }

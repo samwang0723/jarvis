@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	RoundDecimalTwo = 100
+	roundDecimalTwo = 100
 	percent         = -100
 )
 
@@ -43,12 +43,26 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string)
 
 //nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection, error) {
-	realtimeList, err := s.fetchRealtimePrice(ctx)
+	realtimeList := s.fetchRealtimePrice(ctx)
+	exchangeDate, err := s.dal.GetStakeConcentrationLatestDataPoint(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	selections, err := s.dal.ListSelectionsFromPicked(ctx, s.currentUserID)
+	pickedStocks, err := s.dal.ListPickedStocks(ctx, s.currentUserID)
+	if err != nil {
+		return nil, err
+	}
+	stockIDs := make([]string, 0, len(pickedStocks))
+	for _, pickedStock := range pickedStocks {
+		stockIDs = append(stockIDs, pickedStock.StockID)
+	}
+
+	selections, err := s.dal.ListSelectionsFromPicked(ctx, stockIDs, exchangeDate)
+	if err != nil {
+		return nil, err
+	}
+	selections, err = s.concentrationBackfill(ctx, selections, stockIDs, exchangeDate)
 	if err != nil {
 		return nil, err
 	}
@@ -67,14 +81,58 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection,
 		}
 
 		obj.PriceDiff = helper.RoundDecimalTwo(realtime.Close - obj.Close)
-		obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * RoundDecimalTwo)
+		obj.QuoteChange = helper.RoundDecimalTwo(obj.PriceDiff / obj.Close * roundDecimalTwo)
 		obj.Open = realtime.Open
 		obj.High = realtime.High
 		obj.Low = realtime.Low
 		obj.Close = realtime.Close
 		obj.Volume = int(realtime.Volume)
-		obj.Date = realtime.Date
+		obj.ExchangeDate = realtime.Date
 	}
 
 	return selections, nil
+}
+
+func (s *serviceImpl) concentrationBackfill(
+	ctx context.Context,
+	objs []*domain.Selection,
+	stockIDs []string,
+	date string,
+) ([]*domain.Selection, error) {
+	tList, err := s.dal.RetrieveThreePrimaryHistory(ctx, stockIDs, date)
+	if err != nil {
+		return nil, err
+	}
+
+	currentStockID := ""
+	currentIdx := 0
+	currentTrustSum := int64(0)
+	currentForeignSum := int64(0)
+	for _, t := range tList {
+		if currentStockID != t.StockID {
+			currentStockID = t.StockID
+			currentIdx = 0
+			currentTrustSum = 0
+			currentForeignSum = 0
+		}
+
+		currentIdx++
+
+		currentTrustSum += t.TrustTradeShares
+		currentForeignSum += t.ForeignTradeShares
+
+		if currentIdx == threePrimarySumCount {
+			for _, obj := range objs {
+				if obj.StockID == currentStockID {
+					obj.Trust10 = int(currentTrustSum)
+					obj.Foreign10 = int(currentForeignSum)
+					obj.QuoteChange = helper.RoundDecimalTwo(
+						(1 - (obj.Close / (obj.Close - obj.PriceDiff))) * percent,
+					)
+				}
+			}
+		}
+	}
+
+	return objs, nil
 }

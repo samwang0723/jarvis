@@ -20,6 +20,7 @@ import (
 
 	"github.com/bsm/redislock"
 	"github.com/rs/zerolog"
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"golang.org/x/xerrors"
@@ -75,47 +76,49 @@ func (s *serviceImpl) StopRedis() error {
 	return nil
 }
 
-func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) (map[string]*domain.Realtime, error) {
-	today := helper.Today()
-
-	var latestDate string
-	hasData, _ := s.dal.HasStakeConcentration(ctx, today)
-	if !hasData {
-		latestDate, _ = s.dal.GetStakeConcentrationLatestDataPoint(ctx)
-	} else {
-		latestDate = today
-	}
-
-	redisRes, err := s.getRealtimeParsedData(ctx, today)
-	if err != nil {
-		s.logger.Warn().Err(err).Msg("no redis cache record")
-	}
-
+func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) map[string]*domain.Realtime {
 	realtimeList := make(map[string]*domain.Realtime)
 
-	// if already had latest stock data from exchange or cannot find redis
-	// realtime cache, using the latest database record.
-	if latestDate >= today || len(redisRes) == 0 {
-		return realtimeList, nil
-	}
-
-	for _, raw := range redisRes {
-		if raw == "" {
-			continue
+	// Skip if no redis in cluster
+	if config.GetCurrentConfig().RedisCache.Master != "" {
+		today := helper.Today()
+		var latestDate string
+		hasData, _ := s.dal.HasStakeConcentration(ctx, today)
+		if !hasData {
+			latestDate, _ = s.dal.GetStakeConcentrationLatestDataPoint(ctx)
+		} else {
+			latestDate = today
 		}
 
-		realtime := &domain.Realtime{}
-		e := realtime.UnmarshalJSON([]byte(raw))
-		if e != nil || realtime.Close == 0.0 {
-			s.logger.Error().Err(e).Msgf("unmarshal realtime error: %s", raw)
-
-			continue
+		redisRes, err := s.getRealtimeParsedData(ctx, today)
+		if err != nil {
+			s.logger.Warn().Err(err).Msg("no redis cache record")
 		}
 
-		realtimeList[realtime.StockID] = realtime
+		// if already had latest stock data from exchange or cannot find redis
+		// realtime cache, using the latest database record.
+		if latestDate >= today || len(redisRes) == 0 {
+			return realtimeList
+		}
+
+		for _, raw := range redisRes {
+			if raw == "" {
+				continue
+			}
+
+			realtime := &domain.Realtime{}
+			e := realtime.UnmarshalJSON([]byte(raw))
+			if e != nil || realtime.Close == 0.0 {
+				s.logger.Error().Err(e).Msgf("unmarshal realtime error: %s", raw)
+
+				continue
+			}
+
+			realtimeList[realtime.StockID] = realtime
+		}
 	}
 
-	return realtimeList, nil
+	return realtimeList
 }
 
 func (s *serviceImpl) getRealtimeParsedData(ctx context.Context, date string) ([]string, error) {

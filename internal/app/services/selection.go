@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -24,6 +27,20 @@ const (
 	skipHeader                 = "skip_dates"
 	closeToHighestToday        = 0.985
 	realtimeVolume             = 3000
+	minDailyVolume             = 3000000
+	minWeeklyVolume            = 1000000
+	highestRangePercent        = 0.04
+	dailyHighestRangePercent   = 0.96
+	yesterday                  = 1
+	yesterdayAfterClosed       = 2
+	priceMA8                   = 8
+	priceMA21                  = 21
+	priceMA55                  = 55
+	volumeMV5                  = 5
+	volumeMV13                 = 13
+	volumeMV34                 = 34
+	threePrimarySumCount       = 10
+	rewindWeek                 = -5
 )
 
 //nolint:nolintlint,cyclop,nestif
@@ -40,22 +57,37 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 	}
 
 	if req.Date != today || latestDate != "" {
-		objs, err = s.dal.ListSelections(ctx, req.Date, req.Strict)
-		s.logger.Info().Msgf("ListSelections: %v, %v, %v", objs, err, req.Date)
+		selections, err := s.dal.ListSelections(ctx, req.Date, req.Strict)
 		if err != nil {
-			s.logger.Error().Err(err).Msg("list selections")
+			s.logger.Error().Err(err).Msg("list selections data record retrival")
+
+			return nil, err
+		}
+		// doing analysis
+		objs, err = s.advancedFiltering(ctx, selections, req.Strict, req.Date)
+		if err != nil {
+			s.logger.Error().Err(err).Msg("list selections advanced filtering")
 
 			return nil, err
 		}
 	} else {
-		redisRes, err := s.getRealtimeParsedData(ctx, req.Date)
+		var realtimeList []domain.Realtime
+		var res []*domain.Selection
+
+		chips, err := s.getLatestChip(ctx)
 		if err != nil {
-			s.logger.Error().Err(err).Msg("get redis cache failed")
+			s.logger.Error().Err(err).Msg("get latest chip failed")
 
 			return nil, err
 		}
 
-		var realtimeList []domain.Realtime
+		redisRes, realTimeErr := s.getRealtimeParsedData(ctx, req.Date)
+		if realTimeErr != nil {
+			s.logger.Error().Err(realTimeErr).Msg("get redis cache failed")
+
+			return nil, realTimeErr
+		}
+
 		for _, raw := range redisRes {
 			if raw == "" {
 				continue
@@ -72,14 +104,6 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			realtimeList = append(realtimeList, *realtime)
 		}
 
-		chips, err := s.getLatestChip(ctx)
-		if err != nil {
-			s.logger.Error().Err(err).Msg("get latest chip failed")
-
-			return nil, err
-		}
-
-		var res []*domain.Selection
 		for _, realtime := range realtimeList {
 			// override realtime data with history record.
 			history := chips[realtime.StockID]
@@ -91,7 +115,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			obj := &domain.Selection{
 				StockID:         realtime.StockID,
 				Name:            history.Name,
-				Date:            realtime.Date,
+				ExchangeDate:    realtime.Date,
 				Category:        history.Category,
 				Open:            realtime.Open,
 				High:            realtime.High,
@@ -113,7 +137,7 @@ func (s *serviceImpl) ListSelections(ctx context.Context,
 			res = append(res, obj)
 		}
 
-		objs, err = s.dal.AdvancedFiltering(ctx, res, req.Strict, req.Date)
+		objs, err = s.advancedFiltering(ctx, res, req.Strict, req.Date)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("advanced filtering failed")
 
@@ -230,4 +254,191 @@ func (s *serviceImpl) getLatestChip(ctx context.Context) (map[string]*domain.Sel
 	}
 
 	return m, nil
+}
+
+func (s *serviceImpl) advancedFiltering(
+	ctx context.Context,
+	objs []*domain.Selection,
+	strict bool,
+	opts ...string,
+) ([]*domain.Selection, error) {
+	selectionMap := make(map[string]*domain.Selection)
+	stockIDs := make([]string, len(objs))
+	for idx, obj := range objs {
+		stockIDs[idx] = obj.StockID
+		selectionMap[obj.StockID] = obj
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	var pList []*domain.DailyClose
+	var tList []*domain.ThreePrimary
+	var highestPriceMap map[string]float32
+	var err error
+
+	go func() {
+		pList, err = s.dal.RetrieveDailyCloseHistory(ctx, stockIDs, opts...)
+		wg.Done()
+	}()
+
+	go func() {
+		tList, err = s.dal.RetrieveThreePrimaryHistory(ctx, stockIDs, opts...)
+		wg.Done()
+	}()
+
+	go func() {
+		if len(objs) > 0 {
+			highestPriceMap, err = s.dal.GetHighestPrice(
+				ctx,
+				stockIDs,
+				objs[0].ExchangeDate,
+				rewindWeek,
+			)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	if err != nil {
+		return nil, err
+	}
+
+	// fulfill analysis materials
+	analysisMap := mappingMovingAverageConcentration(pList, tList, len(stockIDs), opts...)
+
+	// filtering based on selection conditions
+	output := filter(selectionMap, highestPriceMap, analysisMap, strict, opts...)
+	sort.Slice(output, func(i, j int) bool {
+		return output[i].StockID < output[j].StockID
+	})
+
+	return output, nil
+}
+
+//nolint:nolintlint,gocognit,cyclop
+func mappingMovingAverageConcentration(
+	pList []*domain.DailyClose,
+	tList []*domain.ThreePrimary,
+	size int,
+	opts ...string,
+) map[string]*domain.Analysis {
+	analysisMap := make(map[string]*domain.Analysis, size)
+	currentIdx := 0
+	currentPriceSum := float32(0)
+	currentVolumeSum := uint64(0)
+
+	for _, p := range pList {
+		if _, ok := analysisMap[p.StockID]; !ok {
+			currentIdx = 0
+			currentPriceSum = 0
+			currentVolumeSum = 0
+
+			analysisMap[p.StockID] = &domain.Analysis{}
+		}
+
+		currentIdx++
+		currentPriceSum += p.Close
+		currentVolumeSum += uint64(p.TradedShares)
+
+		lastClose := yesterdayAfterClosed
+		if len(opts) > 0 {
+			lastClose = yesterday
+		}
+
+		switch currentIdx {
+		case lastClose:
+			analysisMap[p.StockID].LastClose = p.Close
+		case volumeMV5:
+			analysisMap[p.StockID].MV5 = currentVolumeSum / volumeMV5
+		case volumeMV13:
+			analysisMap[p.StockID].MV13 = currentVolumeSum / volumeMV13
+		case volumeMV34:
+			analysisMap[p.StockID].MV34 = currentVolumeSum / volumeMV34
+		case priceMA8:
+			analysisMap[p.StockID].MA8 = currentPriceSum / priceMA8
+		case priceMA21:
+			analysisMap[p.StockID].MA21 = currentPriceSum / priceMA21
+		case priceMA55:
+			analysisMap[p.StockID].MA55 = currentPriceSum / priceMA55
+		}
+	}
+
+	// fulfill concentration data
+	currentStockID := ""
+	currentIdx = 0
+	currentTrustSum := int64(0)
+	currentForeignSum := int64(0)
+	for _, t := range tList {
+		if currentStockID != t.StockID {
+			currentStockID = t.StockID
+			currentIdx = 0
+			currentTrustSum = 0
+			currentForeignSum = 0
+		}
+
+		currentIdx++
+		currentTrustSum += t.TrustTradeShares
+		currentForeignSum += t.ForeignTradeShares
+
+		if currentIdx == threePrimarySumCount {
+			analysisMap[currentStockID].Trust = currentTrustSum
+			analysisMap[currentStockID].Foreign = currentForeignSum
+		}
+	}
+
+	return analysisMap
+}
+
+//nolint:nolintlint,gocognit,cyclop
+func filter(
+	source map[string]*domain.Selection,
+	highestPriceMap map[string]float32,
+	analysisMap map[string]*domain.Analysis,
+	strict bool,
+	opts ...string,
+) []*domain.Selection {
+	output := []*domain.Selection{}
+
+	for k, v := range analysisMap {
+		ref := source[k]
+		selected := false
+
+		// if today's realtime value and not within max high range, skip
+		if len(opts) > 0 && float64(ref.Close/ref.High) < dailyHighestRangePercent {
+			continue
+		}
+
+		// checking half-year high is closed enough
+		// checking volume is above weekly volume (3000)
+		// checking MA8, MA21, MA55 is below today's close
+		if math.Abs(1.0-float64(ref.Close/highestPriceMap[ref.StockID])) <= highestRangePercent &&
+			v.MV5 >= minWeeklyVolume &&
+			ref.Close > v.MA8 &&
+			ref.Close > v.MA21 &&
+			ref.Close > v.MA55 {
+			selected = true
+		}
+
+		selectedStrict := false
+		if strict &&
+			v.MV5 > v.MV13 &&
+			v.MV13 > v.MV34 &&
+			v.MA8 > v.MA21 &&
+			v.MA21 > v.MA55 {
+			selectedStrict = true
+		}
+
+		if (selected && !strict) || (selected && selectedStrict) {
+			ref.Trust10 = int(v.Trust)
+			ref.Foreign10 = int(v.Foreign)
+			ref.QuoteChange = helper.RoundDecimalTwo(
+				(1 - (ref.Close / (ref.Close - ref.PriceDiff))) * percent,
+			)
+			output = append(output, ref)
+		}
+	}
+
+	return output
 }

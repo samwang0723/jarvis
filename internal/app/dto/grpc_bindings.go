@@ -151,7 +151,7 @@ func DailyCloseToPB(in *domain.DailyClose) *pb.DailyClose {
 
 	pbID := in.ID.ID
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbTradeShares := in.TradedShares
 	pbTransactions := in.Transactions
 	pbTurnover := in.Turnover
@@ -477,7 +477,7 @@ func SelectionToPB(in *domain.Selection) *pb.Selection {
 	}
 
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbName := in.Name
 	pbCategory := in.Category
 	pbConcentration1 := in.Concentration1

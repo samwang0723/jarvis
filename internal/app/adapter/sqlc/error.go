@@ -12,7 +12,7 @@ type NotEnoughBalanceError struct {
 }
 
 func (e *NotEnoughBalanceError) Error() string {
-	return fmt.Sprintf("not enough balance", e.Err)
+	return fmt.Sprintf("not enough balance: %s", e.Err)
 }
 
 func (e *NotEnoughBalanceError) Unwrap() error {

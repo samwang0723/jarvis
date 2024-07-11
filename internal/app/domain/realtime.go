@@ -74,3 +74,27 @@ func (r *Realtime) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func Merge(objs, picked []*RealtimeList) []*RealtimeList {
+	// Create a map to keep track of seen StockIDs
+	seen := make(map[string]bool)
+
+	// Iterate over the objs list and add each object to the merged list if its StockID has not been seen before
+	var merged []*RealtimeList
+	for _, obj := range objs {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	// Iterate over the picked list and add each object to the merged list if its StockID has not been seen before
+	for _, obj := range picked {
+		if _, ok := seen[obj.StockID]; !ok {
+			merged = append(merged, obj)
+			seen[obj.StockID] = true
+		}
+	}
+
+	return merged
+}

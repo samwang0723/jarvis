@@ -92,22 +92,16 @@ func (s *serviceImpl) ListOrders(
 		}
 	}
 
-	// skip redis fetch if just local development
-	if config.GetCurrentEnv() != config.EnvLocal {
-		err = s.fillRealtimePrice(ctx, objs)
-		if err != nil {
-			return nil, 0, err
-		}
+	// skip redis fetch if no redis in cluster
+	if config.GetCurrentConfig().RedisCache.Master != "" {
+		s.fillRealtimePrice(ctx, objs)
 	}
 
 	return objs, int64(len(objs)), nil
 }
 
-func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*domain.Order) error {
-	realtimeList, err := s.fetchRealtimePrice(ctx)
-	if err != nil {
-		return err
-	}
+func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*domain.Order) {
+	realtimeList := s.fetchRealtimePrice(ctx)
 	for _, order := range objs {
 		// override realtime data with history record.
 		realtime, ok := realtimeList[order.StockID]
@@ -115,8 +109,6 @@ func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*domain.Orde
 			order.CalculateUnrealizedProfitLoss(realtime.Close)
 		}
 	}
-
-	return nil
 }
 
 func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error {
