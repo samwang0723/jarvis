@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"sync"
 
 	"github.com/gofrs/uuid/v5"
+	"github.com/mitchellh/mapstructure"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -381,89 +383,53 @@ func (repo *Repo) getHighestPrice(
 	return highestPriceMap, nil
 }
 
-//nolint:nolintlint,dupl
+func mapToDomainSelection(s any) (*domain.Selection, error) {
+	var selection domain.Selection
+	err := mapstructure.Decode(s, &selection)
+	if err != nil {
+		return nil, err
+	}
+
+	// Manually handle the conversion of specific fields
+	val := reflect.ValueOf(s).Elem()
+	selection.Name = *val.FieldByName("Name").Interface().(*string)
+	selection.StockID = val.FieldByName("StockID").String()
+	selection.Category = val.FieldByName("Category").String()
+	selection.Date = val.FieldByName("Date").String()
+	selection.Open = float32(val.FieldByName("Open").Float())
+	selection.High = float32(val.FieldByName("High").Float())
+	selection.Low = float32(val.FieldByName("Low").Float())
+	selection.Close = float32(val.FieldByName("Close").Float())
+	selection.PriceDiff = float32(val.FieldByName("PriceDiff").Float())
+	selection.Concentration1 = float32(val.FieldByName("Concentration1").Float())
+	selection.Concentration5 = float32(val.FieldByName("Concentration5").Float())
+	selection.Concentration10 = float32(val.FieldByName("Concentration10").Float())
+	selection.Concentration20 = float32(val.FieldByName("Concentration20").Float())
+	selection.Concentration60 = float32(val.FieldByName("Concentration60").Float())
+	selection.Volume = int(val.FieldByName("Volume").Float())
+	selection.Trust = int(val.FieldByName("Trust").Float())
+	selection.Foreign = int(val.FieldByName("Foreignc").Float())
+	selection.Hedging = int(val.FieldByName("Hedging").Float())
+	selection.Dealer = int(val.FieldByName("Dealer").Float())
+
+	return &selection, nil
+}
+
 func toDomainSelectionList(sel any) []*domain.Selection {
 	var result []*domain.Selection
 
-	switch v := sel.(type) {
-	case []*sqlcdb.GetLatestChipRow:
-		result = make([]*domain.Selection, 0, len(v))
-		for _, s := range v {
-			result = append(result, &domain.Selection{
-				Name:            *s.Name,
-				StockID:         s.StockID,
-				Category:        s.Category,
-				Date:            s.ExchangeDate,
-				Open:            float32(s.Open),
-				High:            float32(s.High),
-				Low:             float32(s.Low),
-				Close:           float32(s.Close),
-				PriceDiff:       float32(s.PriceDiff),
-				Concentration1:  float32(s.Concentration1),
-				Concentration5:  float32(s.Concentration5),
-				Concentration10: float32(s.Concentration10),
-				Concentration20: float32(s.Concentration20),
-				Concentration60: float32(s.Concentration60),
-				Volume:          int(s.Volume),
-				Trust:           int(s.Trust),
-				Foreign:         int(s.Foreignc),
-				Hedging:         int(s.Hedging),
-				Dealer:          int(s.Dealer),
-			})
-		}
-	case []*sqlcdb.ListSelectionsFromPickedRow:
-		result = make([]*domain.Selection, 0, len(v))
-		for _, s := range v {
-			result = append(result, &domain.Selection{
-				Name:            *s.Name,
-				StockID:         s.StockID,
-				Category:        s.Category,
-				Date:            s.ExchangeDate,
-				Open:            float32(s.Open),
-				High:            float32(s.High),
-				Low:             float32(s.Low),
-				Close:           float32(s.Close),
-				PriceDiff:       float32(s.PriceDiff),
-				Concentration1:  float32(s.Concentration1),
-				Concentration5:  float32(s.Concentration5),
-				Concentration10: float32(s.Concentration10),
-				Concentration20: float32(s.Concentration20),
-				Concentration60: float32(s.Concentration60),
-				Volume:          int(s.Volume),
-				Trust:           int(s.Trust),
-				Foreign:         int(s.Foreignc),
-				Hedging:         int(s.Hedging),
-				Dealer:          int(s.Dealer),
-			})
-		}
-	case []*sqlcdb.ListSelectionsRow:
-		result = make([]*domain.Selection, 0, len(v))
-		for _, s := range v {
-			result = append(result, &domain.Selection{
-				Name:            *s.Name,
-				StockID:         s.StockID,
-				Category:        s.Category,
-				Date:            s.ExchangeDate,
-				Open:            float32(s.Open),
-				High:            float32(s.High),
-				Low:             float32(s.Low),
-				Close:           float32(s.Close),
-				PriceDiff:       float32(s.PriceDiff),
-				Concentration1:  float32(s.Concentration1),
-				Concentration5:  float32(s.Concentration5),
-				Concentration10: float32(s.Concentration10),
-				Concentration20: float32(s.Concentration20),
-				Concentration60: float32(s.Concentration60),
-				Volume:          int(s.Volume),
-				Trust:           int(s.Trust),
-				Foreign:         int(s.Foreignc),
-				Hedging:         int(s.Hedging),
-				Dealer:          int(s.Dealer),
-			})
-		}
-	default:
-		// Handle unexpected types
+	slice := reflect.ValueOf(sel)
+	if slice.Kind() != reflect.Slice {
 		panic("unsupported type")
+	}
+
+	for i := 0; i < slice.Len(); i++ {
+		s := slice.Index(i).Interface()
+		selection, err := mapToDomainSelection(s)
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, selection)
 	}
 
 	return result
