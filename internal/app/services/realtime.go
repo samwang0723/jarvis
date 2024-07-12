@@ -173,6 +173,7 @@ func (s *serviceImpl) mergeRealtimeToSelection(
 			continue
 		}
 
+		volume, _ := helper.Uint64ToInt(realtime.Volume)
 		selection := &domain.Selection{
 			StockID:         realtime.StockID,
 			Name:            history.Name,
@@ -182,7 +183,7 @@ func (s *serviceImpl) mergeRealtimeToSelection(
 			High:            realtime.High,
 			Low:             realtime.Low,
 			Close:           realtime.Close,
-			Volume:          int(realtime.Volume),
+			Volume:          volume,
 			PriceDiff:       helper.RoundDecimalTwo(realtime.Close - history.Close),
 			Concentration1:  history.Concentration1,
 			Concentration5:  history.Concentration5,

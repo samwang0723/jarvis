@@ -14,6 +14,7 @@
 package helper
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"strconv"
@@ -77,6 +78,14 @@ func StringToUint64(s string) (uint64, error) {
 	}
 
 	return f, nil
+}
+
+func Uint64ToInt(u uint64) (int, error) {
+	// Check if the value is within the range of int
+	if u > math.MaxInt {
+		return 0, fmt.Errorf("overflow: cannot convert %d to int", u)
+	}
+	return int(u), nil
 }
 
 func Today() string {
