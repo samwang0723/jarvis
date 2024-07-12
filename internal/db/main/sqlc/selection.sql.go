@@ -119,8 +119,8 @@ const GetHighestPrice = `-- name: GetHighestPrice :many
 SELECT stock_id, MAX(high)::numeric AS high 
 FROM daily_closes 
 WHERE exchange_date >= $1 
-  AND exchange_date < $2 
-  AND stock_id = ANY($3::text[]) 
+AND exchange_date < $2 
+AND stock_id = ANY($3::text[]) 
 GROUP BY stock_id
 `
 
@@ -501,7 +501,7 @@ SELECT stock_id, exchange_date, close, trade_shares
 FROM daily_closes 
 WHERE exchange_date >= $1 
 AND exchange_date < $2
-  AND stock_id = ANY($3::text[]) 
+AND stock_id = ANY($3::text[]) 
 ORDER BY stock_id, exchange_date DESC
 `
 
@@ -547,8 +547,8 @@ const RetrieveDailyCloseHistoryWithDate = `-- name: RetrieveDailyCloseHistoryWit
 SELECT stock_id, exchange_date, close, trade_shares 
 FROM daily_closes 
 WHERE exchange_date >= $1 
-  AND exchange_date <= $2 
-  AND stock_id = ANY($3::text[]) 
+AND exchange_date <= $2 
+AND stock_id = ANY($3::text[]) 
 ORDER BY stock_id, exchange_date DESC
 `
 
@@ -596,8 +596,10 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= $1
-and exchange_date < $2 and stock_id = Any($3::text[]) 
+from three_primary 
+where exchange_date >= $1
+and exchange_date < $2 
+and stock_id = Any($3::text[]) 
 order by stock_id, exchange_date desc
 `
 
@@ -649,8 +651,10 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= $1
-and exchange_date <= $2 and stock_id = Any($3::text[]) 
+from three_primary 
+where exchange_date >= $1
+and exchange_date <= $2 
+and stock_id = Any($3::text[]) 
 order by stock_id, exchange_date desc
 `
 

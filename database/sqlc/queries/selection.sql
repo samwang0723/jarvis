@@ -167,16 +167,16 @@ FROM (
 SELECT stock_id, MAX(high)::numeric AS high 
 FROM daily_closes 
 WHERE exchange_date >= @start_date 
-  AND exchange_date < @end_date 
-  AND stock_id = ANY(@stock_ids::text[]) 
+AND exchange_date < @end_date 
+AND stock_id = ANY(@stock_ids::text[]) 
 GROUP BY stock_id;
 
 -- name: RetrieveDailyCloseHistoryWithDate :many
 SELECT stock_id, exchange_date, close, trade_shares 
 FROM daily_closes 
 WHERE exchange_date >= @start_date 
-  AND exchange_date <= @end_date 
-  AND stock_id = ANY(@stock_ids::text[]) 
+AND exchange_date <= @end_date 
+AND stock_id = ANY(@stock_ids::text[]) 
 ORDER BY stock_id, exchange_date DESC;
 
 -- name: RetrieveDailyCloseHistory :many
@@ -184,7 +184,7 @@ SELECT stock_id, exchange_date, close, trade_shares
 FROM daily_closes 
 WHERE exchange_date >= @start_date 
 AND exchange_date < @end_date
-  AND stock_id = ANY(@stock_ids::text[]) 
+AND stock_id = ANY(@stock_ids::text[]) 
 ORDER BY stock_id, exchange_date DESC;
 
 -- name: RetrieveThreePrimaryHistoryWithDate :many
@@ -193,8 +193,10 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= @start_date
-and exchange_date <= @end_date and stock_id = Any(@stock_ids::text[]) 
+from three_primary 
+where exchange_date >= @start_date
+and exchange_date <= @end_date 
+and stock_id = Any(@stock_ids::text[]) 
 order by stock_id, exchange_date desc;
 
 -- name: RetrieveThreePrimaryHistory :many
@@ -203,6 +205,8 @@ floor(foreign_trade_shares/1000) as foreign_trade_shares,
 floor(trust_trade_shares/1000) as trust_trade_shares, 
 floor(dealer_trade_shares/1000) as dealer_trade_shares, 
 floor(hedging_trade_shares/1000) as hedging_trade_shares
-from three_primary where exchange_date >= @start_date
-and exchange_date < @end_date and stock_id = Any(@stock_ids::text[]) 
+from three_primary 
+where exchange_date >= @start_date
+and exchange_date < @end_date 
+and stock_id = Any(@stock_ids::text[]) 
 order by stock_id, exchange_date desc;
