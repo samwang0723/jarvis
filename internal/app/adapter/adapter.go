@@ -59,7 +59,7 @@ type Adapter interface {
 		exchangeDate string,
 	) ([]*domain.Selection, error)
 	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
-	GetLatestChip(ctx context.Context) ([]*domain.Selection, error)
+	LatestStockStatSnapshot(ctx context.Context) ([]*domain.Selection, error)
 	ListOrders(ctx context.Context, arg *domain.ListOrdersParams) ([]*domain.Order, error)
 	ListOpenOrders(
 		ctx context.Context,
@@ -276,8 +276,8 @@ func (a *Imp) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
 	return a.repo.GetRealTimeMonitoringKeys(ctx)
 }
 
-func (a *Imp) GetLatestChip(ctx context.Context) ([]*domain.Selection, error) {
-	return a.repo.GetLatestChip(ctx)
+func (a *Imp) LatestStockStatSnapshot(ctx context.Context) ([]*domain.Selection, error) {
+	return a.repo.LatestStockStatSnapshot(ctx)
 }
 
 func (a *Imp) ListOrders(

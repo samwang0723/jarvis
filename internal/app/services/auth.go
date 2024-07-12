@@ -49,8 +49,6 @@ func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uuid.UUID, e
 		return uuid.Nil, errInvalidJWTToken
 	}
 
-	s.logger.Info().Msgf("claims: %+v", claims)
-
 	sessionID := claims.ID
 	userID, err = uuid.FromString(claims.Subject)
 	if err != nil {

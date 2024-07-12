@@ -155,11 +155,30 @@ func (q *Queries) GetHighestPrice(ctx context.Context, arg *GetHighestPriceParam
 	return items, nil
 }
 
-const GetLatestChip = `-- name: GetLatestChip :many
+const GetStartDate = `-- name: GetStartDate :one
+SELECT MIN(a.exchange_date)::text 
+FROM (
+    SELECT exchange_date 
+    FROM stake_concentration
+    WHERE exchange_date <= $1 
+    GROUP BY exchange_date 
+    ORDER BY exchange_date DESC 
+    LIMIT 120
+) AS a
+`
+
+func (q *Queries) GetStartDate(ctx context.Context, exchangeDate string) (string, error) {
+	row := q.db.QueryRow(ctx, GetStartDate, exchangeDate)
+	var column_1 string
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const LatestStockStatSnapshot = `-- name: LatestStockStatSnapshot :many
 SELECT 
     s.stock_id, 
     c.name, 
-  (c.category || '.' || c.market)::text AS category, 
+    (c.category || '.' || c.market)::text AS category, 
     s.exchange_date, 
     d.open, 
     d.close, 
@@ -199,7 +218,7 @@ ORDER BY
     s.stock_id
 `
 
-type GetLatestChipRow struct {
+type LatestStockStatSnapshotRow struct {
 	StockID         string
 	Name            *string
 	Category        string
@@ -221,15 +240,15 @@ type GetLatestChipRow struct {
 	Dealer          float64
 }
 
-func (q *Queries) GetLatestChip(ctx context.Context, exchangeDate string) ([]*GetLatestChipRow, error) {
-	rows, err := q.db.Query(ctx, GetLatestChip, exchangeDate)
+func (q *Queries) LatestStockStatSnapshot(ctx context.Context, exchangeDate string) ([]*LatestStockStatSnapshotRow, error) {
+	rows, err := q.db.Query(ctx, LatestStockStatSnapshot, exchangeDate)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*GetLatestChipRow
+	var items []*LatestStockStatSnapshotRow
 	for rows.Next() {
-		var i GetLatestChipRow
+		var i LatestStockStatSnapshotRow
 		if err := rows.Scan(
 			&i.StockID,
 			&i.Name,
@@ -259,25 +278,6 @@ func (q *Queries) GetLatestChip(ctx context.Context, exchangeDate string) ([]*Ge
 		return nil, err
 	}
 	return items, nil
-}
-
-const GetStartDate = `-- name: GetStartDate :one
-SELECT MIN(a.exchange_date)::text 
-FROM (
-    SELECT exchange_date 
-    FROM stake_concentration
-    WHERE exchange_date <= $1 
-    GROUP BY exchange_date 
-    ORDER BY exchange_date DESC 
-    LIMIT 120
-) AS a
-`
-
-func (q *Queries) GetStartDate(ctx context.Context, exchangeDate string) (string, error) {
-	row := q.db.QueryRow(ctx, GetStartDate, exchangeDate)
-	var column_1 string
-	err := row.Scan(&column_1)
-	return column_1, err
 }
 
 const ListSelections = `-- name: ListSelections :many

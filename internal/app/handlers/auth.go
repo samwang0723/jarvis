@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -32,6 +33,7 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 	claims := &jwt.RegisteredClaims{
 		Audience:  []string{"jarvis"},
 		ID:        user.SessionID,
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(*user.SessionExpiredAt),
 		Issuer:    user.Email,
 		Subject:   user.ID.ID.String(),

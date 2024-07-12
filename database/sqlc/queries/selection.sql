@@ -1,8 +1,8 @@
--- name: GetLatestChip :many
+-- name: LatestStockStatSnapshot :many
 SELECT 
     s.stock_id, 
     c.name, 
-  (c.category || '.' || c.market)::text AS category, 
+    (c.category || '.' || c.market)::text AS category, 
     s.exchange_date, 
     d.open, 
     d.close, 

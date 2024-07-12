@@ -9,13 +9,13 @@ import (
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
-func (repo *Repo) GetLatestChip(ctx context.Context) ([]*domain.Selection, error) {
+func (repo *Repo) LatestStockStatSnapshot(ctx context.Context) ([]*domain.Selection, error) {
 	exchangeDate, err := repo.GetStakeConcentrationLatestDataPoint(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := repo.primary().GetLatestChip(ctx, exchangeDate)
+	res, err := repo.primary().LatestStockStatSnapshot(ctx, exchangeDate)
 	if err != nil {
 		return nil, err
 	}
