@@ -4,7 +4,33 @@ jobs:
   test:
     name: Test with Coverage
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: public.ecr.aws/docker/library/postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --name postgres
     steps:
+    - name: Install psql
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes postgresql-client
+    - name: Alter max connections
+      run: |
+        docker exec -i postgres bash << EOF
+          sed -i -s 's/max_connections = 100/max_connections = 3000/' /var/lib/postgresql/data/postgresql.conf
+        EOF
+        docker restart --time 0 postgres
+        time sleep 5
+    - run: psql -c 'SHOW max_connections;'
+      env:
+        PGHOST: localhost
+        PGUSER: postgres
+        PGPASSWORD: postgres
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
