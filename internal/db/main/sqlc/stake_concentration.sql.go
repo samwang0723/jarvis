@@ -23,18 +23,18 @@ INSERT INTO stake_concentration (
   concentration_20, 
   concentration_60)
 VALUES (
-    unnest($1::varchar[]), 
-    unnest($2::varchar[]), 
-    unnest($3::bigint[]), 
-    unnest($4::bigint[]), 
-    unnest($5::numeric[]),
-    unnest($6::numeric[]),
-    unnest($7::numeric[]),
-    unnest($8::numeric[]),
-    unnest($9::numeric[]),
-    unnest($10::numeric[]),
-    unnest($11::numeric[])
-  )
+  unnest($1::varchar[]), 
+  unnest($2::varchar[]), 
+  unnest($3::bigint[]), 
+  unnest($4::bigint[]), 
+  unnest($5::numeric[]),
+  unnest($6::numeric[]),
+  unnest($7::numeric[]),
+  unnest($8::numeric[]),
+  unnest($9::numeric[]),
+  unnest($10::numeric[]),
+  unnest($11::numeric[])
+)
 ON CONFLICT (stock_id, exchange_date) DO UPDATE
 SET sum_buy_shares = EXCLUDED.sum_buy_shares,
     sum_sell_shares = EXCLUDED.sum_sell_shares,
@@ -127,11 +127,12 @@ func (q *Queries) GetStakeConcentrationLatestDataPoint(ctx context.Context) (str
 
 const GetStakeConcentrationsWithVolumes = `-- name: GetStakeConcentrationsWithVolumes :many
 SELECT a.trade_shares,
-       COALESCE(b.sum_buy_shares, 0)::bigint - COALESCE(b.sum_sell_shares, 0)::bigint AS diff,
-       a.exchange_date
+  COALESCE(b.sum_buy_shares, 0)::bigint - COALESCE(b.sum_sell_shares, 0)::bigint AS diff,
+  a.exchange_date
 FROM daily_closes a
 LEFT JOIN stake_concentration b ON (a.stock_id, a.exchange_date) = (b.stock_id, b.exchange_date)
-WHERE a.stock_id = $1 AND a.exchange_date <= $2
+WHERE a.stock_id = $1 
+AND a.exchange_date <= $2
 ORDER BY a.exchange_date DESC
 LIMIT 60
 `
@@ -169,8 +170,8 @@ func (q *Queries) GetStakeConcentrationsWithVolumes(ctx context.Context, arg *Ge
 
 const HasStakeConcentration = `-- name: HasStakeConcentration :one
 SELECT EXISTS (
-    SELECT 1 FROM stake_concentration
-    WHERE exchange_date = $1
+  SELECT 1 FROM stake_concentration
+  WHERE exchange_date = $1
 )
 `
 
