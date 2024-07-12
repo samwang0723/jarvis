@@ -517,7 +517,7 @@ func TestConnPool_mapCustomTypes_CRUD(t *testing.T) {
 
 			_, err = tx.Exec(
 				ctx,
-				"CREATE TABLE IF NOT EXISTS uuid_decimal(uuid uuid, price numeric, PRIMARY KEY (uuid))",
+				"CREATE TABLE IF NOT EXISTS uuid_decimal(uuid uuid, PRIMARY KEY (uuid))",
 			)
 			if err != nil {
 				t.Errorf("expected no error but got: %v", err)
@@ -528,7 +528,7 @@ func TestConnPool_mapCustomTypes_CRUD(t *testing.T) {
 
 			row := tx.QueryRow(
 				ctx,
-				"INSERT INTO uuid_decimal(uuid, price) VALUES($1, $2) RETURNING uuid, price",
+				"INSERT INTO uuid_decimal(uuid) VALUES($1) RETURNING uuid",
 				id,
 			)
 
@@ -579,7 +579,7 @@ func TestConnPool_mapCustomTypes_CRUD(t *testing.T) {
 			// delete
 			row = tx.QueryRow(
 				ctx,
-				"DELETE FROM uuid_decimal WHERE uuid = $1 RETURNING uuid, price",
+				"DELETE FROM uuid_decimal WHERE uuid = $1 RETURNING uuid",
 				id,
 			)
 

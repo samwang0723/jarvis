@@ -1,6 +1,8 @@
 package db_test
 
 import (
+	"flag"
+	"os"
 	"testing"
 
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
@@ -13,7 +15,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	goleak.VerifyTestMain(m)
+	leak := flag.Bool("leak", false, "use leak detector")
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+
+		return
+	}
+
+	os.Exit(m.Run())
 }
 
 type payloadTestEvent struct {

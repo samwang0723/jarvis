@@ -2,11 +2,26 @@ package common_test
 
 import (
 	"errors"
+	"flag"
+	"os"
 	"sync/atomic"
 	"testing"
 
 	"github.com/samwang0723/jarvis/internal/common"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "use leak detector")
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+
+		return
+	}
+
+	os.Exit(m.Run())
+}
 
 func TestRetry(t *testing.T) {
 	t.Parallel()
