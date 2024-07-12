@@ -43,12 +43,6 @@ func (s *serviceImpl) DeletePickedStockByID(ctx context.Context, stockID string)
 
 //nolint:nolintlint,cyclop,nestif
 func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection, error) {
-	realtimeList := s.fetchRealtimePrice(ctx)
-	exchangeDate, err := s.dal.GetStakeConcentrationLatestDataPoint(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	pickedStocks, err := s.dal.ListPickedStocks(ctx, s.currentUserID)
 	if err != nil {
 		return nil, err
@@ -58,11 +52,12 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection,
 		stockIDs = append(stockIDs, pickedStock.StockID)
 	}
 
-	selections, err := s.dal.ListSelectionsFromPicked(ctx, stockIDs, exchangeDate)
+	selections, err := s.dal.ListSelectionsFromPicked(ctx, stockIDs)
 	if err != nil {
 		return nil, err
 	}
-	selections, err = s.concentrationBackfill(ctx, selections, stockIDs, exchangeDate)
+	latestDate := s.dal.GetStakeConcentrationLatestDataPoint(ctx)
+	selections, err = s.concentrationBackfill(ctx, selections, stockIDs, latestDate)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +68,7 @@ func (s *serviceImpl) ListPickedStock(ctx context.Context) ([]*domain.Selection,
 		)
 	}
 
+	realtimeList := s.fetchRealtimePrice(ctx)
 	for _, obj := range selections {
 		// override realtime data with history record.
 		realtime, ok := realtimeList[obj.StockID]

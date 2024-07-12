@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
@@ -64,10 +65,23 @@ func (s *serviceImpl) ListSelections(
 	req *dto.ListSelectionRequest,
 ) ([]*domain.Selection, error) {
 	var strategy SelectionStrategy
-	if req.Date == helper.Today() {
-		strategy = &RealTimeSelectionStrategy{service: s}
-	} else {
+
+	today := helper.Today()
+	if req.Date == today {
+		// check newest concentration date
+		latestDate := s.dal.GetStakeConcentrationLatestDataPoint(ctx)
+		if req.Date != latestDate {
+			// Case 1: req.Date is today and no data in DAL layer
+			strategy = &RealTimeSelectionStrategy{service: s}
+		} else {
+			// Case 2: req.Date is today and has data in DAL layer
+			strategy = &HistoricalSelectionStrategy{service: s}
+		}
+	} else if req.Date < today {
+		// Case 3: req.Date is not today and must be less than today
 		strategy = &HistoricalSelectionStrategy{service: s}
+	} else {
+		return nil, fmt.Errorf("req.Date cannot be in the future")
 	}
 
 	return strategy.ListSelections(ctx, req)

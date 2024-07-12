@@ -38,7 +38,7 @@ type Adapter interface {
 		stockID, date string,
 	) ([]*domain.CalculationBase, error)
 	HasStakeConcentration(ctx context.Context, exchangeDate string) (bool, error)
-	GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error)
+	GetStakeConcentrationLatestDataPoint(ctx context.Context) string
 	CreatePickedStocks(ctx context.Context, objs []*domain.PickedStock) error
 	DeletePickedStock(ctx context.Context, userID uuid.UUID, stockID string) error
 	ListPickedStocks(ctx context.Context, userID uuid.UUID) ([]domain.PickedStock, error)
@@ -56,7 +56,6 @@ type Adapter interface {
 	ListSelectionsFromPicked(
 		ctx context.Context,
 		stockIDs []string,
-		exchangeDate string,
 	) ([]*domain.Selection, error)
 	GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error)
 	LatestStockStatSnapshot(ctx context.Context) ([]*domain.Selection, error)
@@ -193,7 +192,7 @@ func (a *Imp) HasStakeConcentration(ctx context.Context, exchangeDate string) (b
 	return a.repo.HasStakeConcentration(ctx, exchangeDate)
 }
 
-func (a *Imp) GetStakeConcentrationLatestDataPoint(ctx context.Context) (string, error) {
+func (a *Imp) GetStakeConcentrationLatestDataPoint(ctx context.Context) string {
 	return a.repo.GetStakeConcentrationLatestDataPoint(ctx)
 }
 
@@ -267,9 +266,8 @@ func (a *Imp) ListSelections(
 func (a *Imp) ListSelectionsFromPicked(
 	ctx context.Context,
 	stockIDs []string,
-	exchangeDate string,
 ) ([]*domain.Selection, error) {
-	return a.repo.ListSelectionsFromPicked(ctx, stockIDs, exchangeDate)
+	return a.repo.ListSelectionsFromPicked(ctx, stockIDs)
 }
 
 func (a *Imp) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {

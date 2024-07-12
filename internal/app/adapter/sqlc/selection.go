@@ -10,12 +10,7 @@ import (
 )
 
 func (repo *Repo) LatestStockStatSnapshot(ctx context.Context) ([]*domain.Selection, error) {
-	exchangeDate, err := repo.GetStakeConcentrationLatestDataPoint(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := repo.primary().LatestStockStatSnapshot(ctx, exchangeDate)
+	res, err := repo.primary().LatestStockStatSnapshot(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -23,11 +18,7 @@ func (repo *Repo) LatestStockStatSnapshot(ctx context.Context) ([]*domain.Select
 }
 
 func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, error) {
-	exchangeDate, err := repo.GetStakeConcentrationLatestDataPoint(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+	exchangeDate := repo.GetStakeConcentrationLatestDataPoint(ctx)
 	res, err := repo.primary().GetEligibleStocksFromDate(ctx, exchangeDate)
 	if err != nil {
 		return nil, err
@@ -78,13 +69,8 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 func (repo *Repo) ListSelectionsFromPicked(
 	ctx context.Context,
 	stockIDs []string,
-	exchangeDate string,
 ) ([]*domain.Selection, error) {
-	result, err := repo.primary().
-		ListSelectionsFromPicked(ctx, &sqlcdb.ListSelectionsFromPickedParams{
-			StockIds:     stockIDs,
-			ExchangeDate: exchangeDate,
-		})
+	result, err := repo.primary().ListSelectionsFromPicked(ctx, stockIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -205,8 +191,7 @@ func (repo *Repo) endDate(ctx context.Context, date string) string {
 			endDate = date
 		}
 	} else {
-		date, _ := repo.GetStakeConcentrationLatestDataPoint(ctx)
-		endDate = date
+		endDate = repo.GetStakeConcentrationLatestDataPoint(ctx)
 	}
 
 	return endDate

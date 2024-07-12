@@ -117,7 +117,6 @@ func (s *serviceImpl) CrawlingRealTimePrice(ctx context.Context) error {
 	return template.Execute(ctx)
 }
 
-// The rest of the methods remain the same
 func (s *serviceImpl) ListRealTimeSelections(
 	ctx context.Context,
 	req *dto.ListSelectionRequest,

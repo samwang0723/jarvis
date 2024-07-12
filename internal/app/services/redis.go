@@ -85,7 +85,7 @@ func (s *serviceImpl) fetchRealtimePrice(ctx context.Context) map[string]*domain
 		var latestDate string
 		hasData, _ := s.dal.HasStakeConcentration(ctx, today)
 		if !hasData {
-			latestDate, _ = s.dal.GetStakeConcentrationLatestDataPoint(ctx)
+			latestDate = s.dal.GetStakeConcentrationLatestDataPoint(ctx)
 		} else {
 			latestDate = today
 		}

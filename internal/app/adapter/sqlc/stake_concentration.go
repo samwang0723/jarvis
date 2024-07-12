@@ -53,12 +53,12 @@ func (repo *Repo) HasStakeConcentration(ctx context.Context, exchangeDate string
 
 func (repo *Repo) GetStakeConcentrationLatestDataPoint(
 	ctx context.Context,
-) (string, error) {
+) string {
 	exchangeDate, err := repo.primary().GetStakeConcentrationLatestDataPoint(ctx)
 	if err != nil {
-		return "", err
+		return ""
 	}
-	return exchangeDate, nil
+	return exchangeDate
 }
 
 func toSqlcBatchUpsertStakeConcentrationParams(
