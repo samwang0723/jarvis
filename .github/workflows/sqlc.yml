@@ -20,5 +20,5 @@ jobs:
           cache: true
       - name: Check sqlc diff
         run: |
-          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.26.0 && $(go env GOPATH)/bin/sqlc -f ./database/sqlc.yaml diff && echo pass
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.26.0 && $(go env GOPATH)/bin/sqlc -f ./database/sqlc/sqlc.yaml diff && echo pass
 
