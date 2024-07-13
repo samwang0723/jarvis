@@ -7,6 +7,7 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
 )
 
 const BatchUpsertStocks = `-- name: BatchUpsertStocks :exec
@@ -54,8 +55,8 @@ type CreateStockParams struct {
 	ID       string
 	Name     string
 	Country  string
-	Category *string
-	Market   *string
+	Category sql.NullString
+	Market   sql.NullString
 }
 
 func (q *Queries) CreateStock(ctx context.Context, arg *CreateStockParams) error {
@@ -82,15 +83,15 @@ const ListCategories = `-- name: ListCategories :many
 SELECT DISTINCT category FROM stocks
 `
 
-func (q *Queries) ListCategories(ctx context.Context) ([]*string, error) {
+func (q *Queries) ListCategories(ctx context.Context) ([]sql.NullString, error) {
 	rows, err := q.db.Query(ctx, ListCategories)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []*string
+	var items []sql.NullString
 	for rows.Next() {
-		var category *string
+		var category sql.NullString
 		if err := rows.Scan(&category); err != nil {
 			return nil, err
 		}
@@ -176,8 +177,8 @@ type UpdateStockParams struct {
 	ID       string
 	Name     string
 	Country  string
-	Category *string
-	Market   *string
+	Category sql.NullString
+	Market   sql.NullString
 }
 
 func (q *Queries) UpdateStock(ctx context.Context, arg *UpdateStockParams) error {

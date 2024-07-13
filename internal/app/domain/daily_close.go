@@ -1,9 +1,12 @@
 package domain
 
 import (
+	"database/sql"
 	"reflect"
 
+	"github.com/ericlagergren/decimal"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 type StockPrice struct {
@@ -66,11 +69,8 @@ func mapToDailyClose(s any) (*DailyClose, error) {
 	val := reflect.ValueOf(s).Elem()
 	obj.StockID = val.FieldByName("StockID").String()
 	obj.ExchangeDate = val.FieldByName("ExchangeDate").String()
-	obj.Close = float32(val.FieldByName("Close").Float())
-
-	if val.FieldByName("TradeShares").IsValid() {
-		obj.TradedShares = *val.FieldByName("TradeShares").Interface().(*int64)
-	}
+	obj.Close = helper.DecimalToFloat32(val.FieldByName("Close").Interface().(decimal.Big))
+	obj.TradedShares = val.FieldByName("TradeShares").Interface().(sql.NullInt64).Int64
 
 	return &obj, nil
 }

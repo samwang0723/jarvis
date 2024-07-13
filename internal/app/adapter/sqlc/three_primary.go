@@ -2,6 +2,7 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
@@ -32,10 +33,10 @@ func (repo *Repo) CreateThreePrimary(
 	return repo.primary().CreateThreePrimary(ctx, &sqlcdb.CreateThreePrimaryParams{
 		StockID:            arg.StockID,
 		ExchangeDate:       arg.ExchangeDate,
-		ForeignTradeShares: &arg.ForeignTradeShares,
-		TrustTradeShares:   &arg.TrustTradeShares,
-		DealerTradeShares:  &arg.DealerTradeShares,
-		HedgingTradeShares: &arg.HedgingTradeShares,
+		ForeignTradeShares: sql.NullInt64{Int64: arg.ForeignTradeShares, Valid: true},
+		TrustTradeShares:   sql.NullInt64{Int64: arg.TrustTradeShares, Valid: true},
+		DealerTradeShares:  sql.NullInt64{Int64: arg.DealerTradeShares, Valid: true},
+		HedgingTradeShares: sql.NullInt64{Int64: arg.HedgingTradeShares, Valid: true},
 	})
 }
 
@@ -84,8 +85,8 @@ func fromSqlcThreePrimarys(threePrimary []*sqlcdb.ThreePrimary) []*domain.ThreeP
 
 func fromSqlcThreePrimary(tp *sqlcdb.ThreePrimary) *domain.ThreePrimary {
 	time := domain.Time{
-		CreatedAt: &tp.CreatedAt.Time,
-		UpdatedAt: &tp.UpdatedAt.Time,
+		CreatedAt: &tp.CreatedAt,
+		UpdatedAt: &tp.UpdatedAt,
 	}
 	if tp.DeletedAt.Valid {
 		time.DeletedAt = &tp.DeletedAt.Time
@@ -96,10 +97,10 @@ func fromSqlcThreePrimary(tp *sqlcdb.ThreePrimary) *domain.ThreePrimary {
 		},
 		StockID:            tp.StockID,
 		ExchangeDate:       tp.ExchangeDate,
-		ForeignTradeShares: *tp.ForeignTradeShares,
-		TrustTradeShares:   *tp.TrustTradeShares,
-		DealerTradeShares:  *tp.DealerTradeShares,
-		HedgingTradeShares: *tp.HedgingTradeShares,
+		ForeignTradeShares: tp.ForeignTradeShares.Int64,
+		TrustTradeShares:   tp.TrustTradeShares.Int64,
+		DealerTradeShares:  tp.DealerTradeShares.Int64,
+		HedgingTradeShares: tp.HedgingTradeShares.Int64,
 		Time:               time,
 	}
 }

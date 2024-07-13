@@ -8,6 +8,7 @@ package sqlcdb
 import (
 	"context"
 
+	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
 )
 
@@ -53,8 +54,8 @@ type UpsertTransactionParams struct {
 	UserID       uuid.UUID
 	OrderID      uuid.UUID
 	OrderType    string
-	CreditAmount float64
-	DebitAmount  float64
+	CreditAmount decimal.Big
+	DebitAmount  decimal.Big
 	Status       string
 	Version      int32
 }

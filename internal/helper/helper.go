@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"time"
 	"unsafe"
+
+	"github.com/ericlagergren/decimal"
 )
 
 const (
@@ -86,6 +88,29 @@ func Uint64ToInt(u uint64) (int, error) {
 		return 0, fmt.Errorf("overflow: cannot convert %d to int", u)
 	}
 	return int(u), nil
+}
+
+func Float32ToDecimal(f float32) decimal.Big {
+	// Convert float32 to string
+	fStr := strconv.FormatFloat(float64(f), 'f', -1, 32)
+	// Create a new decimal.Big
+	var d decimal.Big
+	// Set the value of decimal.Big from the string
+	if _, ok := d.SetString(fStr); !ok {
+		return decimal.Big{}
+	}
+	return d
+}
+
+func DecimalToFloat32(d decimal.Big) float32 {
+	// Convert decimal.Big to string
+	dStr := d.String()
+	// Convert string to float32
+	f, err := strconv.ParseFloat(dStr, 32)
+	if err != nil {
+		return 0
+	}
+	return float32(f)
 }
 
 func Today() string {

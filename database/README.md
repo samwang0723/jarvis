@@ -12,7 +12,7 @@ Migrations are generated using [golang-migrate](https://github.com/golang-migrat
 
 ## Generate migrations
 
-action can be create / alter / delete
+action can be create / alter / drop
 ```bash
     migrate create -ext sql -dir database/migrations -tz Asia/Taipei -seq {action}_{table}_{detail}
 ```

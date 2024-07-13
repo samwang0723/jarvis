@@ -45,7 +45,7 @@ func (h *handlerImpl) ListCategories(ctx context.Context) (*dto.ListCategoriesRe
 
 	resp := make([]string, len(entries))
 	for i, v := range entries {
-		resp[i] = *v
+		resp[i] = v
 	}
 
 	return &dto.ListCategoriesResponse{

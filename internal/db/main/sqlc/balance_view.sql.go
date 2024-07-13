@@ -7,9 +7,10 @@ package sqlcdb
 
 import (
 	"context"
+	"time"
 
+	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const GetBalanceView = `-- name: GetBalanceView :one
@@ -24,12 +25,12 @@ WHERE id = $1
 
 type GetBalanceViewRow struct {
 	ID        uuid.UUID
-	Balance   float64
-	Available float64
-	Pending   float64
+	Balance   decimal.Big
+	Available decimal.Big
+	Pending   decimal.Big
 	Version   int32
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (q *Queries) GetBalanceView(ctx context.Context, id uuid.UUID) (*GetBalanceViewRow, error) {
@@ -59,9 +60,9 @@ SET balance = EXCLUDED.balance,
 
 type UpsertBalanceViewParams struct {
 	ID        uuid.UUID
-	Balance   float64
-	Available float64
-	Pending   float64
+	Balance   decimal.Big
+	Available decimal.Big
+	Pending   decimal.Big
 	Version   int32
 }
 

@@ -1,9 +1,12 @@
 package domain
 
 import (
+	"database/sql"
 	"reflect"
 
+	"github.com/ericlagergren/decimal"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 type Selection struct {
@@ -60,7 +63,7 @@ func mapToSelection(s any) (*Selection, error) {
 
 	// Manually handle the conversion of specific fields
 	val := reflect.ValueOf(s).Elem()
-	obj.Name = *val.FieldByName("Name").Interface().(*string)
+	obj.Name = val.FieldByName("Name").Interface().(sql.NullString).String
 	obj.StockID = val.FieldByName("StockID").String()
 	obj.Category = val.FieldByName("Category").String()
 	obj.ExchangeDate = val.FieldByName("ExchangeDate").String()
@@ -69,16 +72,28 @@ func mapToSelection(s any) (*Selection, error) {
 	obj.Low = float32(val.FieldByName("Low").Float())
 	obj.Close = float32(val.FieldByName("Close").Float())
 	obj.PriceDiff = float32(val.FieldByName("PriceDiff").Float())
-	obj.Concentration1 = float32(val.FieldByName("Concentration1").Float())
-	obj.Concentration5 = float32(val.FieldByName("Concentration5").Float())
-	obj.Concentration10 = float32(val.FieldByName("Concentration10").Float())
-	obj.Concentration20 = float32(val.FieldByName("Concentration20").Float())
-	obj.Concentration60 = float32(val.FieldByName("Concentration60").Float())
 	obj.Volume = int(val.FieldByName("Volume").Float())
 	obj.Trust = int(val.FieldByName("Trust").Float())
 	obj.Foreign = int(val.FieldByName("Foreignc").Float())
 	obj.Hedging = int(val.FieldByName("Hedging").Float())
 	obj.Dealer = int(val.FieldByName("Dealer").Float())
+
+	// Handle decimal.Big fields
+	obj.Concentration1 = helper.DecimalToFloat32(
+		val.FieldByName("Concentration1").Interface().(decimal.Big),
+	)
+	obj.Concentration5 = helper.DecimalToFloat32(
+		val.FieldByName("Concentration5").Interface().(decimal.Big),
+	)
+	obj.Concentration10 = helper.DecimalToFloat32(
+		val.FieldByName("Concentration10").Interface().(decimal.Big),
+	)
+	obj.Concentration20 = helper.DecimalToFloat32(
+		val.FieldByName("Concentration20").Interface().(decimal.Big),
+	)
+	obj.Concentration60 = helper.DecimalToFloat32(
+		val.FieldByName("Concentration60").Interface().(decimal.Big),
+	)
 
 	return &obj, nil
 }

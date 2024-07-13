@@ -2,10 +2,10 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 )
@@ -47,12 +47,9 @@ func (repo *Repo) UpdateUser(ctx context.Context, obj *domain.User) error {
 
 func (repo *Repo) UpdateSessionID(ctx context.Context, params *domain.UpdateSessionIDParams) error {
 	return repo.primary().UpdateSessionID(ctx, &sqlcdb.UpdateSessionIDParams{
-		SessionID: &params.SessionID,
-		SessionExpiredAt: pgtype.Timestamp{
-			Time:  params.SessionExpiredAt,
-			Valid: true,
-		},
-		ID: params.ID,
+		SessionID:        sql.NullString{String: params.SessionID, Valid: true},
+		SessionExpiredAt: sql.NullTime{Time: params.SessionExpiredAt, Valid: true},
+		ID:               params.ID,
 	})
 }
 
@@ -123,8 +120,8 @@ func toDomainUser(row *sqlcdb.User) *domain.User {
 		PhoneConfirmedAt: &row.PhoneConfirmedAt.Time,
 		EmailConfirmedAt: &row.EmailConfirmedAt.Time,
 		Time: domain.Time{
-			CreatedAt: &row.CreatedAt.Time,
-			UpdatedAt: &row.UpdatedAt.Time,
+			CreatedAt: &row.CreatedAt,
+			UpdatedAt: &row.UpdatedAt,
 		},
 	}
 }

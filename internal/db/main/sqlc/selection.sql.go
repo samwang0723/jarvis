@@ -7,6 +7,10 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
+
+	"github.com/ericlagergren/decimal"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const GetEligibleStocksFromDate = `-- name: GetEligibleStocksFromDate :many
@@ -28,7 +32,7 @@ AND d.trade_shares >= 1000000
 
 type GetEligibleStocksFromDateRow struct {
 	StockID string
-	Market  *string
+	Market  sql.NullString
 }
 
 func (q *Queries) GetEligibleStocksFromDate(ctx context.Context, exchangeDate string) ([]*GetEligibleStocksFromDateRow, error) {
@@ -60,7 +64,7 @@ WHERE o.status != 'closed'
 
 type GetEligibleStocksFromOrderRow struct {
 	StockID string
-	Market  *string
+	Market  sql.NullString
 }
 
 func (q *Queries) GetEligibleStocksFromOrder(ctx context.Context) ([]*GetEligibleStocksFromOrderRow, error) {
@@ -92,7 +96,7 @@ WHERE p.deleted_at is null
 
 type GetEligibleStocksFromPickedRow struct {
 	StockID string
-	Market  *string
+	Market  sql.NullString
 }
 
 func (q *Queries) GetEligibleStocksFromPicked(ctx context.Context) ([]*GetEligibleStocksFromPickedRow, error) {
@@ -132,7 +136,7 @@ type GetHighestPriceParams struct {
 
 type GetHighestPriceRow struct {
 	StockID string
-	High    float64
+	High    decimal.Big
 }
 
 func (q *Queries) GetHighestPrice(ctx context.Context, arg *GetHighestPriceParams) ([]*GetHighestPriceRow, error) {
@@ -186,16 +190,16 @@ SELECT
   c.name, 
   (c.category || '.' || c.market)::text AS category, 
   s.exchange_date, 
-  d.open, 
-  d.close, 
-  d.high, 
-  d.low, 
-  d.price_diff,
-  s.concentration_1, 
-  s.concentration_5, 
-  s.concentration_10, 
-  s.concentration_20, 
-  s.concentration_60, 
+  d.open::numeric AS open, 
+  d.close::numeric AS close, 
+  d.high::numeric AS high, 
+  d.low::numeric AS low, 
+  d.price_diff::numeric AS price_diff,
+  s.concentration_1::numeric AS concentration_1, 
+  s.concentration_5::numeric AS concentration_5, 
+  s.concentration_10::numeric AS concentration_10, 
+  s.concentration_20::numeric AS concentration_20, 
+  s.concentration_60::numeric AS concentration_60, 
   floor(d.trade_shares/1000) AS volume, 
   floor(COALESCE(t.foreign_trade_shares,0)/1000) AS foreignc,
   floor(COALESCE(t.trust_trade_shares,0)/1000) AS trust, 
@@ -227,19 +231,19 @@ ORDER BY
 
 type LatestStockStatSnapshotRow struct {
 	StockID         string
-	Name            *string
+	Name            sql.NullString
 	Category        string
 	ExchangeDate    string
-	Open            float64
-	Close           float64
-	High            float64
-	Low             float64
-	PriceDiff       float64
-	Concentration1  float64
-	Concentration5  float64
-	Concentration10 float64
-	Concentration20 float64
-	Concentration60 float64
+	Open            decimal.Big
+	Close           decimal.Big
+	High            decimal.Big
+	Low             decimal.Big
+	PriceDiff       decimal.Big
+	Concentration1  decimal.Big
+	Concentration5  decimal.Big
+	Concentration10 decimal.Big
+	Concentration20 decimal.Big
+	Concentration60 decimal.Big
 	Volume          float64
 	Foreignc        float64
 	Trust           float64
@@ -305,16 +309,16 @@ SELECT
   c.name, 
   (c.category || '.' || c.market)::text AS category, 
   s.exchange_date, 
-  d.open, 
-  d.close, 
-  d.high, 
-  d.low, 
-  d.price_diff,
-  s.concentration_1, 
-  s.concentration_5, 
-  s.concentration_10, 
-  s.concentration_20, 
-  s.concentration_60, 
+  d.open::numeric AS open, 
+  d.close::numeric AS close, 
+  d.high::numeric AS high, 
+  d.low::numeric AS low, 
+  d.price_diff::numeric AS price_diff,
+  s.concentration_1::numeric AS concentration_1, 
+  s.concentration_5::numeric AS concentration_5, 
+  s.concentration_10::numeric AS concentration_10, 
+  s.concentration_20::numeric AS concentration_20, 
+  s.concentration_60::numeric AS concentration_60, 
   FLOOR(d.trade_shares/1000) AS volume, 
   FLOOR(COALESCE(t.foreign_trade_shares,0)/1000) AS foreignc,
   FLOOR(COALESCE(t.trust_trade_shares,0)/1000) AS trust, 
@@ -343,25 +347,25 @@ ORDER BY s.stock_id
 
 type ListSelectionsRow struct {
 	StockID         string
-	Name            *string
+	Name            sql.NullString
 	Category        string
 	ExchangeDate    string
-	Open            float64
-	Close           float64
-	High            float64
-	Low             float64
-	PriceDiff       float64
-	Concentration1  float64
-	Concentration5  float64
-	Concentration10 float64
-	Concentration20 float64
-	Concentration60 float64
+	Open            decimal.Big
+	Close           decimal.Big
+	High            decimal.Big
+	Low             decimal.Big
+	PriceDiff       decimal.Big
+	Concentration1  decimal.Big
+	Concentration5  decimal.Big
+	Concentration10 decimal.Big
+	Concentration20 decimal.Big
+	Concentration60 decimal.Big
 	Volume          float64
 	Foreignc        float64
 	Trust           float64
 	Hedging         float64
 	Dealer          float64
-	AvgVolume       *float64
+	AvgVolume       pgtype.Float8
 }
 
 func (q *Queries) ListSelections(ctx context.Context, exchangeDate string) ([]*ListSelectionsRow, error) {
@@ -417,16 +421,16 @@ SELECT
   c.name, 
   (c.category || '.' || c.market)::text AS category, 
   s.exchange_date, 
-  d.open, 
-  d.close, 
-  d.high, 
-  d.low, 
-  d.price_diff,
-  s.concentration_1, 
-  s.concentration_5, 
-  s.concentration_10, 
-  s.concentration_20, 
-  s.concentration_60, 
+  d.open::numeric AS open, 
+  d.close::numeric AS close, 
+  d.high::numeric AS high, 
+  d.low::numeric AS low, 
+  d.price_diff::numeric AS price_diff,
+  s.concentration_1::numeric AS concentration_1, 
+  s.concentration_5::numeric AS concentration_5, 
+  s.concentration_10::numeric AS concentration_10, 
+  s.concentration_20::numeric AS concentration_20, 
+  s.concentration_60::numeric AS concentration_60, 
   floor(d.trade_shares/1000) AS volume, 
   floor(COALESCE(t.foreign_trade_shares,0)/1000) AS foreignc,
   floor(COALESCE(t.trust_trade_shares,0)/1000) AS trust, 
@@ -445,19 +449,19 @@ ORDER BY s.stock_id
 
 type ListSelectionsFromPickedRow struct {
 	StockID         string
-	Name            *string
+	Name            sql.NullString
 	Category        string
 	ExchangeDate    string
-	Open            float64
-	Close           float64
-	High            float64
-	Low             float64
-	PriceDiff       float64
-	Concentration1  float64
-	Concentration5  float64
-	Concentration10 float64
-	Concentration20 float64
-	Concentration60 float64
+	Open            decimal.Big
+	Close           decimal.Big
+	High            decimal.Big
+	Low             decimal.Big
+	PriceDiff       decimal.Big
+	Concentration1  decimal.Big
+	Concentration5  decimal.Big
+	Concentration10 decimal.Big
+	Concentration20 decimal.Big
+	Concentration60 decimal.Big
 	Volume          float64
 	Foreignc        float64
 	Trust           float64
@@ -523,8 +527,8 @@ type RetrieveDailyCloseHistoryParams struct {
 type RetrieveDailyCloseHistoryRow struct {
 	StockID      string
 	ExchangeDate string
-	Close        float64
-	TradeShares  *int64
+	Close        decimal.Big
+	TradeShares  sql.NullInt64
 }
 
 func (q *Queries) RetrieveDailyCloseHistory(ctx context.Context, arg *RetrieveDailyCloseHistoryParams) ([]*RetrieveDailyCloseHistoryRow, error) {
@@ -570,8 +574,8 @@ type RetrieveDailyCloseHistoryWithDateParams struct {
 type RetrieveDailyCloseHistoryWithDateRow struct {
 	StockID      string
 	ExchangeDate string
-	Close        float64
-	TradeShares  *int64
+	Close        decimal.Big
+	TradeShares  sql.NullInt64
 }
 
 func (q *Queries) RetrieveDailyCloseHistoryWithDate(ctx context.Context, arg *RetrieveDailyCloseHistoryWithDateParams) ([]*RetrieveDailyCloseHistoryWithDateRow, error) {

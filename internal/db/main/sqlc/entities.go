@@ -5,6 +5,10 @@
 package sqlcdb
 
 import (
+	"database/sql"
+	"time"
+
+	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -15,51 +19,51 @@ type BalanceEvent struct {
 	EventType   string
 	Payload     []byte
 	Version     int32
-	CreatedAt   pgtype.Timestamp
+	CreatedAt   time.Time
 }
 
 type BalanceView struct {
 	ID        uuid.UUID
-	Balance   float64
-	Available float64
-	Pending   float64
+	Balance   decimal.Big
+	Available decimal.Big
+	Pending   decimal.Big
 	Version   int32
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type DailyClose struct {
 	ID           uuid.UUID
 	StockID      string
 	ExchangeDate string
-	TradeShares  *int64
-	Transactions *int64
-	Turnover     *int64
-	Open         float64
-	Close        float64
-	High         float64
-	Low          float64
-	PriceDiff    float64
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
-	DeletedAt    pgtype.Timestamp
+	TradeShares  sql.NullInt64
+	Transactions sql.NullInt64
+	Turnover     sql.NullInt64
+	Open         decimal.Big
+	Close        decimal.Big
+	High         decimal.Big
+	Low          decimal.Big
+	PriceDiff    decimal.Big
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    sql.NullTime
 }
 
 type Order struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	StockID          string
-	BuyPrice         float64
+	BuyPrice         decimal.Big
 	BuyQuantity      int64
 	BuyExchangeDate  string
-	SellPrice        float64
+	SellPrice        decimal.Big
 	SellQuantity     int64
 	SellExchangeDate string
-	ProfitablePrice  float64
+	ProfitablePrice  decimal.Big
 	Status           string
 	Version          int32
-	CreatedAt        pgtype.Timestamp
-	UpdatedAt        pgtype.Timestamp
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type OrderEvent struct {
@@ -68,59 +72,59 @@ type OrderEvent struct {
 	EventType   string
 	Payload     []byte
 	Version     int32
-	CreatedAt   pgtype.Timestamp
+	CreatedAt   time.Time
 }
 
 type PickedStock struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	StockID   string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	DeletedAt pgtype.Timestamp
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt sql.NullTime
 }
 
 type StakeConcentration struct {
 	ID              uuid.UUID
 	StockID         string
 	ExchangeDate    string
-	SumBuyShares    *int64
-	SumSellShares   *int64
-	AvgBuyPrice     float64
-	AvgSellPrice    float64
-	Concentration1  float64
-	Concentration5  float64
-	Concentration10 float64
-	Concentration20 float64
-	Concentration60 float64
-	CreatedAt       pgtype.Timestamp
-	UpdatedAt       pgtype.Timestamp
-	DeletedAt       pgtype.Timestamp
+	SumBuyShares    sql.NullInt64
+	SumSellShares   sql.NullInt64
+	AvgBuyPrice     decimal.Big
+	AvgSellPrice    decimal.Big
+	Concentration1  pgtype.Numeric
+	Concentration5  pgtype.Numeric
+	Concentration10 pgtype.Numeric
+	Concentration20 pgtype.Numeric
+	Concentration60 pgtype.Numeric
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       sql.NullTime
 }
 
 type Stock struct {
 	ID        string
 	Name      string
 	Country   string
-	Site      *string
-	Category  *string
-	Market    *string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	DeletedAt pgtype.Timestamp
+	Site      sql.NullString
+	Category  sql.NullString
+	Market    sql.NullString
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt sql.NullTime
 }
 
 type ThreePrimary struct {
 	ID                 uuid.UUID
 	StockID            string
 	ExchangeDate       string
-	ForeignTradeShares *int64
-	TrustTradeShares   *int64
-	DealerTradeShares  *int64
-	HedgingTradeShares *int64
-	CreatedAt          pgtype.Timestamp
-	UpdatedAt          pgtype.Timestamp
-	DeletedAt          pgtype.Timestamp
+	ForeignTradeShares sql.NullInt64
+	TrustTradeShares   sql.NullInt64
+	DealerTradeShares  sql.NullInt64
+	HedgingTradeShares sql.NullInt64
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	DeletedAt          sql.NullTime
 }
 
 type Transaction struct {
@@ -128,12 +132,12 @@ type Transaction struct {
 	UserID       uuid.UUID
 	OrderID      uuid.UUID
 	OrderType    string
-	CreditAmount float64
-	DebitAmount  float64
+	CreditAmount decimal.Big
+	DebitAmount  decimal.Big
 	Status       string
 	Version      int32
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type TransactionEvent struct {
@@ -142,7 +146,7 @@ type TransactionEvent struct {
 	EventType   string
 	Payload     []byte
 	Version     int32
-	CreatedAt   pgtype.Timestamp
+	CreatedAt   time.Time
 }
 
 type User struct {
@@ -152,11 +156,11 @@ type User struct {
 	Email            string
 	Phone            string
 	Password         string
-	SessionID        *string
-	EmailConfirmedAt pgtype.Timestamp
-	PhoneConfirmedAt pgtype.Timestamp
-	CreatedAt        pgtype.Timestamp
-	UpdatedAt        pgtype.Timestamp
-	SessionExpiredAt pgtype.Timestamp
-	DeletedAt        pgtype.Timestamp
+	SessionID        sql.NullString
+	EmailConfirmedAt sql.NullTime
+	PhoneConfirmedAt sql.NullTime
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	SessionExpiredAt sql.NullTime
+	DeletedAt        sql.NullTime
 }

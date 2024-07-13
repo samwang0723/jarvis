@@ -3,8 +3,10 @@ package sqlc
 import (
 	"context"
 
+	"github.com/ericlagergren/decimal"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 func (repo *Repo) BatchUpsertStakeConcentration(
@@ -69,35 +71,52 @@ func toSqlcBatchUpsertStakeConcentrationParams(
 		ExchangeDate:    make([]string, 0, len(stakeConcentrations)),
 		SumBuyShares:    make([]int64, 0, len(stakeConcentrations)),
 		SumSellShares:   make([]int64, 0, len(stakeConcentrations)),
-		AvgBuyPrice:     make([]float64, 0, len(stakeConcentrations)),
-		AvgSellPrice:    make([]float64, 0, len(stakeConcentrations)),
-		Concentration1:  make([]float64, 0, len(stakeConcentrations)),
-		Concentration5:  make([]float64, 0, len(stakeConcentrations)),
-		Concentration10: make([]float64, 0, len(stakeConcentrations)),
-		Concentration20: make([]float64, 0, len(stakeConcentrations)),
-		Concentration60: make([]float64, 0, len(stakeConcentrations)),
+		AvgBuyPrice:     make([]decimal.Big, 0, len(stakeConcentrations)),
+		AvgSellPrice:    make([]decimal.Big, 0, len(stakeConcentrations)),
+		Concentration1:  make([]decimal.Big, 0, len(stakeConcentrations)),
+		Concentration5:  make([]decimal.Big, 0, len(stakeConcentrations)),
+		Concentration10: make([]decimal.Big, 0, len(stakeConcentrations)),
+		Concentration20: make([]decimal.Big, 0, len(stakeConcentrations)),
+		Concentration60: make([]decimal.Big, 0, len(stakeConcentrations)),
 	}
 	for _, sc := range stakeConcentrations {
 		result.StockID = append(result.StockID, sc.StockID)
 		result.ExchangeDate = append(result.ExchangeDate, sc.Date)
 		result.SumBuyShares = append(result.SumBuyShares, int64(sc.SumBuyShares))
 		result.SumSellShares = append(result.SumSellShares, int64(sc.SumSellShares))
-		result.AvgBuyPrice = append(result.AvgBuyPrice, float64(sc.AvgBuyPrice))
-		result.AvgSellPrice = append(result.AvgSellPrice, float64(sc.AvgSellPrice))
-		result.Concentration1 = append(result.Concentration1, float64(sc.Concentration1))
-		result.Concentration5 = append(result.Concentration5, float64(sc.Concentration5))
-		result.Concentration10 = append(result.Concentration10, float64(sc.Concentration10))
-		result.Concentration20 = append(result.Concentration20, float64(sc.Concentration20))
-		result.Concentration60 = append(result.Concentration60, float64(sc.Concentration60))
+		result.AvgBuyPrice = append(result.AvgBuyPrice, helper.Float32ToDecimal(sc.AvgBuyPrice))
+		result.AvgSellPrice = append(result.AvgSellPrice, helper.Float32ToDecimal(sc.AvgSellPrice))
+		result.Concentration1 = append(
+			result.Concentration1,
+			helper.Float32ToDecimal(sc.Concentration1),
+		)
+		result.Concentration5 = append(
+			result.Concentration5,
+			helper.Float32ToDecimal(sc.Concentration5),
+		)
+		result.Concentration10 = append(
+			result.Concentration10,
+			helper.Float32ToDecimal(sc.Concentration10),
+		)
+		result.Concentration20 = append(
+			result.Concentration20,
+			helper.Float32ToDecimal(sc.Concentration20),
+		)
+		result.Concentration60 = append(
+			result.Concentration60,
+			helper.Float32ToDecimal(sc.Concentration60),
+		)
 	}
 
 	return result
 }
 
-func toDomainStakeConcentration(res *sqlcdb.StakeConcentration) *domain.StakeConcentration {
+func toDomainStakeConcentration(
+	res *sqlcdb.GetStakeConcentrationByStockIDRow,
+) *domain.StakeConcentration {
 	time := domain.Time{
-		CreatedAt: &res.CreatedAt.Time,
-		UpdatedAt: &res.UpdatedAt.Time,
+		CreatedAt: &res.CreatedAt,
+		UpdatedAt: &res.UpdatedAt,
 	}
 	if res.DeletedAt.Valid {
 		time.DeletedAt = &res.DeletedAt.Time
@@ -108,15 +127,15 @@ func toDomainStakeConcentration(res *sqlcdb.StakeConcentration) *domain.StakeCon
 		},
 		StockID:         res.StockID,
 		Date:            res.ExchangeDate,
-		SumBuyShares:    uint64(*res.SumBuyShares),
-		SumSellShares:   uint64(*res.SumSellShares),
-		AvgBuyPrice:     float32(res.AvgBuyPrice),
-		AvgSellPrice:    float32(res.AvgSellPrice),
-		Concentration1:  float32(res.Concentration1),
-		Concentration5:  float32(res.Concentration5),
-		Concentration10: float32(res.Concentration10),
-		Concentration20: float32(res.Concentration20),
-		Concentration60: float32(res.Concentration60),
+		SumBuyShares:    uint64(res.SumBuyShares.Int64),
+		SumSellShares:   uint64(res.SumSellShares.Int64),
+		AvgBuyPrice:     helper.DecimalToFloat32(res.AvgBuyPrice),
+		AvgSellPrice:    helper.DecimalToFloat32(res.AvgSellPrice),
+		Concentration1:  helper.DecimalToFloat32(res.Concentration1),
+		Concentration5:  helper.DecimalToFloat32(res.Concentration5),
+		Concentration10: helper.DecimalToFloat32(res.Concentration10),
+		Concentration20: helper.DecimalToFloat32(res.Concentration20),
+		Concentration60: helper.DecimalToFloat32(res.Concentration60),
 		Time:            time,
 	}
 }
@@ -136,7 +155,7 @@ func toDomainCalculationBase(
 ) *domain.CalculationBase {
 	return &domain.CalculationBase{
 		Date:        res.ExchangeDate,
-		TradeShares: uint64(*res.TradeShares),
+		TradeShares: uint64(res.TradeShares.Int64),
 		Diff:        int(res.Diff),
 	}
 }

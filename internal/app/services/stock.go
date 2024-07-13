@@ -55,6 +55,6 @@ func (s *serviceImpl) ListStock(
 	return objs, int64(len(objs)), nil
 }
 
-func (s *serviceImpl) ListCategories(ctx context.Context) (objs []*string, err error) {
+func (s *serviceImpl) ListCategories(ctx context.Context) (objs []string, err error) {
 	return s.dal.ListCategories(ctx)
 }

@@ -27,7 +27,7 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 	for _, stock := range res {
 		objs = append(objs, &domain.RealtimeList{
 			StockID: stock.StockID,
-			Market:  *stock.Market,
+			Market:  stock.Market.String,
 		})
 	}
 
@@ -39,7 +39,7 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 	for _, stock := range resPicked {
 		picked = append(picked, &domain.RealtimeList{
 			StockID: stock.StockID,
-			Market:  *stock.Market,
+			Market:  stock.Market.String,
 		})
 	}
 
@@ -51,7 +51,7 @@ func (repo *Repo) GetRealTimeMonitoringKeys(ctx context.Context) ([]string, erro
 	for _, stock := range resOrdered {
 		ordered = append(picked, &domain.RealtimeList{
 			StockID: stock.StockID,
-			Market:  *stock.Market,
+			Market:  stock.Market.String,
 		})
 	}
 
@@ -117,7 +117,7 @@ func (repo *Repo) GetHighestPrice(
 	}
 
 	for _, h := range highest {
-		highestPriceMap[h.StockID] = float32(h.High)
+		highestPriceMap[h.StockID] = helper.DecimalToFloat32(h.High)
 	}
 
 	return highestPriceMap, nil

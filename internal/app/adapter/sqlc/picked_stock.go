@@ -45,8 +45,8 @@ func (repo *Repo) ListPickedStocks(
 	result := make([]domain.PickedStock, 0, len(pickedStocks))
 	for _, pickedStock := range pickedStocks {
 		time := domain.Time{
-			CreatedAt: &pickedStock.CreatedAt.Time,
-			UpdatedAt: &pickedStock.UpdatedAt.Time,
+			CreatedAt: &pickedStock.CreatedAt,
+			UpdatedAt: &pickedStock.UpdatedAt,
 		}
 		if pickedStock.DeletedAt.Valid {
 			time.DeletedAt = &pickedStock.DeletedAt.Time

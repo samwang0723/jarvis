@@ -15,15 +15,42 @@ sql:
         emit_params_struct_pointers: true
         emit_enum_valid_method: true
         emit_all_enum_values: true
-        emit_pointers_for_null_types: true
         output_models_file_name: "entities.go"
         overrides:
+          - go_type: "github.com/ericlagergren/decimal.Big"
+            db_type: "pg_catalog.numeric"
+          - go_type: "github.com/ericlagergren/decimal.Big"
+            db_type: "money"
+          - go_type: "github.com/ericlagergren/decimal.Big"
+            db_type: "numeric"
           - go_type:
               import: "github.com/gofrs/uuid/v5"
               package: "uuid"
               type: "UUID"
             db_type: "uuid"
-          - db_type: "numeric"
-            go_type: "float64"
-          - db_type: "decimal"
-            go_type: "float64"
+          - go_type: "time.Time"
+            db_type: "pg_catalog.timestamp"
+          - go_type: "database/sql.NullTime"
+            db_type: "pg_catalog.timestamp"
+            nullable: true
+          - db_type: "text"
+            go_type: "database/sql.NullString"
+            nullable: true
+          - db_type: "pg_catalog.bool"
+            go_type: "database/sql.NullBool"
+            nullable: true
+          - db_type: "pg_catalog.float8"
+            go_type: "database/sql.NullFloat64"
+            nullable: true
+          - db_type: "pg_catalog.int4"
+            go_type: "database/sql.NullInt32"
+            nullable: true
+          - db_type: "pg_catalog.int8"
+            go_type: "database/sql.NullInt64"
+            nullable: true
+          - db_type: "pg_catalog.varchar"
+            go_type: "database/sql.NullString"
+            nullable: true
+          - db_type: "text"
+            go_type: "database/sql.NullString"
+            nullable: true

@@ -12,6 +12,7 @@ import (
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	esdb "github.com/samwang0723/jarvis/internal/eventsourcing/db"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 type balanceLoaderSaver struct {
@@ -57,9 +58,9 @@ func (bls *balanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 
 	if err := queries.UpsertBalanceView(ctx, &sqlcdb.UpsertBalanceViewParams{
 		ID:        balanceView.ID,
-		Balance:   float64(balanceView.Balance),
-		Available: float64(balanceView.Available),
-		Pending:   float64(balanceView.Pending),
+		Balance:   helper.Float32ToDecimal(balanceView.Balance),
+		Available: helper.Float32ToDecimal(balanceView.Available),
+		Pending:   helper.Float32ToDecimal(balanceView.Pending),
 		Version:   int32(balanceView.Version),
 	}); err != nil {
 		return fmt.Errorf("queries.UpsertBalanceView error: %w", err)
@@ -70,15 +71,15 @@ func (bls *balanceLoaderSaver) Save(ctx context.Context, aggregate eventsourcing
 
 func fromSqlcBalanceView(sqlcBalance *sqlcdb.GetBalanceViewRow) *domain.BalanceView {
 	return &domain.BalanceView{
-		CreatedAt: sqlcBalance.CreatedAt.Time,
-		UpdatedAt: sqlcBalance.UpdatedAt.Time,
+		CreatedAt: sqlcBalance.CreatedAt,
+		UpdatedAt: sqlcBalance.UpdatedAt,
 		BaseAggregate: eventsourcing.BaseAggregate{
 			ID:      sqlcBalance.ID,
 			Version: int(sqlcBalance.Version),
 		},
-		Balance:   float32(sqlcBalance.Balance),
-		Pending:   float32(sqlcBalance.Pending),
-		Available: float32(sqlcBalance.Available),
+		Balance:   helper.DecimalToFloat32(sqlcBalance.Balance),
+		Pending:   helper.DecimalToFloat32(sqlcBalance.Pending),
+		Available: helper.DecimalToFloat32(sqlcBalance.Available),
 	}
 }
 

@@ -1,5 +1,20 @@
 -- name: GetStakeConcentrationByStockID :one
-SELECT * 
+SELECT 
+  id,
+  stock_id, 
+  exchange_date, 
+  sum_buy_shares, 
+  sum_sell_shares, 
+  avg_buy_price, 
+  avg_sell_price, 
+  concentration_1::numeric, 
+  concentration_5::numeric, 
+  concentration_10::numeric, 
+  concentration_20::numeric, 
+  concentration_60::numeric,
+  created_at,
+  updated_at,
+  deleted_at
 FROM stake_concentration
 WHERE stock_id = $1 AND exchange_date = $2
 LIMIT 1;

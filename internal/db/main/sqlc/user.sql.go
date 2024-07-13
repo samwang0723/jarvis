@@ -7,9 +7,9 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
 
 	uuid "github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const CreateUser = `-- name: CreateUser :exec
@@ -183,8 +183,8 @@ UPDATE users SET session_id = $1, session_expired_at = $2 WHERE id = $3
 `
 
 type UpdateSessionIDParams struct {
-	SessionID        *string
-	SessionExpiredAt pgtype.Timestamp
+	SessionID        sql.NullString
+	SessionExpiredAt sql.NullTime
 	ID               uuid.UUID
 }
 

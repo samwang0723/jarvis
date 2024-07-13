@@ -8,6 +8,7 @@ package sqlcdb
 import (
 	"context"
 
+	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
 )
 
@@ -167,13 +168,13 @@ type UpsertOrderParams struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	StockID          string
-	BuyPrice         float64
+	BuyPrice         decimal.Big
 	BuyQuantity      int64
 	BuyExchangeDate  string
-	SellPrice        float64
+	SellPrice        decimal.Big
 	SellQuantity     int64
 	SellExchangeDate string
-	ProfitablePrice  float64
+	ProfitablePrice  decimal.Big
 	Status           string
 	Version          int32
 }

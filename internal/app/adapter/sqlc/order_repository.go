@@ -12,6 +12,7 @@ import (
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	esdb "github.com/samwang0723/jarvis/internal/eventsourcing/db"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 type orderLoaderSaver struct {
@@ -59,13 +60,13 @@ func (ols *orderLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.A
 		ID:               order.ID,
 		UserID:           order.UserID,
 		StockID:          order.StockID,
-		BuyPrice:         float64(order.BuyPrice),
+		BuyPrice:         helper.Float32ToDecimal(order.BuyPrice),
 		BuyQuantity:      int64(order.BuyQuantity),
 		BuyExchangeDate:  order.BuyExchangeDate,
-		SellPrice:        float64(order.SellPrice),
+		SellPrice:        helper.Float32ToDecimal(order.SellPrice),
 		SellQuantity:     int64(order.SellQuantity),
 		SellExchangeDate: order.SellExchangeDate,
-		ProfitablePrice:  float64(order.ProfitablePrice),
+		ProfitablePrice:  helper.Float32ToDecimal(order.ProfitablePrice),
 		Status:           order.Status,
 		Version:          int32(order.Version),
 	}); err != nil {
@@ -77,8 +78,8 @@ func (ols *orderLoaderSaver) Save(ctx context.Context, aggregate eventsourcing.A
 
 func fromSqlcOrderView(sqlcOrder *sqlcdb.Order) *domain.Order {
 	return &domain.Order{
-		CreatedAt: sqlcOrder.CreatedAt.Time,
-		UpdatedAt: sqlcOrder.UpdatedAt.Time,
+		CreatedAt: sqlcOrder.CreatedAt,
+		UpdatedAt: sqlcOrder.UpdatedAt,
 		BaseAggregate: eventsourcing.BaseAggregate{
 			ID:      sqlcOrder.ID,
 			Version: int(sqlcOrder.Version),
@@ -90,9 +91,9 @@ func fromSqlcOrderView(sqlcOrder *sqlcdb.Order) *domain.Order {
 		SellQuantity:     uint64(sqlcOrder.SellQuantity),
 		BuyQuantity:      uint64(sqlcOrder.BuyQuantity),
 		UserID:           sqlcOrder.UserID,
-		ProfitablePrice:  float32(sqlcOrder.ProfitablePrice),
-		SellPrice:        float32(sqlcOrder.SellPrice),
-		BuyPrice:         float32(sqlcOrder.BuyPrice),
+		ProfitablePrice:  helper.DecimalToFloat32(sqlcOrder.ProfitablePrice),
+		SellPrice:        helper.DecimalToFloat32(sqlcOrder.SellPrice),
+		BuyPrice:         helper.DecimalToFloat32(sqlcOrder.BuyPrice),
 	}
 }
 

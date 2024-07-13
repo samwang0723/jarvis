@@ -2,6 +2,7 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
@@ -28,8 +29,18 @@ func (repo *Repo) DeleteStockByID(
 	return repo.primary().DeleteStockByID(ctx, id)
 }
 
-func (repo *Repo) ListCategories(ctx context.Context) ([]*string, error) {
-	return repo.primary().ListCategories(ctx)
+func (repo *Repo) ListCategories(ctx context.Context) ([]string, error) {
+	res, err := repo.primary().ListCategories(ctx)
+	if err != nil {
+		return []string{}, err
+	}
+	categories := make([]string, len(res))
+	for _, v := range res {
+		if v.Valid {
+			categories = append(categories, v.String)
+		}
+	}
+	return categories, nil
 }
 
 func (repo *Repo) ListStocks(
@@ -78,8 +89,8 @@ func toSqlcCreateStockParams(stock *domain.Stock) *sqlcdb.CreateStockParams {
 		ID:       stock.ID,
 		Name:     stock.Name,
 		Country:  stock.Country,
-		Category: &stock.Category,
-		Market:   &stock.Market,
+		Category: sql.NullString{String: stock.Category, Valid: true},
+		Market:   sql.NullString{String: stock.Market, Valid: true},
 	}
 }
 
@@ -93,8 +104,8 @@ func fromSqlcStocks(stocks []*sqlcdb.Stock) []*domain.Stock {
 
 func fromSqlcStock(stock *sqlcdb.Stock) *domain.Stock {
 	time := domain.Time{
-		CreatedAt: &stock.CreatedAt.Time,
-		UpdatedAt: &stock.UpdatedAt.Time,
+		CreatedAt: &stock.CreatedAt,
+		UpdatedAt: &stock.UpdatedAt,
 	}
 	if stock.DeletedAt.Valid {
 		time.DeletedAt = &stock.DeletedAt.Time
@@ -103,8 +114,8 @@ func fromSqlcStock(stock *sqlcdb.Stock) *domain.Stock {
 		ID:       stock.ID,
 		Name:     stock.Name,
 		Country:  stock.Country,
-		Category: *stock.Category,
-		Market:   *stock.Market,
+		Category: stock.Category.String,
+		Market:   stock.Market.String,
 		Time:     time,
 	}
 }

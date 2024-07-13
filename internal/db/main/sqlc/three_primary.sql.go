@@ -7,6 +7,7 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
 )
 
 const BatchUpsertThreePrimary = `-- name: BatchUpsertThreePrimary :exec
@@ -60,10 +61,10 @@ INSERT INTO three_primary (
 type CreateThreePrimaryParams struct {
 	StockID            string
 	ExchangeDate       string
-	ForeignTradeShares *int64
-	TrustTradeShares   *int64
-	DealerTradeShares  *int64
-	HedgingTradeShares *int64
+	ForeignTradeShares sql.NullInt64
+	TrustTradeShares   sql.NullInt64
+	DealerTradeShares  sql.NullInt64
+	HedgingTradeShares sql.NullInt64
 }
 
 func (q *Queries) CreateThreePrimary(ctx context.Context, arg *CreateThreePrimaryParams) error {

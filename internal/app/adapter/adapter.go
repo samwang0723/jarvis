@@ -12,7 +12,7 @@ type Adapter interface {
 	BatchUpsertStocks(ctx context.Context, objs []*domain.Stock) error
 	CreateStock(ctx context.Context, obj *domain.Stock) error
 	DeleteStockByID(ctx context.Context, id string) error
-	ListCategories(ctx context.Context) ([]*string, error)
+	ListCategories(ctx context.Context) ([]string, error)
 	ListStocks(ctx context.Context, arg *domain.ListStocksParams) ([]*domain.Stock, error)
 	BatchUpsertThreePrimary(ctx context.Context, objs []*domain.ThreePrimary) error
 	CreateThreePrimary(ctx context.Context, arg *domain.ThreePrimary) error
@@ -114,7 +114,7 @@ func (a *Imp) DeleteStockByID(ctx context.Context, id string) error {
 	return a.repo.DeleteStockByID(ctx, id)
 }
 
-func (a *Imp) ListCategories(ctx context.Context) ([]*string, error) {
+func (a *Imp) ListCategories(ctx context.Context) ([]string, error) {
 	return a.repo.ListCategories(ctx)
 }
 

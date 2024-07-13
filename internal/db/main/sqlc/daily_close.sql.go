@@ -7,9 +7,11 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
+	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const BatchUpsertDailyClose = `-- name: BatchUpsertDailyClose :exec
@@ -44,11 +46,11 @@ type BatchUpsertDailyCloseParams struct {
 	TradeShares  []int64
 	Transactions []int64
 	Turnover     []int64
-	Open         []float64
-	Close        []float64
-	High         []float64
-	Low          []float64
-	PriceDiff    []float64
+	Open         []decimal.Big
+	Close        []decimal.Big
+	High         []decimal.Big
+	Low          []decimal.Big
+	PriceDiff    []decimal.Big
 }
 
 func (q *Queries) BatchUpsertDailyClose(ctx context.Context, arg *BatchUpsertDailyCloseParams) error {
@@ -78,14 +80,14 @@ INSERT INTO daily_closes (
 type CreateDailyCloseParams struct {
 	StockID      string
 	ExchangeDate string
-	TradeShares  *int64
-	Transactions *int64
-	Turnover     *int64
-	Open         float64
-	Close        float64
-	High         float64
-	Low          float64
-	PriceDiff    float64
+	TradeShares  sql.NullInt64
+	Transactions sql.NullInt64
+	Turnover     sql.NullInt64
+	Open         decimal.Big
+	Close        decimal.Big
+	High         decimal.Big
+	Low          decimal.Big
+	PriceDiff    decimal.Big
 }
 
 func (q *Queries) CreateDailyClose(ctx context.Context, arg *CreateDailyCloseParams) error {
@@ -144,17 +146,17 @@ type ListDailyCloseRow struct {
 	ID           uuid.UUID
 	StockID      string
 	ExchangeDate string
-	Transactions *int64
+	Transactions sql.NullInt64
 	TradeShares  float64
 	Turnover     float64
-	Open         float64
-	High         float64
-	Close        float64
-	Low          float64
-	PriceDiff    float64
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
-	DeletedAt    pgtype.Timestamp
+	Open         decimal.Big
+	High         decimal.Big
+	Close        decimal.Big
+	Low          decimal.Big
+	PriceDiff    decimal.Big
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    sql.NullTime
 }
 
 func (q *Queries) ListDailyClose(ctx context.Context, arg *ListDailyCloseParams) ([]*ListDailyCloseRow, error) {
@@ -222,7 +224,7 @@ WHERE
 
 type ListLatestPriceRow struct {
 	StockID      string
-	Close        float64
+	Close        decimal.Big
 	ExchangeDate string
 }
 

@@ -12,6 +12,7 @@ import (
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 	esdb "github.com/samwang0723/jarvis/internal/eventsourcing/db"
+	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 type transactionLoaderSaver struct {
@@ -63,7 +64,7 @@ func (ols *transactionLoaderSaver) Save(
 		UserID:       trans.UserID,
 		OrderID:      trans.OrderID,
 		OrderType:    trans.OrderType,
-		CreditAmount: float64(trans.CreditAmount),
+		CreditAmount: helper.Float32ToDecimal(trans.CreditAmount),
 		Status:       trans.Status,
 		Version:      int32(trans.Version),
 	}); err != nil {
@@ -75,8 +76,8 @@ func (ols *transactionLoaderSaver) Save(
 
 func fromSqlcTransaction(sqlcTrans *sqlcdb.Transaction) *domain.Transaction {
 	return &domain.Transaction{
-		CreatedAt: sqlcTrans.CreatedAt.Time,
-		UpdatedAt: sqlcTrans.UpdatedAt.Time,
+		CreatedAt: sqlcTrans.CreatedAt,
+		UpdatedAt: sqlcTrans.UpdatedAt,
 		BaseAggregate: eventsourcing.BaseAggregate{
 			ID:      sqlcTrans.ID,
 			Version: int(sqlcTrans.Version),
@@ -85,8 +86,8 @@ func fromSqlcTransaction(sqlcTrans *sqlcdb.Transaction) *domain.Transaction {
 		Status:       sqlcTrans.Status,
 		UserID:       sqlcTrans.UserID,
 		OrderID:      sqlcTrans.OrderID,
-		CreditAmount: float32(sqlcTrans.CreditAmount),
-		DebitAmount:  float32(sqlcTrans.DebitAmount),
+		CreditAmount: helper.DecimalToFloat32(sqlcTrans.CreditAmount),
+		DebitAmount:  helper.DecimalToFloat32(sqlcTrans.DebitAmount),
 	}
 }
 

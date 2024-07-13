@@ -7,6 +7,11 @@ package sqlcdb
 
 import (
 	"context"
+	"database/sql"
+	"time"
+
+	"github.com/ericlagergren/decimal"
+	uuid "github.com/gofrs/uuid/v5"
 )
 
 const BatchUpsertStakeConcentration = `-- name: BatchUpsertStakeConcentration :exec
@@ -52,13 +57,13 @@ type BatchUpsertStakeConcentrationParams struct {
 	ExchangeDate    []string
 	SumBuyShares    []int64
 	SumSellShares   []int64
-	AvgBuyPrice     []float64
-	AvgSellPrice    []float64
-	Concentration1  []float64
-	Concentration5  []float64
-	Concentration10 []float64
-	Concentration20 []float64
-	Concentration60 []float64
+	AvgBuyPrice     []decimal.Big
+	AvgSellPrice    []decimal.Big
+	Concentration1  []decimal.Big
+	Concentration5  []decimal.Big
+	Concentration10 []decimal.Big
+	Concentration20 []decimal.Big
+	Concentration60 []decimal.Big
 }
 
 func (q *Queries) BatchUpsertStakeConcentration(ctx context.Context, arg *BatchUpsertStakeConcentrationParams) error {
@@ -79,7 +84,22 @@ func (q *Queries) BatchUpsertStakeConcentration(ctx context.Context, arg *BatchU
 }
 
 const GetStakeConcentrationByStockID = `-- name: GetStakeConcentrationByStockID :one
-SELECT id, stock_id, exchange_date, sum_buy_shares, sum_sell_shares, avg_buy_price, avg_sell_price, concentration_1, concentration_5, concentration_10, concentration_20, concentration_60, created_at, updated_at, deleted_at 
+SELECT 
+  id,
+  stock_id, 
+  exchange_date, 
+  sum_buy_shares, 
+  sum_sell_shares, 
+  avg_buy_price, 
+  avg_sell_price, 
+  concentration_1::numeric, 
+  concentration_5::numeric, 
+  concentration_10::numeric, 
+  concentration_20::numeric, 
+  concentration_60::numeric,
+  created_at,
+  updated_at,
+  deleted_at
 FROM stake_concentration
 WHERE stock_id = $1 AND exchange_date = $2
 LIMIT 1
@@ -90,9 +110,27 @@ type GetStakeConcentrationByStockIDParams struct {
 	ExchangeDate string
 }
 
-func (q *Queries) GetStakeConcentrationByStockID(ctx context.Context, arg *GetStakeConcentrationByStockIDParams) (*StakeConcentration, error) {
+type GetStakeConcentrationByStockIDRow struct {
+	ID              uuid.UUID
+	StockID         string
+	ExchangeDate    string
+	SumBuyShares    sql.NullInt64
+	SumSellShares   sql.NullInt64
+	AvgBuyPrice     decimal.Big
+	AvgSellPrice    decimal.Big
+	Concentration1  decimal.Big
+	Concentration5  decimal.Big
+	Concentration10 decimal.Big
+	Concentration20 decimal.Big
+	Concentration60 decimal.Big
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       sql.NullTime
+}
+
+func (q *Queries) GetStakeConcentrationByStockID(ctx context.Context, arg *GetStakeConcentrationByStockIDParams) (*GetStakeConcentrationByStockIDRow, error) {
 	row := q.db.QueryRow(ctx, GetStakeConcentrationByStockID, arg.StockID, arg.ExchangeDate)
-	var i StakeConcentration
+	var i GetStakeConcentrationByStockIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.StockID,
@@ -143,7 +181,7 @@ type GetStakeConcentrationsWithVolumesParams struct {
 }
 
 type GetStakeConcentrationsWithVolumesRow struct {
-	TradeShares  *int64
+	TradeShares  sql.NullInt64
 	Diff         int32
 	ExchangeDate string
 }
