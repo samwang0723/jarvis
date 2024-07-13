@@ -29,7 +29,7 @@ func (er *EventRegistry) Register(event Event) {
 func (er *EventRegistry) Get(eventType EventType) (reflect.Type, error) {
 	typ, ok := er.events[eventType]
 	if !ok {
-		return nil, &EventNotRegisteredError{eventType: eventType}
+		return nil, &EventNotRegisteredError{event: eventType}
 	}
 
 	return typ, nil

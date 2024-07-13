@@ -14,7 +14,7 @@ TRIVY_VERSION=0.37.1
 GOLANG_LINTER_VERSION=1.59.1
 
 SHELL = /bin/bash
-SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/kafka)
+SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/kafka | grep -v /internal/cache/mock | grep -v /internal/db/main/sqlc | grep -v /database | grep -v /internal/cronjob/mocks )
 
 tool-version-check:
 	@( \

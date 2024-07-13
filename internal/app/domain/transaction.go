@@ -139,7 +139,7 @@ func NewTransaction(
 		return nil, err
 	}
 	// record uncommitted events
-	tran.AppendChange(event)
+	tran.AppendChanges(event)
 
 	return tran, nil
 }
@@ -158,7 +158,7 @@ func (tran *Transaction) Complete() error {
 		return err
 	}
 	// record uncommitted events
-	tran.AppendChange(event)
+	tran.AppendChanges(event)
 
 	return nil
 }
@@ -177,7 +177,7 @@ func (tran *Transaction) Fail() error {
 		return err
 	}
 	// record uncommitted events
-	tran.AppendChange(event)
+	tran.AppendChanges(event)
 
 	return nil
 }

@@ -85,7 +85,7 @@ func NewBalanceView(userID uuid.UUID, initBalance float32) (*BalanceView, error)
 		return nil, err
 	}
 	// record uncommitted events
-	bv.AppendChange(event)
+	bv.AppendChanges(event)
 
 	return bv, nil
 }
@@ -116,7 +116,7 @@ func (bv *BalanceView) MoveAvailableToPending(transaction *Transaction) error {
 		return err
 	}
 	// record uncommitted events
-	bv.AppendChange(event)
+	bv.AppendChanges(event)
 
 	return nil
 }
@@ -143,7 +143,7 @@ func (bv *BalanceView) MovePendingToAvailable(transaction *Transaction) error {
 		return err
 	}
 
-	bv.AppendChange(event)
+	bv.AppendChanges(event)
 
 	return nil
 }
@@ -170,7 +170,7 @@ func (bv *BalanceView) CreditPending(transaction *Transaction) error {
 		return err
 	}
 
-	bv.AppendChange(event)
+	bv.AppendChanges(event)
 
 	return nil
 }
@@ -197,7 +197,7 @@ func (bv *BalanceView) DebitPending(transaction *Transaction) error {
 		return err
 	}
 
-	bv.AppendChange(event)
+	bv.AppendChanges(event)
 
 	return nil
 }

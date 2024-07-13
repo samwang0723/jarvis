@@ -7,21 +7,21 @@ import (
 )
 
 type User struct {
-	ID
+	Time
+	SessionExpiredAt *time.Time
+	PhoneConfirmedAt *time.Time
+	EmailConfirmedAt *time.Time
 	FirstName        string
 	LastName         string
 	Email            string
 	Phone            string
 	Password         string
 	SessionID        string
-	SessionExpiredAt *time.Time
-	PhoneConfirmedAt *time.Time
-	EmailConfirmedAt *time.Time
-	Time
+	ID
 }
 
 type UpdateSessionIDParams struct {
-	SessionID        string
 	SessionExpiredAt time.Time
+	SessionID        string
 	ID               uuid.UUID
 }

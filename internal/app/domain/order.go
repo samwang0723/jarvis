@@ -53,12 +53,12 @@ type Order struct {
 }
 
 type ListOrdersParams struct {
-	UserID        uuid.UUID
-	Limit         int32
-	Offset        int32
-	StockIDs      []string
 	Status        string
 	ExchangeMonth string
+	StockIDs      []string
+	Limit         int32
+	Offset        int32
+	UserID        uuid.UUID
 }
 
 // ensure Transaction implements Aggregate interface
@@ -270,7 +270,7 @@ func NewOrder(
 		return nil, err
 	}
 	// record uncommitted events
-	order.AppendChange(event)
+	order.AppendChanges(event)
 
 	return order, nil
 }
@@ -301,7 +301,7 @@ func (order *Order) Change(
 		return err
 	}
 	// record uncommitted events
-	order.AppendChange(event)
+	order.AppendChanges(event)
 
 	// close order if all open positions are closed
 	if order.QuantityMatched() {
@@ -325,7 +325,7 @@ func (order *Order) Close() error {
 		return err
 	}
 	// record uncommitted events
-	order.AppendChange(event)
+	order.AppendChanges(event)
 
 	return nil
 }
