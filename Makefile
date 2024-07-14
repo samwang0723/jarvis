@@ -174,6 +174,12 @@ upgrade: ## upgrade all dependencies, dangerous!!
 	go get -t -u ./... && \
 	go mod tidy
 
+NEW_VERSION = "default"
+upgrade-go: ## upgrade go version(example: make upgrade-go NEW_VERSION="1.22.3")
+	sed -i '' "s/$(GO_VERSION)/$(NEW_VERSION)/" .go_version && \
+	go mod edit -go $(shell echo $(NEW_VERSION) | cut -d. -f1,2) && \
+	go mod tidy
+
 ##############
 #   build    #
 ##############
