@@ -31,7 +31,7 @@ SET
 UPDATE stocks SET deleted_at = NOW() WHERE id = $1;
 
 -- name: ListStocks :many
-SELECT id, name, country, site, category, market, created_at, updated_at, deleted_at FROM stocks
+SELECT id, name, country, category, market, created_at, updated_at, deleted_at FROM stocks
 WHERE
     (@country::VARCHAR = '' OR country = @country)
     AND (id = ANY(@stock_ids::text[]) OR NOT @filter_by_stock_id::bool)

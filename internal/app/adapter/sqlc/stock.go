@@ -2,7 +2,6 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
@@ -30,17 +29,7 @@ func (repo *Repo) DeleteStockByID(
 }
 
 func (repo *Repo) ListCategories(ctx context.Context) ([]string, error) {
-	res, err := repo.primary().ListCategories(ctx)
-	if err != nil {
-		return []string{}, err
-	}
-	var categories []string
-	for _, v := range res {
-		if v.Valid {
-			categories = append(categories, v.String)
-		}
-	}
-	return categories, nil
+	return repo.primary().ListCategories(ctx)
 }
 
 func (repo *Repo) ListStocks(
@@ -89,8 +78,8 @@ func toSqlcCreateStockParams(stock *domain.Stock) *sqlcdb.CreateStockParams {
 		ID:       stock.ID,
 		Name:     stock.Name,
 		Country:  stock.Country,
-		Category: sql.NullString{String: stock.Category, Valid: true},
-		Market:   sql.NullString{String: stock.Market, Valid: true},
+		Category: stock.Category,
+		Market:   stock.Market,
 	}
 }
 
@@ -114,8 +103,8 @@ func fromSqlcStock(stock *sqlcdb.Stock) *domain.Stock {
 		ID:       stock.ID,
 		Name:     stock.Name,
 		Country:  stock.Country,
-		Category: stock.Category.String,
-		Market:   stock.Market.String,
+		Category: stock.Category,
+		Market:   stock.Market,
 		Time:     time,
 	}
 }

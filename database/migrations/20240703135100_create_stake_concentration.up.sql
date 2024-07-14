@@ -20,8 +20,8 @@ CREATE TABLE stake_concentration (
 );
 
 -- Create indexes
-CREATE INDEX index_stake_concentration_exchange_date ON stake_concentration (exchange_date);
-CREATE INDEX index_stake_concentration_stock_id ON stake_concentration (stock_id);
+CREATE INDEX idx_stake_concentration_exchange_date ON stake_concentration (exchange_date);
+CREATE INDEX idx_stake_concentration_stock_id ON stake_concentration (stock_id);
 
 -- Create the trigger
 CREATE TRIGGER update_stake_concentration_updated_at BEFORE UPDATE ON stake_concentration

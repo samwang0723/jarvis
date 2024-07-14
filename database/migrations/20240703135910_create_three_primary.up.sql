@@ -15,12 +15,9 @@ CREATE TABLE three_primary (
 );
 
 -- Create indexes
-CREATE INDEX index_three_primary_foreign ON three_primary (foreign_trade_shares);
-CREATE INDEX index_three_primary_trust ON three_primary (trust_trade_shares);
-CREATE INDEX index_three_primary_dealer ON three_primary (dealer_trade_shares);
-CREATE INDEX index_three_primary_hedging ON three_primary (hedging_trade_shares);
-CREATE INDEX index_three_primary_exchange_date ON three_primary (exchange_date);
-CREATE INDEX index_three_primary_stock_id ON three_primary (stock_id);
+CREATE INDEX idx_three_primary_id_exchange_date_desc ON three_primary (id, exchange_date DESC);
+CREATE INDEX idx_three_primary_stock_date_desc_full ON three_primary
+(stock_id, exchange_date DESC, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares);
 
 -- Create the trigger
 CREATE TRIGGER update_three_primary_updated_at BEFORE UPDATE ON three_primary

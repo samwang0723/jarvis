@@ -105,9 +105,8 @@ type Stock struct {
 	ID        string
 	Name      string
 	Country   string
-	Site      sql.NullString
-	Category  sql.NullString
-	Market    sql.NullString
+	Category  string
+	Market    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt sql.NullTime

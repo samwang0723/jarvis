@@ -2,7 +2,7 @@ module github.com/samwang0723/jarvis
 
 go 1.22
 
-require golang.org/x/net v0.23.0 // indirect
+require golang.org/x/net v0.24.0 // indirect
 
 require (
 	github.com/bsm/redislock v0.7.2
@@ -50,7 +50,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/rs/cors v1.11.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.22.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240227224415-6ceb2ff114de
 )
 
@@ -92,7 +92,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.1.5 // indirect
+	github.com/opencontainers/runc v1.1.13 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
@@ -105,7 +105,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect

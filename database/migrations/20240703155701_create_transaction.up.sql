@@ -16,8 +16,8 @@ CREATE TABLE transactions (
 );
 
 -- Create an index on order_id
-CREATE INDEX index_transaction_order_id ON transactions(order_id);
-CREATE INDEX index_transaction_user_id ON transactions(user_id);
+CREATE INDEX idx_transaction_order_id ON transactions(order_id);
+CREATE INDEX idx_transaction_user_id ON transactions(user_id);
 
 -- Create a trigger to call the function before update
 CREATE TRIGGER update_transactions_updated_at

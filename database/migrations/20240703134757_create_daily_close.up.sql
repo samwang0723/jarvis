@@ -19,13 +19,11 @@ CREATE TABLE daily_closes (
 );
 
 -- Create indexes
-CREATE INDEX index_daily_closes_transactions ON daily_closes (trade_shares);
-CREATE INDEX index_daily_closes_close ON daily_closes (close);
-CREATE INDEX index_daily_closes_exchange_date ON daily_closes (exchange_date);
-CREATE INDEX index_daily_closes_stock_id ON daily_closes (stock_id);
-CREATE INDEX index_daily_closes_stock_id_exchange_date_desc ON daily_closes (stock_id, exchange_date DESC);
-CREATE INDEX index_daily_closes_covering ON daily_closes (stock_id, exchange_date, close);
-CREATE INDEX index_daily_closes_covering_high ON daily_closes (stock_id, exchange_date, high);
+create index idx_daily_closes_exchange_date on daily_closes (exchange_date);
+create index idx_daily_closes_stock_id on daily_closes (stock_id);
+create index idx_daily_closes_covering_high on daily_closes (stock_id, exchange_date, high);
+create index idx_daily_closes_stock_date_desc_full on daily_closes 
+(stock_id, exchange_date desc, close, trade_shares);
 
 -- Create the trigger
 CREATE TRIGGER update_daily_closes_updated_at BEFORE UPDATE ON daily_closes

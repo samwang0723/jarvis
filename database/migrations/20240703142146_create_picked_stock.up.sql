@@ -12,7 +12,7 @@ CREATE TABLE picked_stocks (
 );
 
 -- Create a partial unique index to enforce the constraint
-CREATE UNIQUE INDEX unique_active_picked_stock_per_user
+CREATE UNIQUE INDEX idx_unique_active_picked_stock_per_user
 ON picked_stocks (user_id, stock_id)
 WHERE deleted_at IS NULL;
 

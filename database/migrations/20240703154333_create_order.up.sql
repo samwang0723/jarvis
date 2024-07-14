@@ -20,8 +20,8 @@ CREATE TABLE orders (
 );
 
 -- Create indexes
-CREATE INDEX index_order_user_id ON orders(user_id);
-CREATE INDEX index_order_user_stock_id ON orders(user_id, stock_id);
+CREATE INDEX idx_order_user_id ON orders(user_id);
+CREATE INDEX idx_order_user_stock_id ON orders(user_id, stock_id);
 
 -- Create a trigger to call the function before update
 CREATE TRIGGER update_orders_updated_at
