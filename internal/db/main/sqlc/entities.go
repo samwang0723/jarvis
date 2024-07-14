@@ -10,7 +10,6 @@ import (
 
 	"github.com/ericlagergren/decimal"
 	uuid "github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type BalanceEvent struct {
@@ -92,11 +91,11 @@ type StakeConcentration struct {
 	SumSellShares   sql.NullInt64
 	AvgBuyPrice     decimal.Big
 	AvgSellPrice    decimal.Big
-	Concentration1  pgtype.Numeric
-	Concentration5  pgtype.Numeric
-	Concentration10 pgtype.Numeric
-	Concentration20 pgtype.Numeric
-	Concentration60 pgtype.Numeric
+	Concentration1  decimal.Big
+	Concentration5  decimal.Big
+	Concentration10 decimal.Big
+	Concentration20 decimal.Big
+	Concentration60 decimal.Big
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       sql.NullTime

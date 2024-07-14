@@ -112,7 +112,7 @@ func toSqlcBatchUpsertStakeConcentrationParams(
 }
 
 func toDomainStakeConcentration(
-	res *sqlcdb.GetStakeConcentrationByStockIDRow,
+	res *sqlcdb.StakeConcentration,
 ) *domain.StakeConcentration {
 	time := domain.Time{
 		CreatedAt: &res.CreatedAt,

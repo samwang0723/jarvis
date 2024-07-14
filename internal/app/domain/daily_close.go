@@ -3,6 +3,7 @@ package domain
 import (
 	"database/sql"
 	"reflect"
+	"time"
 
 	"github.com/ericlagergren/decimal"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -38,6 +39,7 @@ type ListDailyCloseParams struct {
 }
 
 func ConvertDailyCloseList(sel any) []*DailyClose {
+	helper.TrackElapsed(time.Now(), "mapToDailyCloseList")
 	var result []*DailyClose
 
 	slice := reflect.ValueOf(sel)
