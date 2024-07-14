@@ -21,8 +21,6 @@ sql:
             db_type: "pg_catalog.numeric"
           - go_type: "github.com/ericlagergren/decimal.Big"
             db_type: "money"
-          - go_type: "github.com/ericlagergren/decimal.Big"
-            db_type: "numeric"
           - go_type:
               import: "github.com/gofrs/uuid/v5"
               package: "uuid"
@@ -49,8 +47,5 @@ sql:
             go_type: "database/sql.NullInt64"
             nullable: true
           - db_type: "pg_catalog.varchar"
-            go_type: "database/sql.NullString"
-            nullable: true
-          - db_type: "text"
             go_type: "database/sql.NullString"
             nullable: true

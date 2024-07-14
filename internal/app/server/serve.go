@@ -92,6 +92,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		pginit.WithLogLevel(zerolog.WarnLevel),
 		pginit.WithLogger(logger, "request-id"),
 		pginit.WithUUIDType(),
+		pginit.WithDecimalType(),
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("could not init database")

@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/ericlagergren/decimal"
-	"github.com/mitchellh/mapstructure"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -48,22 +47,15 @@ func ConvertDailyCloseList(sel any) []*DailyClose {
 
 	for i := 0; i < slice.Len(); i++ {
 		s := slice.Index(i).Interface()
-		obj, err := mapToDailyClose(s)
-		if err != nil {
-			panic(err)
-		}
+		obj := mapToDailyClose(s)
 		result = append(result, obj)
 	}
 
 	return result
 }
 
-func mapToDailyClose(s any) (*DailyClose, error) {
+func mapToDailyClose(s any) *DailyClose {
 	var obj DailyClose
-	err := mapstructure.Decode(s, &obj)
-	if err != nil {
-		return nil, err
-	}
 
 	// Manually handle the conversion of specific fields
 	val := reflect.ValueOf(s).Elem()
@@ -72,5 +64,5 @@ func mapToDailyClose(s any) (*DailyClose, error) {
 	obj.Close = helper.DecimalToFloat32(val.FieldByName("Close").Interface().(decimal.Big))
 	obj.TradedShares = val.FieldByName("TradeShares").Interface().(sql.NullInt64).Int64
 
-	return &obj, nil
+	return &obj
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/rs/zerolog"
+	"github.com/samwang0723/jarvis/internal/db/pginit/ext/decimal/ericlagergren"
 )
 
 const (
@@ -182,6 +183,13 @@ func WithLogLevel(zLvl zerolog.Level) Option {
 func WithUUIDType() Option {
 	return func(pgi *PGInit) {
 		pgi.registerDataTypeFuncs = append(pgi.registerDataTypeFuncs, gofrs.Register)
+	}
+}
+
+// WithDecimalType set pgx decimal type to ericlagergren/decimal.
+func WithDecimalType() Option {
+	return func(pgi *PGInit) {
+		pgi.registerDataTypeFuncs = append(pgi.registerDataTypeFuncs, ericlagergren.Register)
 	}
 }
 

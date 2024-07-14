@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/ericlagergren/decimal"
-	"github.com/mitchellh/mapstructure"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -44,22 +43,15 @@ func ConvertSelectionList(sel any) []*Selection {
 
 	for i := 0; i < slice.Len(); i++ {
 		s := slice.Index(i).Interface()
-		obj, err := mapToSelection(s)
-		if err != nil {
-			panic(err)
-		}
+		obj := mapToSelection(s)
 		result = append(result, obj)
 	}
 
 	return result
 }
 
-func mapToSelection(s any) (*Selection, error) {
+func mapToSelection(s any) *Selection {
 	var obj Selection
-	err := mapstructure.Decode(s, &obj)
-	if err != nil {
-		return nil, err
-	}
 
 	// Manually handle the conversion of specific fields
 	val := reflect.ValueOf(s).Elem()
@@ -67,11 +59,6 @@ func mapToSelection(s any) (*Selection, error) {
 	obj.StockID = val.FieldByName("StockID").String()
 	obj.Category = val.FieldByName("Category").String()
 	obj.ExchangeDate = val.FieldByName("ExchangeDate").String()
-	obj.Open = float32(val.FieldByName("Open").Float())
-	obj.High = float32(val.FieldByName("High").Float())
-	obj.Low = float32(val.FieldByName("Low").Float())
-	obj.Close = float32(val.FieldByName("Close").Float())
-	obj.PriceDiff = float32(val.FieldByName("PriceDiff").Float())
 	obj.Volume = int(val.FieldByName("Volume").Float())
 	obj.Trust = int(val.FieldByName("Trust").Float())
 	obj.Foreign = int(val.FieldByName("Foreignc").Float())
@@ -79,6 +66,21 @@ func mapToSelection(s any) (*Selection, error) {
 	obj.Dealer = int(val.FieldByName("Dealer").Float())
 
 	// Handle decimal.Big fields
+	obj.Open = helper.DecimalToFloat32(
+		val.FieldByName("Open").Interface().(decimal.Big),
+	)
+	obj.High = helper.DecimalToFloat32(
+		val.FieldByName("High").Interface().(decimal.Big),
+	)
+	obj.Low = helper.DecimalToFloat32(
+		val.FieldByName("Low").Interface().(decimal.Big),
+	)
+	obj.Close = helper.DecimalToFloat32(
+		val.FieldByName("Close").Interface().(decimal.Big),
+	)
+	obj.PriceDiff = helper.DecimalToFloat32(
+		val.FieldByName("PriceDiff").Interface().(decimal.Big),
+	)
 	obj.Concentration1 = helper.DecimalToFloat32(
 		val.FieldByName("Concentration1").Interface().(decimal.Big),
 	)
@@ -95,5 +97,5 @@ func mapToSelection(s any) (*Selection, error) {
 		val.FieldByName("Concentration60").Interface().(decimal.Big),
 	)
 
-	return &obj, nil
+	return &obj
 }

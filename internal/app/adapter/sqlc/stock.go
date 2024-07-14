@@ -34,7 +34,7 @@ func (repo *Repo) ListCategories(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	categories := make([]string, len(res))
+	var categories []string
 	for _, v := range res {
 		if v.Valid {
 			categories = append(categories, v.String)
