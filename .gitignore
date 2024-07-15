@@ -42,9 +42,9 @@ vendor/
 logs/
 
 # Project customized files
-config.dev.yaml
-config.prod.yaml
 secrets.yaml
+recaptcha.html
+.env
 
 # Generated files
 coverage.txt
