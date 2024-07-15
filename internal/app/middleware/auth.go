@@ -26,7 +26,7 @@ func (c contextKey) String() string {
 var JwtClaimsKey = contextKey("jwtClaims")
 
 func parseToken(token string) (*jwt.RegisteredClaims, error) {
-	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(config.GetJwtSecret()))
+	verifier, err := jwt.NewVerifierHS(jwt.HS256, []byte(config.GetCurrentConfig().JwtSecret))
 	if err != nil {
 		return nil, err
 	}

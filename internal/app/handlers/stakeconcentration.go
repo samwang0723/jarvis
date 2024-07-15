@@ -25,7 +25,7 @@ func (h *handlerImpl) GetStakeConcentration(
 	ctx context.Context,
 	req *dto.GetStakeConcentrationRequest,
 ) (*domain.StakeConcentration, error) {
-	res, err := h.dataService.GetStakeConcentration(ctx, req)
+	res, err := h.dataService.WithUserID(ctx).GetStakeConcentration(ctx, req)
 	if err != nil {
 		return nil, err
 	}

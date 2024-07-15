@@ -12,6 +12,7 @@ SQLC_VERSION=v1.26.0
 GCI_VERSION=0.11.2
 TRIVY_VERSION=0.37.1
 GOLANG_LINTER_VERSION=1.59.1
+GO_VERSION=$(shell cat .go_version)
 
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/kafka | grep -v /internal/cache/mock | grep -v /internal/db/main/sqlc | grep -v /database | grep -v /internal/cronjob/mocks )
@@ -137,6 +138,9 @@ sqlc: ## gen sqlc code for your app
 # migrate #
 ###########
 
+migrate: ## migrate db to latest version
+	go run ./cmd/migrate
+
 db-pg-init-main: ## create users and passwords in postgres for your app
 	@( \
 	printf "Enter host for db(localhost): \n"; read -rs DB_HOST &&\
@@ -175,18 +179,14 @@ upgrade: ## upgrade all dependencies, dangerous!!
 	go mod tidy
 
 NEW_VERSION = "default"
-upgrade-go: ## upgrade go version(example: make upgrade-go NEW_VERSION="1.22.3")
+upgrade-go: ## upgrade go version(example: make upgrade-go NEW_VERSION="1.22.5")
 	sed -i '' "s/$(GO_VERSION)/$(NEW_VERSION)/" .go_version && \
 	go mod edit -go $(shell echo $(NEW_VERSION) | cut -d. -f1,2) && \
 	go mod tidy
 
-##############
-#   build    #
-##############
-
-build:
-	@echo "[go build] build executable binary for development"
-	@go build -o jarvis-api cmd/main.go
+#########
+# PROTO #
+#########
 
 # protoc -I third_party --openapiv2_out api --openapiv2_opt logtostderr=true --proto_path=internal/app/pb jarvis.v1.proto
 proto: ## generate proto files
@@ -206,45 +206,50 @@ proto: ## generate proto files
 	@protoc -I ./third_party -I ./internal/app/pb --openapiv2_out api --openapiv2_opt logtostderr=true jarvis.v1.proto
 
 
-docker-build: lint test docker-m1 ## build docker image in M1 device
+
+##############
+#   build    #
+##############
+build: lint test bench sec-scan docker-build ## lint, test, bench and sec scan before building the docker image
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
 
-docker-local:
-	@echo "[docker build] build local docker image on Mac M1"
-	@docker build \
-		-t samwang0723/$(APP_NAME):$(VERSION) \
+LAST_MAIN_COMMIT_HASH=$(shell git rev-parse --short HEAD)
+LAST_MAIN_COMMIT_TIME=$(shell git show --no-patch --format=%cd --date=iso-strict HEAD)
+RELEASE_TAG=$(shell git describe --abbrev=0 --tags)
+REPO_NAME=samwang0723
+
+docker-build: lint test docker-build-api ## build docker image in M1 device
+	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
+
+docker-build-api: TAG_NAME=$(REPO_NAME)/$(APP_NAME) ## docker build for api
+docker-build-api: COMPILATION_MAIN_FILES="./cmd/api/*.go"
+docker-build-api: GLOBAL_VAR_PKG="main"
+docker-build-api:
+	$(call docker-build-generic)
+
+# use a function instead of a target for docker-build-generic
+# since it's impossible for a target to be run twice in a make call
+define docker-build-generic
+	if [ -n "${PLATFORM}" ]; then \
+		PLATFORM_FLAG="--platform ${PLATFORM}"; \
+	fi; \
+	docker run --privileged --rm tonistiigi/binfmt --install all; \
+	DOCKER_BUILDKIT=1 \
+	docker buildx build \
+		-f build/docker/app/Dockerfile \
+		-t $(TAG_NAME) \
+		$$PLATFORM_FLAG \
+		--build-arg COMPILATION_MAIN_FILES=$(COMPILATION_MAIN_FILES) \
+		--build-arg GLOBAL_VAR_PKG=$(GLOBAL_VAR_PKG) \
 		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
 		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
-		--build-arg ENVIRONMENT=local \
-		-f build/docker/app/Dockerfile .
-	@docker push samwang0723/$(APP_NAME):$(VERSION)
-
-docker-m1:
-	@echo "[docker build] build local docker image on Mac M1"
-	@docker build \
-		-t samwang0723/$(APP_NAME):$(VERSION) \
-		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
-		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
-		--build-arg ENVIRONMENT=dev \
-		-f build/docker/app/Dockerfile .
-	@docker push samwang0723/$(APP_NAME):$(VERSION)
-
-docker-amd64-deps:
-	@echo "[docker buildx] install buildx dependency"
-	@docker buildx create --name m1-builder
-	@docker buildx use m1-builder
-	@docker buildx inspect --bootstrap
-
-docker-amd64:
-	@echo "[docker buildx] build amd64 version docker image for Ubuntu AWS EC2 instance"
-	@docker buildx use m1-builder
-	@docker buildx build \
-		--load --platform=linux/amd64 \
-		-t samwang0723/$(APP_NAME):$(VERSION) \
-		--build-arg LAST_MAIN_COMMIT_HASH=$(LAST_MAIN_COMMIT_HASH) \
-		--build-arg LAST_MAIN_COMMIT_TIME=$(LAST_MAIN_COMMIT_TIME) \
-		--build-arg ENVIRONMENT=prod \
-		-f build/docker/app/Dockerfile .
+		--build-arg RELEASE_TAG=$(RELEASE_TAG) \
+		--build-arg GO_VERSION=$(GO_VERSION) \
+		--ssh default \
+		--progress=plain \
+		--load \
+		./
+endef
 
 ##################
 # k8s Deployment #

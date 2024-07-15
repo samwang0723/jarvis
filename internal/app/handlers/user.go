@@ -16,15 +16,61 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/url"
 
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
+
+type RecaptchaResponse struct {
+	ChallengeTS string   `json:"challenge_ts"`
+	Hostname    string   `json:"hostname"`
+	ErrorCodes  []string `json:"error-codes"`
+	Success     bool     `json:"success"`
+}
+
+func verifyRecaptcha(token string) (bool, error) {
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify",
+		url.Values{"secret": {config.GetCurrentConfig().RecaptchaSecret}, "response": {token}})
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	var recaptchaResponse RecaptchaResponse
+	err = json.Unmarshal(body, &recaptchaResponse)
+	if err != nil {
+		return false, err
+	}
+
+	return recaptchaResponse.Success, nil
+}
 
 func (h *handlerImpl) CreateUser(
 	ctx context.Context,
 	req *dto.CreateUserRequest,
 ) (*dto.CreateUserResponse, error) {
+	// Verify reCAPTCHA
+	valid, err := verifyRecaptcha(req.Recaptcha)
+	if !valid || err != nil {
+		return &dto.CreateUserResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: "Invalid CAPTCHA",
+			Success:      false,
+		}, errors.New("invalid CAPTCHA")
+	}
+
 	user := &domain.User{
 		Email:     req.Email,
 		Phone:     req.Phone,
@@ -33,7 +79,17 @@ func (h *handlerImpl) CreateUser(
 		Password:  req.Password,
 	}
 
-	err := h.dataService.CreateUser(ctx, user)
+	err = user.Validate()
+	if err != nil {
+		return &dto.CreateUserResponse{
+			Status:       dto.StatusError,
+			ErrorCode:    "",
+			ErrorMessage: err.Error(),
+			Success:      false,
+		}, err
+	}
+
+	err = h.dataService.CreateUser(ctx, user)
 	if err != nil {
 		return &dto.CreateUserResponse{
 			Status:       dto.StatusError,

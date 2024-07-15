@@ -15,6 +15,7 @@ import (
 func main() {
 	config.Load()
 	cfg := config.GetCurrentConfig()
+	zerolog.TimestampFieldName = "t"
 	logger := zerolog.New(os.Stdout).With().Str("app", cfg.Server.Name).Timestamp().Logger()
 
 	// Set the global log level based on the environment variable

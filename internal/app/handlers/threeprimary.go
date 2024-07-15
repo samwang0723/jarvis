@@ -23,7 +23,7 @@ func (h *handlerImpl) ListThreePrimary(
 	ctx context.Context,
 	req *dto.ListThreePrimaryRequest,
 ) (*dto.ListThreePrimaryResponse, error) {
-	entries, totalCount, err := h.dataService.ListThreePrimary(ctx, req)
+	entries, totalCount, err := h.dataService.WithUserID(ctx).ListThreePrimary(ctx, req)
 	if err != nil {
 		return nil, err
 	}

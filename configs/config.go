@@ -28,6 +28,7 @@ const (
 	RedisPassword = "REDIS_PASSWD"
 	SmartProxy    = "SMART_PROXY"
 	JwtSecret     = "JWT_SECRET"
+	Recaptcha     = "RECAPTCHA_SECRET"
 	EnvCoreKey    = "ENVIRONMENT"
 	EnvLocal      = "local"
 	EnvDev        = "dev"
@@ -36,19 +37,21 @@ const (
 )
 
 type Config struct {
+	Log struct {
+		Level string `yaml:"level"`
+	} `yaml:"log"`
+	JwtSecret       string
+	RecaptchaSecret string
+	Kafka           struct {
+		GroupID string   `yaml:"groupId"`
+		Brokers []string `yaml:"brokers"`
+		Topics  []string `yaml:"topics"`
+	} `yaml:"kafka"`
 	RedisCache struct {
 		Master        string   `yaml:"master"`
 		Password      string   `yaml:"password"`
 		SentinelAddrs []string `yaml:"sentinelAddrs"`
 	} `yaml:"redis"`
-	Log struct {
-		Level string `yaml:"level"`
-	} `yaml:"log"`
-	Kafka struct {
-		GroupID string   `yaml:"groupId"`
-		Brokers []string `yaml:"brokers"`
-		Topics  []string `yaml:"topics"`
-	} `yaml:"kafka"`
 	Server struct {
 		Name     string `yaml:"name"`
 		Host     string `yaml:"host"`
@@ -85,12 +88,14 @@ type Config struct {
 
 //nolint:nolintlint, gochecknoglobals
 var (
-	instance  Config
-	env       string
-	dbuser    string
-	dbpasswd  string
-	jwtsecret string
-	envOnce   sync.Once
+	instance        Config
+	env             string
+	dbuser          string
+	dbpasswd        string
+	jwtsecretLocal  string
+	recaptchaSecret string
+	migrationDown   bool
+	envOnce         sync.Once
 )
 
 func GetCurrentEnv() string {
@@ -99,8 +104,10 @@ func GetCurrentEnv() string {
 		if env == "" {
 			flag.StringVar(&inputEnv, "env", "local", "environment you want start the server")
 			flag.StringVar(&dbuser, "dbuser", "", "database username")
-			flag.StringVar(&jwtsecret, "jwtsecret", "", "jwt secret key")
+			flag.StringVar(&jwtsecretLocal, "jwtsecret", "", "jwt secret key")
 			flag.StringVar(&dbpasswd, "dbpasswd", "", "database password")
+			flag.BoolVar(&migrationDown, "down", false, "migrate down")
+			flag.StringVar(&recaptchaSecret, "recaptcha", "", "reCaptcha secret")
 
 			flag.Parse()
 		}
@@ -119,8 +126,8 @@ func GetCurrentEnv() string {
 	return env
 }
 
-func GetJwtSecret() string {
-	return jwtsecret
+func IsMigrationDown() bool {
+	return migrationDown
 }
 
 func Load() {
@@ -158,6 +165,18 @@ func Load() {
 
 	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
+	}
+
+	if jwtsecret := os.Getenv(JwtSecret); jwtsecret != "" {
+		instance.JwtSecret = jwtsecret
+	} else {
+		instance.JwtSecret = jwtsecretLocal
+	}
+
+	if recaptcha := os.Getenv(Recaptcha); recaptcha != "" {
+		instance.RecaptchaSecret = recaptcha
+	} else {
+		instance.RecaptchaSecret = recaptchaSecret
 	}
 }
 

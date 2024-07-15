@@ -1,78 +1,72 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.22-alpine AS build_base
+ARG GO_VERSION=1.22.5
+
+###########
+# MODULES #
+###########
+
+FROM --platform=${BUILDPLATFORM} public.ecr.aws/docker/library/golang:${GO_VERSION}-alpine AS modules
+
+WORKDIR /src
+
+COPY ./go.mod ./go.sum ./
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+RUN go mod download
+
+###########
+# BUILDER #
+###########
+
+FROM --platform=${BUILDPLATFORM} public.ecr.aws/docker/library/golang:${GO_VERSION}-alpine AS builder
+
+COPY --from=modules /go/pkg /go/pkg
+
+RUN adduser -D -u 10001 nonroot
+
+WORKDIR /src
+
+COPY ./ ./
 
 # Add Maintainer Info
 LABEL maintainer="Sam Wang <sam.wang.0723@gmail.com>"
 
-# Accept build-time argument for environment
-ARG ENVIRONMENT=dev
+ARG COMPILATION_MAIN_FILES
+ARG GLOBAL_VAR_PKG
 
-# Set environment variable
-ENV ENVIRONMENT=${ENVIRONMENT}
+ARG TARGETOS
+ARG TARGETARCH
 
-RUN apk add --no-cache git
+ARG LAST_MAIN_COMMIT_HASH
+ARG LAST_MAIN_COMMIT_TIME
+ARG RELEASE_TAG
 
-# Conditionally execute commands based on the environment
-RUN if [ "$ENVIRONMENT" = "prod" ]; then \
-  echo "Installing production-specific certification and tzdata"; \
-  RUN apk update && apk add ca-certificates && apk add tzdata \
-fi
+ENV FLAG="-X ${GLOBAL_VAR_PKG}.CommitTime=${LAST_MAIN_COMMIT_TIME}"
+ENV FLAG="$FLAG -X ${GLOBAL_VAR_PKG}.CommitHash=${LAST_MAIN_COMMIT_HASH}"
+ENV FLAG="$FLAG -X ${GLOBAL_VAR_PKG}.ReleaseTag=${RELEASE_TAG}"
 
-# Set the Current Working Directory inside the container
-WORKDIR /app
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
+    -installsuffix 'static' \
+    -ldflags "-s -w $FLAG" \
+    -buildvcs=true \
+    -o /app ${COMPILATION_MAIN_FILES}
 
-# We want to populate the module cache based on the go.{mod,sum} files.
-COPY go.mod .
-COPY go.sum .
+#########
+# FINAL #
+#########
 
-RUN go mod download
+FROM scratch AS final
 
-# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
-COPY . .
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=modules /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=modules /usr/share/zoneinfo /usr/share/zoneinfo
 
-# Unit tests
-RUN CGO_ENABLED=0 go test -v -tags all_tests -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v /third_party/)
+COPY ./configs /configs
 
-# Build the Go app
-RUN go build -o /jarvis-api cmd/main.go
+COPY --from=builder /app /app
 
-# Start fresh from a smaller image
-FROM scratch
-
-WORKDIR /
-
-# Set environment variable
-ENV ENVIRONMENT=${ENVIRONMENT}
-
-# Conditionally execute commands based on the environment
-RUN if [ "$ENVIRONMENT" = "prod" ]; then \
-  echo "Copy production-specific certification and tzdata"; \
-  COPY --from=build_base /usr/share/zoneinfo /usr/share/zoneinfo \
-  COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ \
-fi
-
-COPY --from=build_base /app/configs/config.${ENVIRONMENT}.yaml /configs/config.${ENVIRONMENT}.yaml
-COPY --from=build_base /jarvis-api /jarvis-api
-
-# This container exposes ports to the outside world
-EXPOSE 8080 8081 80 443 22 3306 6379
-
-#USER nonroot:nonroot
-#RUN chmod +x /jarvis-api
 ENV TZ=Asia/Taipei
 
-# Run the binary program
-ENTRYPOINT [ "/jarvis-api" ]
+USER nonroot
 
-###############
-# development #
-###############
-
-# docker build -t samwang0723/jarvis-api:m1 --build-arg ENVIRONMENT=local -f Dockerfile.local .
-# docker run -p 8080-8081:8080-8081 --name jarvis-api-container --env-file=./.env samwang0723/jarvis-api:m1
-
-###############
-# production  #
-###############
-
-# docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest --build-arg ENVIRONMENT=prod -f Dockerfile .
+CMD ["/app"]

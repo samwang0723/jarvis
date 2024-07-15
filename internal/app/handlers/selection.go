@@ -29,7 +29,7 @@ func (h *handlerImpl) ListSelections(
 	ctx context.Context,
 	req *dto.ListSelectionRequest,
 ) (*dto.ListSelectionResponse, error) {
-	entries, err := h.dataService.ListSelections(ctx, req)
+	entries, err := h.dataService.WithUserID(ctx).ListSelections(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,10 @@ func (h *handlerImpl) ListSelections(
 	}, nil
 }
 
-func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(ctx context.Context, schedule string) error {
+func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(
+	ctx context.Context,
+	schedule string,
+) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
 		err := h.dataService.CronjobPresetRealtimeMonitoringKeys(ctx)
 		if err != nil {

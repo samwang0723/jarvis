@@ -556,6 +556,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }
@@ -675,6 +676,9 @@
           "type": "string"
         },
         "password": {
+          "type": "string"
+        },
+        "recaptcha": {
           "type": "string"
         }
       }
@@ -874,6 +878,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1DailyClose"
           }
         }
@@ -927,6 +932,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Order"
           }
         }
@@ -955,6 +961,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Selection"
           }
         }
@@ -977,6 +984,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Selection"
           }
         }
@@ -1016,6 +1024,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Stock"
           }
         }
@@ -1075,6 +1084,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1ThreePrimary"
           }
         }
@@ -1112,6 +1122,7 @@
         "entries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1User"
           }
         }

@@ -587,6 +587,7 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 	pbFirstName := in.FirstName
 	pbLastName := in.LastName
 	pbPassword := in.Password
+	pbRecaptcha := in.Recaptcha
 
 	return &CreateUserRequest{
 		Email:     pbEmail,
@@ -594,6 +595,7 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 		FirstName: pbFirstName,
 		LastName:  pbLastName,
 		Password:  pbPassword,
+		Recaptcha: pbRecaptcha,
 	}
 }
 

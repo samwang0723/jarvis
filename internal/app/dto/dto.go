@@ -164,6 +164,7 @@ type CreateUserRequest struct {
 	LastName  string `json:"lastName"`
 	Phone     string `json:"phone"`
 	Password  string `json:"password"`
+	Recaptcha string `json:"recaptcha"`
 }
 
 type CreateUserResponse struct {

@@ -77,7 +77,7 @@ func New(dataService services.IService, logger *zerolog.Logger) IHandler {
 	res := &handlerImpl{
 		dataService: dataService,
 		logger:      logger,
-		jwtSecret:   []byte(config.GetJwtSecret()),
+		jwtSecret:   []byte(config.GetCurrentConfig().JwtSecret),
 	}
 
 	return res
