@@ -4,7 +4,6 @@ import (
 	"flag"
 	"math"
 	"os"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -254,8 +253,8 @@ func TestKeys(t *testing.T) {
 
 	for _, test := range tests {
 		result := helper.Keys(test.input)
-		if !reflect.DeepEqual(result, test.expected) {
-			t.Errorf("Keys(%v) = %v; want %v", test.input, result, test.expected)
+		if !cmp.Equal(result, test.expected) {
+			t.Errorf("Query diff = %v", cmp.Diff(test.input, test.expected))
 		}
 	}
 }
