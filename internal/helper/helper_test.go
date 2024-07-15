@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ericlagergren/decimal"
+	"github.com/google/go-cmp/cmp"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"go.uber.org/goleak"
 )
@@ -285,8 +286,8 @@ func TestSliceToMap(t *testing.T) {
 
 	for _, test := range tests {
 		result := helper.SliceToMap(test.input, test.fn)
-		if !reflect.DeepEqual(result, test.expected) {
-			t.Errorf("SliceToMap(%v, fn) = %v; want %v", test.input, result, test.expected)
+		if !cmp.Equal(result, test.expected) {
+			t.Errorf("Query diff = %v", cmp.Diff(test.input, test.expected))
 		}
 	}
 }
