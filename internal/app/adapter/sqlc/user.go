@@ -109,6 +109,10 @@ func toDomainUserList(rows []*sqlcdb.User) []*domain.User {
 }
 
 func toDomainUser(row *sqlcdb.User) *domain.User {
+	sessionID := ""
+	if row.SessionID.Valid {
+		sessionID = row.SessionID.String
+	}
 	return &domain.User{
 		ID:               domain.ID{ID: row.ID},
 		FirstName:        row.FirstName,
@@ -116,6 +120,7 @@ func toDomainUser(row *sqlcdb.User) *domain.User {
 		Email:            row.Email,
 		Phone:            row.Phone,
 		Password:         row.Password,
+		SessionID:        sessionID,
 		SessionExpiredAt: &row.SessionExpiredAt.Time,
 		PhoneConfirmedAt: &row.PhoneConfirmedAt.Time,
 		EmailConfirmedAt: &row.EmailConfirmedAt.Time,

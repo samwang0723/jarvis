@@ -160,13 +160,13 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	gRPCServer := grpc.NewServer(
 		grpc.ChainStreamInterceptor(
 			selector.StreamServerInterceptor(
-				auth.StreamServerInterceptor(middleware.Authenticate),
+				auth.StreamServerInterceptor(middleware.Authenticate(dataService)),
 				selector.MatchFunc(middleware.AuthRoutes),
 			),
 		),
 		grpc.ChainUnaryInterceptor(
 			selector.UnaryServerInterceptor(
-				auth.UnaryServerInterceptor(middleware.Authenticate),
+				auth.UnaryServerInterceptor(middleware.Authenticate(dataService)),
 				selector.MatchFunc(middleware.AuthRoutes),
 			),
 		),

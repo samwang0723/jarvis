@@ -68,7 +68,6 @@ type IService interface {
 		ctx context.Context,
 		req *dto.ListUsersRequest,
 	) (objs []*domain.User, totalCount int64, err error)
-	GetUser(ctx context.Context) (obj *domain.User, err error)
 	CreateUser(ctx context.Context, obj *domain.User) (err error)
 	UpdateUser(ctx context.Context, obj *domain.User) (err error)
 	Login(ctx context.Context, email, password string) (obj *domain.User, err error)
@@ -76,6 +75,7 @@ type IService interface {
 	DeleteUser(ctx context.Context) (err error)
 	GetUserByEmail(ctx context.Context, email string) (obj *domain.User, err error)
 	GetUserByPhone(ctx context.Context, phone string) (obj *domain.User, err error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (obj *domain.User, err error)
 	GetBalance(ctx context.Context) (obj *domain.BalanceView, err error)
 	CreateTransaction(
 		ctx context.Context,

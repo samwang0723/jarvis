@@ -43,8 +43,6 @@ logs/
 
 # Project customized files
 secrets.yaml
-recaptcha.html
-.env
 
 # Generated files
 coverage.txt

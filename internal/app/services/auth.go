@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/cristalhq/jwt/v5"
 	"github.com/gofrs/uuid/v5"
+	config "github.com/samwang0723/jarvis/configs"
 	"github.com/samwang0723/jarvis/internal/app/domain"
-	"github.com/samwang0723/jarvis/internal/app/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,11 +29,15 @@ func (s *serviceImpl) Login(
 	}
 
 	// generate session_id
+	newSessionID := uuid.Must(uuid.NewV4())
+	newExpiredAt := time.Now().AddDate(0, 0, sessionExpiredDays)
 	err = s.dal.UpdateSessionID(ctx, &domain.UpdateSessionIDParams{
 		ID:               obj.ID.ID,
-		SessionID:        uuid.Must(uuid.NewV4()).String(),
-		SessionExpiredAt: time.Now().AddDate(0, 0, sessionExpiredDays),
+		SessionID:        newSessionID.String(),
+		SessionExpiredAt: newExpiredAt,
 	})
+	obj.SessionID = newSessionID.String()
+	obj.SessionExpiredAt = &newExpiredAt
 	if err != nil {
 		return nil, err
 	}
@@ -43,24 +46,12 @@ func (s *serviceImpl) Login(
 }
 
 func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uuid.UUID, err error) {
-	// get user_id from context
-	claims, ok := ctx.Value(middleware.JwtClaimsKey).(jwt.RegisteredClaims)
+	user, ok := ctx.Value(config.JwtClaimsKey).(*domain.User)
 	if !ok {
-		return uuid.Nil, errInvalidJWTToken
+		return uuid.Nil, errUserNotFound
 	}
 
-	sessionID := claims.ID
-	userID, err = uuid.FromString(claims.Subject)
-	if err != nil {
-		return uuid.Nil, err
-	}
-
-	user, err := s.dal.GetUserByID(ctx, userID)
-	if err != nil || user.SessionID != sessionID {
-		return uuid.Nil, err
-	}
-
-	return userID, nil
+	return user.ID.ID, nil
 }
 
 func (s *serviceImpl) Logout(ctx context.Context) error {

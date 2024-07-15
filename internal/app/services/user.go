@@ -16,28 +16,21 @@ package services
 
 import (
 	"context"
-	"errors"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	errUserNotFound         = errors.New("user not found")
-	errUserPasswordNotMatch = errors.New("user password not match")
-)
-
-func (s *serviceImpl) GetUser(ctx context.Context) (obj *domain.User, err error) {
-	obj, err = s.dal.GetUserByID(ctx, s.currentUserID)
+func (s *serviceImpl) GetUserByID(ctx context.Context, id uuid.UUID) (obj *domain.User, err error) {
+	obj, err = s.dal.GetUserByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-
 	if obj == nil {
 		return nil, errUserNotFound
 	}
-
 	return obj, nil
 }
 

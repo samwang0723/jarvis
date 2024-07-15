@@ -36,6 +36,15 @@ const (
 	EnvProd       = "prod"
 )
 
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
+//nolint:gochecknoglobals // for jwt secret encryption/decryption
+var JwtClaimsKey = contextKey("jwtClaims")
+
 type Config struct {
 	Log struct {
 		Level string `yaml:"level"`
