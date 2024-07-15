@@ -31,6 +31,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 )
 
+//go:generate mockgen -source=services.go -destination=mocks/services.go -package=services
 type IService interface {
 	BatchUpsertDailyClose(ctx context.Context, objs *[]any) error
 	ListDailyClose(

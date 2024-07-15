@@ -3,7 +3,6 @@ package domain
 import (
 	"database/sql"
 	"reflect"
-	"time"
 
 	"github.com/ericlagergren/decimal"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -35,7 +34,6 @@ type Selection struct {
 }
 
 func ConvertSelectionList(sel any) []*Selection {
-	helper.TrackElapsed(time.Now(), "mapToSelectionList")
 	var result []*Selection
 
 	slice := reflect.ValueOf(sel)

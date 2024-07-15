@@ -5,7 +5,6 @@ import (
 	"math"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -50,8 +49,6 @@ func (s *serviceImpl) executeAnalysisEngine(
 }
 
 func mapWithIDs(objs []*domain.Selection) (map[string]*domain.Selection, []string) {
-	defer helper.TrackElapsed(time.Now(), "mapWithIDs")
-
 	selectionMap := make(map[string]*domain.Selection)
 	stockIDs := make([]string, len(objs))
 	for idx, obj := range objs {
@@ -67,8 +64,6 @@ func (s *serviceImpl) aggregateStockStat(
 	objs []*domain.Selection,
 	opts ...string,
 ) ([]*domain.DailyClose, []*domain.ThreePrimary, map[string]float32, error) {
-	defer helper.TrackElapsed(time.Now(), "aggregateStockStat")
-
 	var wg sync.WaitGroup
 	wg.Add(3)
 
@@ -79,7 +74,6 @@ func (s *serviceImpl) aggregateStockStat(
 	errChan := make(chan error, 3)
 
 	go func() {
-		defer helper.TrackElapsed(time.Now(), " ->> RetrieveDailyCloseHistory")
 		defer wg.Done()
 		var err error
 		pList, err = s.dal.RetrieveDailyCloseHistory(ctx, stockIDs, opts...)
@@ -89,7 +83,6 @@ func (s *serviceImpl) aggregateStockStat(
 	}()
 
 	go func() {
-		defer helper.TrackElapsed(time.Now(), " ->> RetrieveThreePrimaryHistory")
 		defer wg.Done()
 		var err error
 		tList, err = s.dal.RetrieveThreePrimaryHistory(ctx, stockIDs, opts...)
@@ -99,7 +92,6 @@ func (s *serviceImpl) aggregateStockStat(
 	}()
 
 	go func() {
-		defer helper.TrackElapsed(time.Now(), " ->> GetHighestPrice")
 		defer wg.Done()
 		if len(objs) > 0 {
 			var err error
@@ -134,8 +126,6 @@ func mapMAToConcentration(
 	size int,
 	opts ...string,
 ) map[string]*domain.Analysis {
-	defer helper.TrackElapsed(time.Now(), "mapMAToConcentration")
-
 	analysisMap := make(map[string]*domain.Analysis, size)
 	currentIdx := 0
 	currentPriceSum := float32(0)
@@ -210,8 +200,6 @@ func filterByCoreLogic(
 	strict bool,
 	opts ...string,
 ) []*domain.Selection {
-	defer helper.TrackElapsed(time.Now(), "filterByCoreLogic")
-
 	output := []*domain.Selection{}
 
 	for k, v := range analysisMap {

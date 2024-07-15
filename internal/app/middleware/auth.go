@@ -68,12 +68,12 @@ func Authenticate(service services.IService) func(ctx context.Context) (context.
 		sessionID := tokenInfo.ID
 		userID, err := uuid.FromString(tokenInfo.Subject)
 		if err != nil {
-			return ctx, status.Errorf(codes.Unauthenticated, "Invalid auth token: %v", err)
+			return nil, status.Errorf(codes.Unauthenticated, "Invalid auth token: %v", err)
 		}
 
 		user, err := service.GetUserByID(ctx, userID)
 		if err != nil || user.SessionID != sessionID {
-			return ctx, status.Error(
+			return nil, status.Error(
 				codes.Unauthenticated,
 				"Invalid auth token: session_id invalid",
 			)

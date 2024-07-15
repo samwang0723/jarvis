@@ -16,7 +16,6 @@ package helper
 import (
 	"fmt"
 	"math"
-	"reflect"
 	"strconv"
 	"time"
 	"unsafe"
@@ -36,24 +35,8 @@ func Bytes2String(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// Convert a slice or array of a specific type to array of interface{}
-func CastInterfaceSlice(s any) *[]any {
-	v := reflect.ValueOf(s)
-	// There is no need to check, we want to panic if it's not slice or array
-	intf := make([]any, v.Len())
-	for i := 0; i < v.Len(); i++ {
-		intf[i] = v.Index(i).Interface()
-	}
-
-	return &intf
-}
-
 func RoundDecimal(x float32) float32 {
 	return float32(math.Round(float64(x)))
-}
-
-func RoundUpDecimalTwo(x float32) float32 {
-	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
 }
 
 func RoundDecimalTwo(x float32) float32 {
