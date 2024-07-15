@@ -32,19 +32,15 @@ func ListDailyCloseRequestFromPB(in *pb.ListDailyCloseRequest) *ListDailyCloseRe
 	out := &ListDailyCloseRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListDailyCloseSearchParamsFromPB(in.SearchParams),
+		SearchParams: listDailyCloseSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListDailyCloseSearchParamsFromPB(
+func listDailyCloseSearchParamsFromPB(
 	in *pb.ListDailyCloseSearchParams,
 ) *ListDailyCloseSearchParams {
-	if in == nil {
-		return nil
-	}
-
 	out := &ListDailyCloseSearchParams{
 		Start:   in.Start,
 		StockID: in.StockID,
@@ -65,13 +61,13 @@ func ListStockRequestFromPB(in *pb.ListStockRequest) *ListStockRequest {
 	out := &ListStockRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListStockSearchParamsFromPB(in.SearchParams),
+		SearchParams: listStockSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchParams {
+func listStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchParams {
 	if in == nil {
 		return nil
 	}

@@ -23,6 +23,10 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func ptrToString(s string) *string {
+	return &s
+}
+
 func TestListDailyCloseRequestFromPB(t *testing.T) {
 	t.Parallel()
 
@@ -77,6 +81,50 @@ func TestListDailyCloseRequestFromPB(t *testing.T) {
 			t.Parallel()
 
 			got := dto.ListDailyCloseRequestFromPB(tt.args.in)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestListStockRequestFromPB(t *testing.T) {
+	tests := []struct {
+		name string
+		in   *pb.ListStockRequest
+		want *dto.ListStockRequest
+	}{
+		{
+			name: "nil input",
+			in:   nil,
+			want: nil,
+		},
+		{
+			name: "valid input",
+			in: &pb.ListStockRequest{
+				Offset: 10,
+				Limit:  20,
+				SearchParams: &pb.ListStockSearchParams{
+					StockIDs: []string{"AAPL", "GOOGL"},
+					Country:  "USA",
+					Name:     "Tech",
+					Category: "Technology",
+				},
+			},
+			want: &dto.ListStockRequest{
+				Offset: 10,
+				Limit:  20,
+				SearchParams: &dto.ListStockSearchParams{
+					StockIDs: &[]string{"AAPL", "GOOGL"},
+					Country:  "USA",
+					Name:     ptrToString("Tech"),
+					Category: ptrToString("Technology"),
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := dto.ListStockRequestFromPB(tt.in)
 			assert.Equal(t, tt.want, got)
 		})
 	}
