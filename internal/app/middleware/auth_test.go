@@ -50,8 +50,6 @@ func createTestToken(userID, sessionID string) string {
 }
 
 func TestAuthenticate(t *testing.T) {
-	t.Parallel()
-
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -115,8 +113,6 @@ func TestAuthenticate(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			if tt.expectServiceCall {
 				// Set up mock expectations
 				mockService.EXPECT().
@@ -124,7 +120,7 @@ func TestAuthenticate(t *testing.T) {
 					Return(&domain.User{
 						ID:        domain.ID{ID: tt.args.userID},
 						SessionID: tt.args.sessionID.String(),
-					}, nil)
+					}, nil).Times(1)
 			}
 
 			// Create a context with the token
