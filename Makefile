@@ -48,7 +48,7 @@ vendor:
 test: test-race test-leak test-coverage-ci ## launch all tests
 
 test-race: ## launch all tests with race detection
-	go test $(SOURCE_LIST)  -cover -race
+	go test $(SOURCE_LIST)  -cover -race -count=1
 
 test-leak: ## launch all tests with leak detection (if possible)
 	go test $(SOURCE_LIST)  -leak

@@ -10,6 +10,7 @@ import (
 
 	"github.com/ericlagergren/decimal"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"go.uber.org/goleak"
 )
@@ -253,8 +254,8 @@ func TestKeys(t *testing.T) {
 
 	for _, test := range tests {
 		result := helper.Keys(test.input)
-		if !cmp.Equal(result, test.expected) {
-			t.Errorf("Query diff = %v", cmp.Diff(test.input, test.expected))
+		if diff := cmp.Diff(result, test.expected, cmpopts.SortSlices(func(x, y string) bool { return x < y })); diff != "" {
+			t.Errorf("TestKeys() mismatch (-want +got):\n%s", diff)
 		}
 	}
 }
@@ -286,7 +287,7 @@ func TestSliceToMap(t *testing.T) {
 	for _, test := range tests {
 		result := helper.SliceToMap(test.input, test.fn)
 		if !cmp.Equal(result, test.expected) {
-			t.Errorf("Query diff = %v", cmp.Diff(test.input, test.expected))
+			t.Errorf("Query diff = %v", cmp.Diff(result, test.expected))
 		}
 	}
 }
