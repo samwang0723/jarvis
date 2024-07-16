@@ -2,12 +2,27 @@ package cronjob
 
 import (
 	"context"
+	"flag"
+	"os"
 	"testing"
 
 	cron "github.com/robfig/cron/v3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "use leak detector")
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+
+		return
+	}
+
+	os.Exit(m.Run())
+}
 
 func TestNew(t *testing.T) {
 	nopLogger := zerolog.Nop()
