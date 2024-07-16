@@ -15,6 +15,11 @@ database:
   maxIdleConns: 10
   maxOpenConns: 30
 
+kafka:
+  brokers: ["host.docker.internal:9092"]
+  topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
+  groupId: "jarvis"
+
 # Logging
 log:
   level: "info"

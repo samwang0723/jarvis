@@ -11,8 +11,11 @@ services:
     networks:
       - default
       - postgresql_jarvis-infra
+      - kafka_jarvis-infra
 networks:
   default:
     driver: bridge
   postgresql_jarvis-infra:
+    external: true
+  kafka_jarvis-infra:
     external: true
