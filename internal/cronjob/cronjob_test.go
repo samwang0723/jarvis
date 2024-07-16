@@ -1,44 +1,25 @@
-// Copyright 2021 Wei (Sam) Wang <sam.wang.0723@gmail.com>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cronjob
 
 import (
 	"context"
-	"flag"
-	"os"
 	"testing"
 
 	cron "github.com/robfig/cron/v3"
-	"go.uber.org/goleak"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	leak := flag.Bool("leak", false, "use leak detector")
-
-	if *leak {
-		goleak.VerifyTestMain(m)
-
-		return
+func TestNew(t *testing.T) {
+	nopLogger := zerolog.Nop()
+	cfg := Config{
+		Logger: &nopLogger,
 	}
 
-	os.Exit(m.Run())
+	cronjob := New(cfg)
+	assert.NotNil(t, cronjob, "Expected cronjob to be not nil")
 }
 
-func Test_cronjobImpl_AddJob(t *testing.T) {
-	t.Parallel()
-
+func TestAddJob(t *testing.T) {
 	type fields struct {
 		instance *cron.Cron
 	}
@@ -52,20 +33,95 @@ func Test_cronjobImpl_AddJob(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Valid cron spec",
+			fields: fields{
+				instance: cron.New(),
+			},
+			args: args{
+				spec: "* * * * *",
+				job:  func() {},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid cron spec",
+			fields: fields{
+				instance: cron.New(),
+			},
+			args: args{
+				spec: "invalid spec",
+				job:  func() {},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			c := &cronjobImpl{
 				instance: tt.fields.instance,
 			}
 			if err := c.AddJob(context.Background(), tt.args.spec, tt.args.job); (err != nil) != tt.wantErr {
 				t.Errorf("cronjobImpl.AddJob() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func TestStart(t *testing.T) {
+	type fields struct {
+		instance *cron.Cron
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "Start cron job",
+			fields: fields{
+				instance: cron.New(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			c := &cronjobImpl{
+				instance: tt.fields.instance,
+			}
+			c.Start()
+			// Add assertions to check if the cron job started
+		})
+	}
+}
+
+func TestStop(t *testing.T) {
+	type fields struct {
+		instance *cron.Cron
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{
+			name: "Stop cron job",
+			fields: fields{
+				instance: cron.New(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		t.Run(tt.name, func(t *testing.T) {
+			c := &cronjobImpl{
+				instance: tt.fields.instance,
+			}
+			c.Stop()
+			// Add assertions to check if the cron job stopped
 		})
 	}
 }

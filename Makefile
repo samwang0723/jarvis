@@ -15,7 +15,7 @@ GOLANG_LINTER_VERSION=1.59.1
 GO_VERSION=$(shell cat .go_version)
 
 SHELL = /bin/bash
-SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/kafka | grep -v /internal/cache/mock | grep -v /internal/db/main/sqlc | grep -v /database | grep -v /internal/cronjob/mocks | grep -v /internal/services/mocks )
+SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/cache/mocks | grep -v /internal/db/main/sqlc | grep -v /database | grep -v /internal/cronjob/mocks | grep -v /internal/services/mocks | grep -v /internal/kafka/mocks )
 
 tool-version-check:
 	@( \

@@ -43,7 +43,7 @@ func WithKafka(cfg KafkaConfig) Option {
 			Topics:  cfg.Topics,
 			GroupID: cfg.GroupID, // having consumer group id to prevent duplication of message consumption
 			Logger:  cfg.Logger,
-		})
+		}, nil)
 	}
 }
 
