@@ -50,7 +50,7 @@ type Adapter interface {
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 	GetUserByPhone(ctx context.Context, phone string) (*domain.User, error)
 	GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, error)
-	ListUsers(ctx context.Context, limit int32, offset int32) ([]*domain.User, error)
+	ListUsers(ctx context.Context, limit, offset int32) ([]*domain.User, error)
 	GetBalanceView(ctx context.Context, id uuid.UUID) (*domain.BalanceView, error)
 	ListSelections(ctx context.Context, date string, strict bool) ([]*domain.Selection, error)
 	ListSelectionsFromPicked(
@@ -247,7 +247,7 @@ func (a *Imp) GetUserByID(ctx context.Context, userID uuid.UUID) (*domain.User, 
 	return a.repo.GetUserByID(ctx, userID)
 }
 
-func (a *Imp) ListUsers(ctx context.Context, limit int32, offset int32) ([]*domain.User, error) {
+func (a *Imp) ListUsers(ctx context.Context, limit, offset int32) ([]*domain.User, error) {
 	return a.repo.ListUsers(ctx, limit, offset)
 }
 

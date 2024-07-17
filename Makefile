@@ -17,6 +17,11 @@ GO_VERSION=$(shell cat .go_version)
 SHELL = /bin/bash
 SOURCE_LIST = $$(go list ./... | grep -v /third_party/ | grep -v /internal/app/pb | grep -v /cmd | grep -v /internal/cache/mocks | grep -v /internal/db/main/sqlc | grep -v /database | grep -v /internal/cronjob/mocks | grep -v /internal/services/mocks | grep -v /internal/kafka/mocks )
 
+ifneq (,$(wildcard .env))
+    include .env
+    export $(shell sed 's/=.*//' .env)
+endif
+
 tool-version-check:
 	@( \
 	    INSTALLED_TOOL_VERSION=$$($(tool_version_check) | grep $(tool_version)); \

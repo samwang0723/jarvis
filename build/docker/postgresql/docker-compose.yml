@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   postgresql:
+    container_name: postgresql
     image: docker.io/bitnami/postgresql:16
     ports:
       - '5432:5432'
