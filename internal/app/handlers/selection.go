@@ -60,7 +60,6 @@ func (h *handlerImpl) CrawlingRealTimePrice(ctx context.Context, schedule string
 	err := h.dataService.AddJob(ctx, schedule, func() {
 		if h.dataService.ObtainLock(ctx, cache.CronjobLock, cronLockPeriod*time.Minute) == nil {
 			h.logger.Info().Msg("cronjob lock is not obtained")
-
 			return
 		}
 		err := h.dataService.CrawlingRealTimePrice(ctx)

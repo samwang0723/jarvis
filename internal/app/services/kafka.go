@@ -15,6 +15,7 @@ package services
 
 import (
 	"context"
+	"io"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog"
@@ -59,43 +60,44 @@ func (cfg *KafkaConfig) validate() error {
 //nolint:nolintlint, cyclop
 func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
+
 	go func() {
+		s.logger.Info().Msg("Starting Kafka consumer goroutine")
+		defer s.logger.Info().Msg("Kafka consumer goroutine exited")
 		for {
-			msg, err := s.consumer.ReadMessage(ctx)
-			if err != nil {
-				s.logger.Error().Msgf("Kafka:ReadMessage error: %s", err.Error())
-
-				continue
-			}
-
-			ent, err := unmarshalMessageTodomain(msg)
-			if err != nil {
-				s.logger.Error().Msgf("Kafka:unmarshalMessageTodomain error: %s", err.Error())
-
-				continue
-			}
-			respChan <- data{
-				topic:  msg.Topic,
-				values: &[]any{ent},
-			}
-
 			select {
 			case <-ctx.Done():
-				s.logger.Warn().Msg("ListeningKafkaInput: context cancel")
-
 				return
 			default:
+				msg, err := s.consumer.ReadMessage(ctx)
+				if err != nil {
+					if err == context.Canceled || err == io.EOF {
+						return
+					}
+					s.logger.Error().Msgf("Kafka:ReadMessage error: %s", err.Error())
+					continue
+				}
+
+				ent, err := unmarshalMessageTodomain(msg)
+				if err != nil {
+					s.logger.Error().Msgf("Kafka:unmarshalMessageTodomain error: %s", err.Error())
+					continue
+				}
+				respChan <- data{
+					topic:  msg.Topic,
+					values: &[]any{ent},
+				}
 			}
 		}
 	}()
 
 	// handler goroutine to insert message from Kafka to database
 	go func() {
+		s.logger.Info().Msg("Starting Handler goroutine")
+		defer s.logger.Info().Msg("Handler goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
-				s.logger.Warn().Msg("ListeningKafkaInput(respChan): context cancel")
-
 				return
 			case obj, ok := <-respChan:
 				var err error

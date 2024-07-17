@@ -8,7 +8,7 @@ server:
 
 # Database credentials
 database:
-  host: "host.docker.internal"
+  host: "localhost" # "host.docker.internal"
   port: "5432"
   database: "jarvis_main"
   maxLifetime:  10
@@ -16,9 +16,13 @@ database:
   maxOpenConns: 30
 
 kafka:
-  brokers: ["host.docker.internal:9092"]
+  brokers: ["localhost:9092"] # ["host.docker.internal:9092"]
   topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
   groupId: "jarvis"
+
+redis:
+  sentinelAddrs: ["localhost:26379"] # ["host.docker.internal:26379"]
+  master: "mymaster"
 
 # Logging
 log:

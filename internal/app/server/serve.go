@@ -200,14 +200,14 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		Handler(handler),
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
-		BeforeStart(func() error {
+		BeforeStart(func(ctx context.Context) error {
 			if cfg.RedisCache.Master != "" {
 				dataService.StartCron()
 			}
 
 			return nil
 		}),
-		AfterStart(func() error {
+		AfterStart(func(ctx context.Context) error {
 			if cfg.Kafka.GroupID != "" {
 				// listening kafka
 				handler.ListeningKafkaInput(ctx)
@@ -215,7 +215,7 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 
 			return nil
 		}),
-		BeforeStop(func() error {
+		BeforeStop(func(ctx context.Context) error {
 			if cfg.RedisCache.Master != "" {
 				dataService.StopCron()
 				err = dataService.StopRedis()
@@ -255,7 +255,7 @@ func newServer(opts ...Option) IServer {
 
 func (s *server) Start(ctx context.Context) error {
 	for _, fn := range s.opts.BeforeStart {
-		if err := fn(); err != nil {
+		if err := fn(ctx); err != nil {
 			return err
 		}
 	}
@@ -288,7 +288,7 @@ func (s *server) Start(ctx context.Context) error {
 	}()
 
 	for _, fn := range s.opts.AfterStart {
-		if err = fn(); err != nil {
+		if err = fn(ctx); err != nil {
 			return err
 		}
 	}
@@ -299,7 +299,7 @@ func (s *server) Start(ctx context.Context) error {
 func (s *server) Stop() error {
 	var err error
 	for _, fn := range s.opts.BeforeStop {
-		if err = fn(); err != nil {
+		if err = fn(context.Background()); err != nil {
 			break
 		}
 	}
@@ -314,8 +314,10 @@ func (s *server) Stop() error {
 
 // Run starts the server and shut down gracefully afterwards
 func (s *server) Run(ctx context.Context) error {
+	// Create a cancellable context
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	if err := s.Start(childCtx); err != nil {
 		return err
 	}
@@ -323,29 +325,32 @@ func (s *server) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
+	var wg sync.WaitGroup
 	if config.GetCurrentConfig().RedisCache.Master != "" {
-		// schedule to preset the stocks met expectation condition yesterday for realtime tracking
-		var waitGroup sync.WaitGroup
-		waitGroup.Add(1)
-
+		wg.Add(1)
 		go func(ctx context.Context, svc *server) {
-			defer waitGroup.Done()
+			defer wg.Done()
 
-			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
+			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(ctx, "40 8 * * 1-5")
 			if err != nil {
 				svc.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
 			}
 
-			err = svc.Handler().CrawlingRealTimePrice(childCtx, "*/3 9-13 * * 1-5")
+			err = svc.Handler().CrawlingRealTimePrice(ctx, "*/3 9-13 * * 1-5")
 			if err != nil {
 				svc.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
 			}
 
 			<-ctx.Done()
 		}(childCtx, s)
-
-		waitGroup.Wait()
 	}
+	// Use a separate goroutine to wait for WaitGroup
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
 
 	select {
 	case <-quit:
@@ -353,6 +358,14 @@ func (s *server) Run(ctx context.Context) error {
 		cancel()
 	case <-childCtx.Done():
 		s.Logger().Warn().Msg("main context being canceled")
+	}
+
+	// Wait for goroutines to finish or timeout
+	select {
+	case <-done:
+		s.Logger().Info().Msg("All goroutines finished")
+	case <-time.After(5 * time.Second):
+		s.Logger().Warn().Msg("Timed out waiting for goroutines to finish")
 	}
 
 	return s.Stop()

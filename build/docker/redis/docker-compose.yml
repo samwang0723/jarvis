@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  redis:
+    container_name: redis
+    image: docker.io/bitnami/redis-sentinel:latest
+    ports:
+      - '6379:6379'
+      - '26379:26379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_MASTER_SET=mymaster
+    restart: unless-stopped
+    networks:
+      - jarvis-infra
+
+networks:
+  jarvis-infra:
+    driver: bridge

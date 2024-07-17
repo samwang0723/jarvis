@@ -43,6 +43,7 @@ logs/
 
 # Project customized files
 secrets.yaml
+.env
 
 # Generated files
 coverage.txt
