@@ -62,8 +62,8 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
 
 	go func() {
-		s.logger.Info().Msg("Starting Kafka consumer goroutine")
-		defer s.logger.Info().Msg("Kafka consumer goroutine exited")
+		s.logger.Info().Str("component", "kafka").Msg("Goroutine starting")
+		defer s.logger.Info().Str("component", "kafka").Msg("Goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
@@ -74,13 +74,17 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					if err == context.Canceled || err == io.EOF {
 						return
 					}
-					s.logger.Error().Msgf("Kafka:ReadMessage error: %s", err.Error())
+					s.logger.Error().
+						Str("component", "kafka").
+						Msgf("ReadMessage error: %s", err.Error())
 					continue
 				}
 
 				ent, err := unmarshalMessageTodomain(msg)
 				if err != nil {
-					s.logger.Error().Msgf("Kafka:unmarshalMessageTodomain error: %s", err.Error())
+					s.logger.Error().
+						Str("component", "kafka").
+						Msgf("Convert to domain model error: %s", err.Error())
 					continue
 				}
 				respChan <- data{
@@ -93,8 +97,8 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 
 	// handler goroutine to insert message from Kafka to database
 	go func() {
-		s.logger.Info().Msg("Starting Handler goroutine")
-		defer s.logger.Info().Msg("Handler goroutine exited")
+		s.logger.Info().Str("component", "handler").Msg("Goroutine starting")
+		defer s.logger.Info().Str("component", "handler").Msg("Goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
@@ -114,7 +118,9 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					}
 
 					if err != nil {
-						s.logger.Error().Msgf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
+						s.logger.Error().
+							Str("component", "kafka").
+							Msgf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
 					}
 				}
 			}
