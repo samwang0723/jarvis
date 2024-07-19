@@ -62,21 +62,18 @@ func Authenticate(service services.IService) func(ctx context.Context) (context.
 
 		tokenInfo, err := parseToken(token)
 		if err != nil || !tokenInfo.IsValidAt(time.Now()) || !tokenInfo.IsForAudience("jarvis") {
-			return nil, status.Errorf(codes.Unauthenticated, "Invalid auth token: %v", err)
+			return nil, status.Errorf(codes.Unauthenticated, "invalid auth_token %v", err)
 		}
 
 		sessionID := tokenInfo.ID
 		userID, err := uuid.FromString(tokenInfo.Subject)
 		if err != nil {
-			return nil, status.Errorf(codes.Unauthenticated, "Invalid auth token: %v", err)
+			return nil, status.Errorf(codes.Unauthenticated, "invalid auth_token %v", err)
 		}
 
 		user, err := service.GetUserByID(ctx, userID)
 		if err != nil || user.SessionID != sessionID {
-			return nil, status.Error(
-				codes.Unauthenticated,
-				"Invalid auth token: session_id invalid",
-			)
+			return nil, status.Error(codes.Unauthenticated, "invalid auth_token no session_id")
 		}
 
 		ctx = logging.InjectFields(ctx, logging.Fields{"auth.sub", tokenInfo.Subject})

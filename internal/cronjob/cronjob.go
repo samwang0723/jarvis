@@ -46,7 +46,7 @@ func New(cfg Config) Cronjob {
 	// load location with Taipei timezone
 	location, err := time.LoadLocation(timeZone)
 	if err != nil {
-		cfg.Logger.Fatal().Err(err).Msg("cronjob.New: failed")
+		cfg.Logger.Fatal().Err(err).Msg("cronjob init failed")
 
 		return nil
 	}
@@ -63,20 +63,20 @@ func New(cfg Config) Cronjob {
 
 func (c Config) Info(_ string, keysAndValues ...any) {
 	if len(keysAndValues) > 0 {
-		c.Logger.Info().Msgf("cronjob.Run: success, data=%+v;", keysAndValues)
+		c.Logger.Info().Msgf("cronjob Run succeed, data=%+v;", keysAndValues)
 	}
 }
 
 func (c Config) Error(_ error, _ string, keysAndValues ...any) {
 	if len(keysAndValues) > 0 {
-		c.Logger.Warn().Msgf("cronjob.Run: failed, data=%+v;", keysAndValues)
+		c.Logger.Warn().Msgf("cronjob Run failed, data=%+v;", keysAndValues)
 	}
 }
 
 func (c *cronjobImpl) AddJob(_ context.Context, spec string, job func()) error {
 	_, err := c.instance.AddFunc(spec, job)
 	if err != nil {
-		return xerrors.Errorf("cronjob.AddJob: failed, spec=%s, err=%w", spec, err)
+		return xerrors.Errorf("cronjob AddJob failed, spec=%s, err=%w", spec, err)
 	}
 
 	return nil

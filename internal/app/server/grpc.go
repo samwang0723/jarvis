@@ -205,7 +205,7 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 				res,
 			), status.Errorf(
 				codes.Unauthenticated,
-				"Login failed: %s",
+				"login failed %s",
 				res.ErrorMessage,
 			)
 	}

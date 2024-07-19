@@ -43,15 +43,15 @@ type KafkaConfig struct {
 
 func (cfg *KafkaConfig) validate() error {
 	if cfg.GroupID == "" {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid groupId")
+		return xerrors.Errorf("invalid kafka groupId")
 	}
 
 	if len(cfg.Brokers) == 0 {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid brokers")
+		return xerrors.Errorf("invalid kafka brokers")
 	}
 
 	if len(cfg.Topics) == 0 {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid topics")
+		return xerrors.Errorf("invalid kafka topics")
 	}
 
 	return nil
@@ -62,8 +62,8 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
 
 	go func() {
-		s.logger.Info().Str("component", "kafka").Msg("Goroutine starting")
-		defer s.logger.Info().Str("component", "kafka").Msg("Goroutine exited")
+		s.logger.Info().Str("component", "kafka").Msg("goroutine starting")
+		defer s.logger.Info().Str("component", "kafka").Msg("goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
@@ -75,16 +75,16 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 						return
 					}
 					s.logger.Error().
-						Str("component", "kafka").
-						Msgf("ReadMessage error: %s", err.Error())
+						Str("component", "kafka").Err(err).
+						Msgf("read message")
 					continue
 				}
 
 				ent, err := unmarshalMessageTodomain(msg)
 				if err != nil {
 					s.logger.Error().
-						Str("component", "kafka").
-						Msgf("Convert to domain model error: %s", err.Error())
+						Str("component", "kafka").Err(err).
+						Msg("domain model unmarshal")
 					continue
 				}
 				respChan <- data{
@@ -97,8 +97,8 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 
 	// handler goroutine to insert message from Kafka to database
 	go func() {
-		s.logger.Info().Str("component", "handler").Msg("Goroutine starting")
-		defer s.logger.Info().Str("component", "handler").Msg("Goroutine exited")
+		s.logger.Info().Str("component", "handler").Msg("goroutine starting")
+		defer s.logger.Info().Str("component", "handler").Msg("goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
@@ -120,7 +120,7 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					if err != nil {
 						s.logger.Error().
 							Str("component", "kafka").
-							Msgf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
+							Msgf("batch upsert (%s) failed: %s", obj.topic, err.Error())
 					}
 				}
 			}

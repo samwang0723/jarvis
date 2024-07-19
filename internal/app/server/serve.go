@@ -23,7 +23,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -266,6 +265,19 @@ func (s *server) Start(ctx context.Context) error {
 		Msgf("Server [%s] started. Version: (%s). Environment: (%s)",
 			s.Name(), s.Config().Server.Version, config.GetCurrentEnv())
 
+	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
+	if config.GetCurrentConfig().RedisCache.Master != "" {
+		err := s.Handler().CronjobPresetRealtimeMonitoringKeys(ctx, "40 8 * * 1-5")
+		if err != nil {
+			s.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
+		}
+
+		err = s.Handler().CrawlingRealTimePrice(ctx, "*/3 9-13 * * 1-5")
+		if err != nil {
+			s.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
+		}
+	}
+
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GrpcPort)
@@ -325,47 +337,12 @@ func (s *server) Run(ctx context.Context) error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
-	var wg sync.WaitGroup
-	if config.GetCurrentConfig().RedisCache.Master != "" {
-		wg.Add(1)
-		go func(ctx context.Context, svc *server) {
-			defer wg.Done()
-
-			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(ctx, "40 8 * * 1-5")
-			if err != nil {
-				svc.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
-			}
-
-			err = svc.Handler().CrawlingRealTimePrice(ctx, "*/3 9-13 * * 1-5")
-			if err != nil {
-				svc.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
-			}
-
-			<-ctx.Done()
-		}(childCtx, s)
-	}
-	// Use a separate goroutine to wait for WaitGroup
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-
 	select {
 	case <-quit:
 		s.Logger().Warn().Msg("signal interrupt")
 		cancel()
 	case <-childCtx.Done():
 		s.Logger().Warn().Msg("main context being canceled")
-	}
-
-	// Wait for goroutines to finish or timeout
-	select {
-	case <-done:
-		s.Logger().Info().Msg("All goroutines finished")
-	case <-time.After(5 * time.Second):
-		s.Logger().Warn().Msg("Timed out waiting for goroutines to finish")
 	}
 
 	return s.Stop()

@@ -17,7 +17,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -56,19 +55,16 @@ func verifyRecaptcha(token string) (bool, error) {
 	return recaptchaResponse.Success, nil
 }
 
-func (h *handlerImpl) CreateUser(
-	ctx context.Context,
-	req *dto.CreateUserRequest,
-) (*dto.CreateUserResponse, error) {
+func (h *handlerImpl) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateUserResponse, error) {
 	// Verify reCAPTCHA
 	valid, err := verifyRecaptcha(req.Recaptcha)
 	if !valid || err != nil {
 		return &dto.CreateUserResponse{
 			Status:       dto.StatusError,
 			ErrorCode:    "",
-			ErrorMessage: "Invalid CAPTCHA",
+			ErrorMessage: errInvalidCaptcha.Error(),
 			Success:      false,
-		}, errors.New("invalid CAPTCHA")
+		}, errInvalidCaptcha
 	}
 
 	user := &domain.User{
@@ -107,10 +103,7 @@ func (h *handlerImpl) CreateUser(
 	}, nil
 }
 
-func (h *handlerImpl) ListUsers(
-	ctx context.Context,
-	req *dto.ListUsersRequest,
-) (*dto.ListUsersResponse, error) {
+func (h *handlerImpl) ListUsers(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
 	entries, totalCount, err := h.dataService.WithUserID(ctx).ListUsers(ctx, req)
 	if err != nil {
 		return nil, err

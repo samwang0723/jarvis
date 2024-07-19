@@ -46,7 +46,7 @@ func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(
 	err := h.dataService.AddJob(ctx, schedule, func() {
 		err := h.dataService.CronjobPresetRealtimeMonitoringKeys(ctx)
 		if err != nil {
-			h.logger.Error().Msgf("failed to preset real time keys: %s", err)
+			h.logger.Error().Err(err).Msg("failed to preset real time keys")
 		}
 	})
 	if err != nil {
@@ -59,12 +59,12 @@ func (h *handlerImpl) CronjobPresetRealtimeMonitoringKeys(
 func (h *handlerImpl) CrawlingRealTimePrice(ctx context.Context, schedule string) error {
 	err := h.dataService.AddJob(ctx, schedule, func() {
 		if h.dataService.ObtainLock(ctx, cache.CronjobLock, cronLockPeriod*time.Minute) == nil {
-			h.logger.Info().Msg("cronjob lock is not obtained")
+			h.logger.Warn().Msg("cronjob lock is not obtained")
 			return
 		}
 		err := h.dataService.CrawlingRealTimePrice(ctx)
 		if err != nil {
-			h.logger.Error().Msgf("failed to retrieve real time price: %s", err)
+			h.logger.Error().Err(err).Msg("failed to retrieve real time price")
 		}
 	})
 	if err != nil {

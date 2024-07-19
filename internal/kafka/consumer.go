@@ -84,8 +84,8 @@ func New(cfg Config, reader Reader) ikafka.IKafka {
 func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, error) {
 	msg, err := k.instance.ReadMessage(ctx)
 
-	k.cfg.Logger.Info().
-		Msgf("Kafka:ReadMessage: read data: %s, err: %s", helper.Bytes2String(msg.Value), err)
+	k.cfg.Logger.Info().Str("component", "kafka").
+		Msgf("message: %s, err: %s", helper.Bytes2String(msg.Value), err)
 
 	return ikafka.ReceivedMessage{
 		Topic:   msg.Topic,
@@ -94,11 +94,11 @@ func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, er
 }
 
 func (k *kafkaImpl) Close() error {
-	k.cfg.Logger.Info().Msg("Kafka:Close")
+	k.cfg.Logger.Info().Str("component", "kafka").Msg("closing")
 
 	err := k.instance.Close()
 	if err != nil {
-		k.cfg.Logger.Error().Msgf("Kafka:Close: Close failed: %s", err)
+		k.cfg.Logger.Error().Str("component", "kafka").Err(err).Msg("close failed")
 	}
 
 	return err

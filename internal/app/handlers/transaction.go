@@ -7,10 +7,7 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-func (h *handlerImpl) CreateTransaction(
-	ctx context.Context,
-	req *dto.CreateTransactionRequest,
-) (*dto.CreateTransactionResponse, error) {
+func (h *handlerImpl) CreateTransaction(ctx context.Context, req *dto.CreateTransactionRequest) (*dto.CreateTransactionResponse, error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
 	case domain.OrderTypeDeposit:
@@ -21,7 +18,7 @@ func (h *handlerImpl) CreateTransaction(
 		return &dto.CreateTransactionResponse{
 			Status:       dto.StatusError,
 			ErrorCode:    "",
-			ErrorMessage: "invalid order type",
+			ErrorMessage: errOrderTypeNotAllowed.Error(),
 			Success:      false,
 		}, errOrderTypeNotAllowed
 	}
