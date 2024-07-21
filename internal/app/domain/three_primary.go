@@ -9,7 +9,7 @@ import (
 type ThreePrimary struct {
 	Time
 	StockID            string `json:"stockId"`
-	ExchangeDate       string `json:"exchangeDate"`
+	ExchangeDate       string `json:"date"`
 	ForeignTradeShares int64  `json:"foreignTradeShares"`
 	TrustTradeShares   int64  `json:"trustTradeShares"`
 	DealerTradeShares  int64  `json:"dealerTradeShares"`
