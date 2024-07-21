@@ -9,23 +9,23 @@ import (
 )
 
 type StockPrice struct {
-	ExchangeDate string
-	StockID      string
-	Price        float32
+	ExchangeDate string  `json:"exchangeDate"`
+	StockID      string  `json:"stockId"`
+	Price        float32 `json:"price"`
 }
 
 type DailyClose struct {
 	Time
 	StockID      string
-	ExchangeDate string
-	TradedShares int64
-	Transactions int64
-	Turnover     int64
-	Open         float32
-	Close        float32
-	High         float32
-	Low          float32
-	PriceDiff    float32
+	ExchangeDate string  `json:"date"`
+	TradedShares int64   `json:"tradeShares"`
+	Transactions int64   `json:"transactions"`
+	Turnover     int64   `json:"turnover"`
+	Open         float32 `json:"open"`
+	Close        float32 `json:"close"`
+	High         float32 `json:"high"`
+	Low          float32 `json:"low"`
+	PriceDiff    float32 `json:"priceDiff"`
 	ID
 }
 

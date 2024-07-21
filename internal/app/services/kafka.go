@@ -17,6 +17,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/gofrs/uuid/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog"
 	"github.com/samwang0723/jarvis/internal/app/domain"
@@ -141,10 +142,12 @@ func unmarshalMessageTodomain(msg ikafka.ReceivedMessage) (any, error) {
 	case ikafka.DailyClosesV1:
 		var obj domain.DailyClose
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	case ikafka.StakeConcentrationV1:
 		var obj domain.StakeConcentration
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	case ikafka.StocksV1:
 		var obj domain.Stock
@@ -153,6 +156,7 @@ func unmarshalMessageTodomain(msg ikafka.ReceivedMessage) (any, error) {
 	case ikafka.ThreePrimaryV1:
 		var obj domain.ThreePrimary
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	}
 

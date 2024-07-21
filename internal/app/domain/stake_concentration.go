@@ -8,17 +8,17 @@ type CalculationBase struct {
 
 type StakeConcentration struct {
 	Time
-	StockID         string
-	Date            string
-	Diff            []int32
-	SumBuyShares    uint64
-	SumSellShares   uint64
+	StockID         string  `json:"stockId"`
+	Date            string  `json:"exchangeDate"`
+	Diff            []int32 `json:"diff"`
+	SumBuyShares    uint64  `json:"sumBuyShares"`
+	SumSellShares   uint64  `json:"sumSellShares"`
 	Concentration1  float32
 	Concentration5  float32
 	Concentration10 float32
 	Concentration20 float32
 	Concentration60 float32
-	AvgBuyPrice     float32
-	AvgSellPrice    float32
+	AvgBuyPrice     float32 `json:"avgBuyPrice"`
+	AvgSellPrice    float32 `json:"avgSellPrice"`
 	ID
 }

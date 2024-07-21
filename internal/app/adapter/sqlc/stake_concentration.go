@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ericlagergren/decimal"
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -67,6 +68,7 @@ func toSqlcBatchUpsertStakeConcentrationParams(
 	stakeConcentrations []*domain.StakeConcentration,
 ) *sqlcdb.BatchUpsertStakeConcentrationParams {
 	result := &sqlcdb.BatchUpsertStakeConcentrationParams{
+		ID:              make([]uuid.UUID, 0, len(stakeConcentrations)),
 		StockID:         make([]string, 0, len(stakeConcentrations)),
 		ExchangeDate:    make([]string, 0, len(stakeConcentrations)),
 		SumBuyShares:    make([]int64, 0, len(stakeConcentrations)),
@@ -80,6 +82,7 @@ func toSqlcBatchUpsertStakeConcentrationParams(
 		Concentration60: make([]decimal.Big, 0, len(stakeConcentrations)),
 	}
 	for _, sc := range stakeConcentrations {
+		result.ID = append(result.ID, sc.ID.ID)
 		result.StockID = append(result.StockID, sc.StockID)
 		result.ExchangeDate = append(result.ExchangeDate, sc.Date)
 		result.SumBuyShares = append(result.SumBuyShares, int64(sc.SumBuyShares))

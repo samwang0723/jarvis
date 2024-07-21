@@ -18,6 +18,10 @@ func (s *serviceImpl) BatchUpsertDailyClose(ctx context.Context, objs *[]any) er
 		}
 	}
 
+	// print the dailyCloses
+	for _, v := range dailyCloses {
+		s.logger.Info().Str("component", "service").Msgf("dailyClose: %v", v)
+	}
 	err := s.dal.BatchUpsertDailyClose(ctx, dailyCloses)
 	if err != nil {
 		return err

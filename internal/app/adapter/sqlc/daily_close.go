@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/ericlagergren/decimal"
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 	"github.com/samwang0723/jarvis/internal/helper"
@@ -22,6 +23,7 @@ func (repo *Repo) CreateDailyClose(
 	obj *domain.DailyClose,
 ) error {
 	return repo.primary().CreateDailyClose(ctx, &sqlcdb.CreateDailyCloseParams{
+		ID:           obj.ID.ID,
 		StockID:      obj.StockID,
 		ExchangeDate: obj.ExchangeDate,
 		TradeShares:  sql.NullInt64{Int64: obj.TradedShares, Valid: true},
@@ -71,6 +73,7 @@ func toSqlcBatchUpsertDailyCloseParams(
 	dailyClose []*domain.DailyClose,
 ) *sqlcdb.BatchUpsertDailyCloseParams {
 	result := &sqlcdb.BatchUpsertDailyCloseParams{
+		ID:           make([]uuid.UUID, 0, len(dailyClose)),
 		StockID:      make([]string, 0, len(dailyClose)),
 		ExchangeDate: make([]string, 0, len(dailyClose)),
 		TradeShares:  make([]int64, 0, len(dailyClose)),
@@ -83,6 +86,7 @@ func toSqlcBatchUpsertDailyCloseParams(
 		PriceDiff:    make([]decimal.Big, 0, len(dailyClose)),
 	}
 	for _, dc := range dailyClose {
+		result.ID = append(result.ID, dc.ID.ID)
 		result.StockID = append(result.StockID, dc.StockID)
 		result.ExchangeDate = append(result.ExchangeDate, dc.ExchangeDate)
 		result.TradeShares = append(result.TradeShares, dc.TradedShares)

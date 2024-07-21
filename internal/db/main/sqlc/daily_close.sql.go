@@ -16,18 +16,19 @@ import (
 
 const BatchUpsertDailyClose = `-- name: BatchUpsertDailyClose :exec
 INSERT INTO daily_closes (
-    stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
+    id, stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
   ) VALUES (
-    unnest($1::varchar[]), 
+    unnest($1::uuid[]), 
     unnest($2::varchar[]), 
-    unnest($3::bigint[]), 
+    unnest($3::varchar[]), 
     unnest($4::bigint[]), 
-    unnest($5::bigint[]),
-    unnest($6::numeric[]),
+    unnest($5::bigint[]), 
+    unnest($6::bigint[]),
     unnest($7::numeric[]),
     unnest($8::numeric[]),
     unnest($9::numeric[]),
-    unnest($10::numeric[])
+    unnest($10::numeric[]),
+    unnest($11::numeric[])
   )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE SET
     trade_shares = EXCLUDED.trade_shares,
@@ -41,6 +42,7 @@ ON CONFLICT (stock_id, exchange_date) DO UPDATE SET
 `
 
 type BatchUpsertDailyCloseParams struct {
+	ID           []uuid.UUID
 	StockID      []string
 	ExchangeDate []string
 	TradeShares  []int64
@@ -55,6 +57,7 @@ type BatchUpsertDailyCloseParams struct {
 
 func (q *Queries) BatchUpsertDailyClose(ctx context.Context, arg *BatchUpsertDailyCloseParams) error {
 	_, err := q.db.Exec(ctx, BatchUpsertDailyClose,
+		arg.ID,
 		arg.StockID,
 		arg.ExchangeDate,
 		arg.TradeShares,
@@ -71,13 +74,14 @@ func (q *Queries) BatchUpsertDailyClose(ctx context.Context, arg *BatchUpsertDai
 
 const CreateDailyClose = `-- name: CreateDailyClose :exec
 INSERT INTO daily_closes (
-    stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
+    id, stock_id, exchange_date, trade_shares, transactions, turnover, open, close, high, low, price_diff
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 )
 `
 
 type CreateDailyCloseParams struct {
+	ID           uuid.UUID
 	StockID      string
 	ExchangeDate string
 	TradeShares  sql.NullInt64
@@ -92,6 +96,7 @@ type CreateDailyCloseParams struct {
 
 func (q *Queries) CreateDailyClose(ctx context.Context, arg *CreateDailyCloseParams) error {
 	_, err := q.db.Exec(ctx, CreateDailyClose,
+		arg.ID,
 		arg.StockID,
 		arg.ExchangeDate,
 		arg.TradeShares,

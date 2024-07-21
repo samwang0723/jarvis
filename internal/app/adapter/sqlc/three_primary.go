@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/app/domain"
 	sqlcdb "github.com/samwang0723/jarvis/internal/db/main/sqlc"
 )
@@ -31,6 +32,7 @@ func (repo *Repo) CreateThreePrimary(
 	arg *domain.ThreePrimary,
 ) error {
 	return repo.primary().CreateThreePrimary(ctx, &sqlcdb.CreateThreePrimaryParams{
+		ID:                 arg.ID.ID,
 		StockID:            arg.StockID,
 		ExchangeDate:       arg.ExchangeDate,
 		ForeignTradeShares: sql.NullInt64{Int64: arg.ForeignTradeShares, Valid: true},
@@ -44,6 +46,7 @@ func toSqlcBatchUpsertThreePrimaryParams(
 	threePrimary []*domain.ThreePrimary,
 ) *sqlcdb.BatchUpsertThreePrimaryParams {
 	result := &sqlcdb.BatchUpsertThreePrimaryParams{
+		ID:                 make([]uuid.UUID, 0, len(threePrimary)),
 		StockID:            make([]string, 0, len(threePrimary)),
 		ExchangeDate:       make([]string, 0, len(threePrimary)),
 		ForeignTradeShares: make([]int64, 0, len(threePrimary)),
@@ -52,6 +55,7 @@ func toSqlcBatchUpsertThreePrimaryParams(
 		HedgingTradeShares: make([]int64, 0, len(threePrimary)),
 	}
 	for _, tp := range threePrimary {
+		result.ID = append(result.ID, tp.ID.ID)
 		result.StockID = append(result.StockID, tp.StockID)
 		result.ExchangeDate = append(result.ExchangeDate, tp.ExchangeDate)
 		result.ForeignTradeShares = append(result.ForeignTradeShares, tp.ForeignTradeShares)

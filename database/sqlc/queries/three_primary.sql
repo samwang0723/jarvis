@@ -1,14 +1,15 @@
 -- name: CreateThreePrimary :exec
 INSERT INTO three_primary (
-    stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
+    id, stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 );
 
 -- name: BatchUpsertThreePrimary :exec
 INSERT INTO three_primary (
-    stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
+    id, stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
+    unnest(@id::uuid[]),
     unnest(@stock_id::varchar[]), 
     unnest(@exchange_date::varchar[]), 
     unnest(@foreign_trade_shares::bigint[]), 

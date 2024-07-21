@@ -8,18 +8,21 @@ package sqlcdb
 import (
 	"context"
 	"database/sql"
+
+	uuid "github.com/gofrs/uuid/v5"
 )
 
 const BatchUpsertThreePrimary = `-- name: BatchUpsertThreePrimary :exec
 INSERT INTO three_primary (
-    stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
+    id, stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
-    unnest($1::varchar[]), 
+    unnest($1::uuid[]),
     unnest($2::varchar[]), 
-    unnest($3::bigint[]), 
+    unnest($3::varchar[]), 
     unnest($4::bigint[]), 
-    unnest($5::bigint[]),
-    unnest($6::bigint[])
+    unnest($5::bigint[]), 
+    unnest($6::bigint[]),
+    unnest($7::bigint[])
 )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE
 SET
@@ -30,6 +33,7 @@ SET
 `
 
 type BatchUpsertThreePrimaryParams struct {
+	ID                 []uuid.UUID
 	StockID            []string
 	ExchangeDate       []string
 	ForeignTradeShares []int64
@@ -40,6 +44,7 @@ type BatchUpsertThreePrimaryParams struct {
 
 func (q *Queries) BatchUpsertThreePrimary(ctx context.Context, arg *BatchUpsertThreePrimaryParams) error {
 	_, err := q.db.Exec(ctx, BatchUpsertThreePrimary,
+		arg.ID,
 		arg.StockID,
 		arg.ExchangeDate,
 		arg.ForeignTradeShares,
@@ -52,13 +57,14 @@ func (q *Queries) BatchUpsertThreePrimary(ctx context.Context, arg *BatchUpsertT
 
 const CreateThreePrimary = `-- name: CreateThreePrimary :exec
 INSERT INTO three_primary (
-    stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
+    id, stock_id, exchange_date, foreign_trade_shares, trust_trade_shares, dealer_trade_shares, hedging_trade_shares
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 )
 `
 
 type CreateThreePrimaryParams struct {
+	ID                 uuid.UUID
 	StockID            string
 	ExchangeDate       string
 	ForeignTradeShares sql.NullInt64
@@ -69,6 +75,7 @@ type CreateThreePrimaryParams struct {
 
 func (q *Queries) CreateThreePrimary(ctx context.Context, arg *CreateThreePrimaryParams) error {
 	_, err := q.db.Exec(ctx, CreateThreePrimary,
+		arg.ID,
 		arg.StockID,
 		arg.ExchangeDate,
 		arg.ForeignTradeShares,

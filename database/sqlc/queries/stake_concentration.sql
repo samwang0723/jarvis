@@ -6,6 +6,7 @@ LIMIT 1;
 
 -- name: BatchUpsertStakeConcentration :exec
 INSERT INTO stake_concentration (
+  id,
   stock_id, 
   exchange_date, 
   sum_buy_shares, 
@@ -18,6 +19,7 @@ INSERT INTO stake_concentration (
   concentration_20, 
   concentration_60)
 VALUES (
+  unnest(@id::uuid[]), 
   unnest(@stock_id::varchar[]), 
   unnest(@exchange_date::varchar[]), 
   unnest(@sum_buy_shares::bigint[]), 

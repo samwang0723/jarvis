@@ -8,12 +8,12 @@ import (
 
 type ThreePrimary struct {
 	Time
-	StockID            string
-	ExchangeDate       string
-	ForeignTradeShares int64
-	TrustTradeShares   int64
-	DealerTradeShares  int64
-	HedgingTradeShares int64
+	StockID            string `json:"stockId"`
+	ExchangeDate       string `json:"exchangeDate"`
+	ForeignTradeShares int64  `json:"foreignTradeShares"`
+	TrustTradeShares   int64  `json:"trustTradeShares"`
+	DealerTradeShares  int64  `json:"dealerTradeShares"`
+	HedgingTradeShares int64  `json:"hedgingTradeShares"`
 	ID
 }
 

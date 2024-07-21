@@ -10,10 +10,12 @@ import (
 	"database/sql"
 
 	"github.com/ericlagergren/decimal"
+	uuid "github.com/gofrs/uuid/v5"
 )
 
 const BatchUpsertStakeConcentration = `-- name: BatchUpsertStakeConcentration :exec
 INSERT INTO stake_concentration (
+  id,
   stock_id, 
   exchange_date, 
   sum_buy_shares, 
@@ -26,17 +28,18 @@ INSERT INTO stake_concentration (
   concentration_20, 
   concentration_60)
 VALUES (
-  unnest($1::varchar[]), 
+  unnest($1::uuid[]), 
   unnest($2::varchar[]), 
-  unnest($3::bigint[]), 
+  unnest($3::varchar[]), 
   unnest($4::bigint[]), 
-  unnest($5::numeric[]),
+  unnest($5::bigint[]), 
   unnest($6::numeric[]),
   unnest($7::numeric[]),
   unnest($8::numeric[]),
   unnest($9::numeric[]),
   unnest($10::numeric[]),
-  unnest($11::numeric[])
+  unnest($11::numeric[]),
+  unnest($12::numeric[])
 )
 ON CONFLICT (stock_id, exchange_date) DO UPDATE
 SET sum_buy_shares = EXCLUDED.sum_buy_shares,
@@ -51,6 +54,7 @@ SET sum_buy_shares = EXCLUDED.sum_buy_shares,
 `
 
 type BatchUpsertStakeConcentrationParams struct {
+	ID              []uuid.UUID
 	StockID         []string
 	ExchangeDate    []string
 	SumBuyShares    []int64
@@ -66,6 +70,7 @@ type BatchUpsertStakeConcentrationParams struct {
 
 func (q *Queries) BatchUpsertStakeConcentration(ctx context.Context, arg *BatchUpsertStakeConcentrationParams) error {
 	_, err := q.db.Exec(ctx, BatchUpsertStakeConcentration,
+		arg.ID,
 		arg.StockID,
 		arg.ExchangeDate,
 		arg.SumBuyShares,
