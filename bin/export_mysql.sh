@@ -6,6 +6,8 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+# For migrating the legacy MySQL tables
+# Usage: ./bin/export_mysql.sh {TABLE_NAME}
 TABLE=$1
 
 kubectl exec -it mysql-primary-0 -- mysqldump -u root -piori2008 jarvis --tables ${TABLE} --no-create-info --skip-comments --complete-insert --compatible=ansi --compact > ./${TABLE}_raw.sql

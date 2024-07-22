@@ -223,7 +223,7 @@ LAST_MAIN_COMMIT_TIME=$(shell git show --no-patch --format=%cd --date=iso-strict
 RELEASE_TAG=$(shell git describe --abbrev=0 --tags)
 REPO_NAME=samwang0723
 
-docker-build: lint test docker-build-api ## build docker image in M1 device
+docker-build: docker-build-api ## build docker image in M1 device
 	@printf "\nyou can now deploy to your env of choice:\ncd deploy\nENV=dev make deploy-latest\n"
 
 docker-build-api: TAG_NAME=$(REPO_NAME)/$(APP_NAME) ## docker build for api

@@ -1,27 +1,19 @@
 # Server configurations
 server:
   name: "jarvis-api"
-  version: "v2.0.1"
+  version: "v3.0.0"
   host: "0.0.0.0"
   port: 8080
   grpcPort: 8081
 
 # Database credentials
 database:
-  host: "mysql-primary-headless.default.svc.cluster.local"
-  port: 3306
-  database: "jarvis"
+  host: "postgres-postgresql-hl.default.svc.cluster.local"
+  port: "5432"
+  database: "jarvis_main"
   maxLifetime:  10
   minIdleConns: 20
   maxOpenConns: 200
-
-replica:
-  host: "mysql-secondary-headless.default.svc.cluster.local"
-  port: 3306
-  database: "jarvis"
-  maxLifetime:  10
-  minIdleConns: 40
-  maxOpenConns: 800
 
 kafka:
   brokers: ["kafka-headless.default.svc.cluster.local:9092"]
@@ -34,4 +26,4 @@ redis:
 
 # Logging
 log:
-  level: "debug"
+  level: "info"

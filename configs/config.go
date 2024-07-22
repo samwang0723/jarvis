@@ -110,7 +110,7 @@ var (
 func GetCurrentEnv() string {
 	envOnce.Do(func() {
 		inputEnv := os.Getenv(EnvCoreKey)
-		if env == "" {
+		if inputEnv == "" {
 			flag.StringVar(&inputEnv, "env", "local", "environment you want start the server")
 			flag.StringVar(&dbuser, "dbuser", "", "database username")
 			flag.StringVar(&jwtsecretLocal, "jwtsecret", "", "jwt secret key")
@@ -120,8 +120,6 @@ func GetCurrentEnv() string {
 
 			flag.Parse()
 		}
-		env = EnvLocal
-
 		switch inputEnv {
 		case "dev":
 			env = EnvDev
@@ -129,6 +127,8 @@ func GetCurrentEnv() string {
 			env = EnvStaging
 		case "prod":
 			env = EnvProd
+		default:
+			env = EnvLocal
 		}
 	})
 

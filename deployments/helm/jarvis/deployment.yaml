@@ -60,8 +60,6 @@ spec:
               fieldPath: status.podIP
         - name: ENVIRONMENT
           value: "dev"
-        - name: START_CRON
-          value: "true"
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:

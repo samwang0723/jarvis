@@ -3,7 +3,6 @@ package pginit
 import (
 	"context"
 	"fmt"
-	"net"
 	"time"
 
 	gofrs "github.com/jackc/pgx-gofrs-uuid"
@@ -49,8 +48,8 @@ type Config struct {
 // opts is not provided it will initializes PGInit with default configuration.
 func New(conf *Config, opts ...Option) (*PGInit, error) {
 	databaseURL := fmt.Sprintf(
-		"postgres://%s:%s@%s/%s",
-		conf.User, conf.Password, net.JoinHostPort(conf.Host, conf.Port), conf.Database,
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		conf.User, conf.Password, conf.Host, conf.Port, conf.Database,
 	)
 
 	pgxConf, err := pgxpool.ParseConfig(databaseURL)
