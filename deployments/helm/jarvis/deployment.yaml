@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: application
-        image: samwang0723/jarvis-api:v2.0.1
+        image: samwang0723/jarvis-api:latest
         imagePullPolicy: Always
         ports:
         - name: rest-api-port
@@ -85,3 +85,9 @@ spec:
               secretKeyRef:
                 name: jwt-secret
                 key: token
+        - name: RECAPTCHA_SECRET
+          valueFrom:
+              secretKeyRef:
+                name: recaptcha-secret
+                key: token
+

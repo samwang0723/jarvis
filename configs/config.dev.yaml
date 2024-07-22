@@ -8,12 +8,12 @@ server:
 
 # Database credentials
 database:
-  host: "postgres-postgresql-hl.default.svc.cluster.local"
+  host: "postgres-postgresql"
   port: "5432"
   database: "jarvis_main"
   maxLifetime:  10
-  minIdleConns: 20
-  maxOpenConns: 200
+  minIdleConns: 10
+  maxOpenConns: 50
 
 kafka:
   brokers: ["kafka-headless.default.svc.cluster.local:9092"]

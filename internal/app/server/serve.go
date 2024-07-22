@@ -175,15 +175,6 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 	health := healthcheck.NewHandler()
 	// Our app is not happy if we've got more than 10000 goroutines running.
 	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(maxGoRoutines))
-	// Our app is not ready if we can't resolve our upstream dependency in DNS.
-	health.AddReadinessCheck(
-		"upstream-database-read-dns",
-		healthcheck.DNSResolveCheck(cfg.Replica.Host, dnsResolveTimeout),
-	)
-	health.AddReadinessCheck(
-		"upstream-database-write-dns",
-		healthcheck.DNSResolveCheck(cfg.Database.Host, dnsResolveTimeout),
-	)
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
 	// Convert pgxpool.Pool to *sql.DB
 	sqlDB := stdlib.OpenDB(*pgi.ConnConfig())
