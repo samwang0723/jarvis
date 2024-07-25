@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2024-07-25
+
+### Bug Fixes
+
+- Update master to main branch
+- Update Makefile to allow make docker-build with push to registry
+
+### Refactor
+
+- V3.0.0 candidate ([#47](https://github.com/samwang0723/stock-crawler/issues/47))
+
+### Chroe
+
+- Add coverage calculation ([#45](https://github.com/samwang0723/stock-crawler/issues/45))
+
 ## [2.0.1] - 2024-07-02
 
 ### Bug Fixes
