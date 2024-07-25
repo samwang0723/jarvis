@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	"github.com/samwang0723/jarvis/internal/helper"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -32,19 +32,15 @@ func ListDailyCloseRequestFromPB(in *pb.ListDailyCloseRequest) *ListDailyCloseRe
 	out := &ListDailyCloseRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListDailyCloseSearchParamsFromPB(in.SearchParams),
+		SearchParams: listDailyCloseSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListDailyCloseSearchParamsFromPB(
+func listDailyCloseSearchParamsFromPB(
 	in *pb.ListDailyCloseSearchParams,
 ) *ListDailyCloseSearchParams {
-	if in == nil {
-		return nil
-	}
-
 	out := &ListDailyCloseSearchParams{
 		Start:   in.Start,
 		StockID: in.StockID,
@@ -65,13 +61,13 @@ func ListStockRequestFromPB(in *pb.ListStockRequest) *ListStockRequest {
 	out := &ListStockRequest{
 		Offset:       in.Offset,
 		Limit:        in.Limit,
-		SearchParams: ListStockSearchParamsFromPB(in.SearchParams),
+		SearchParams: listStockSearchParamsFromPB(in.SearchParams),
 	}
 
 	return out
 }
 
-func ListStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchParams {
+func listStockSearchParamsFromPB(in *pb.ListStockSearchParams) *ListStockSearchParams {
 	if in == nil {
 		return nil
 	}
@@ -144,14 +140,14 @@ func MapToProtobufStructUint64(m map[int]uint64) *structpb.Struct {
 	return s
 }
 
-func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
+func DailyCloseToPB(in *domain.DailyClose) *pb.DailyClose {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbTradeShares := in.TradedShares
 	pbTransactions := in.Transactions
 	pbTurnover := in.Turnover
@@ -162,27 +158,27 @@ func DailyCloseToPB(in *entity.DailyClose) *pb.DailyClose {
 	pbDiff := in.PriceDiff
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.DailyClose{
-		Id:           pbID.Uint64(),
+		Id:           pbID.String(),
 		StockID:      pbStockID,
 		Date:         pbDate,
-		TradeShares:  pbTradeShares,
-		Transactions: pbTransactions,
-		Turnover:     pbTurnover,
+		TradeShares:  uint64(pbTradeShares),
+		Transactions: uint64(pbTransactions),
+		Turnover:     uint64(pbTurnover),
 		Open:         pbOpen,
 		Close:        pbClose,
 		High:         pbHigh,
@@ -213,36 +209,34 @@ func ListStockResponseToPB(in *ListStockResponse) *pb.ListStockResponse {
 	}
 }
 
-func StockToPB(in *entity.Stock) *pb.Stock {
+func StockToPB(in *domain.Stock) *pb.Stock {
 	if in == nil {
 		return nil
 	}
 
 	pbID := in.ID
-	pbStockID := in.StockID
 	pbName := in.Name
 	pbCategory := in.Category
 	pbCountry := in.Country
 	pbMarket := in.Market
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.Stock{
-		Id:        pbID.Uint64(),
-		StockID:   pbStockID,
+		Id:        pbID,
 		Name:      pbName,
 		Category:  pbCategory,
 		Country:   pbCountry,
@@ -280,13 +274,13 @@ func GetStakeConcentrationRequestFromPB(
 }
 
 func GetStakeConcentrationResponseToPB(
-	in *entity.StakeConcentration,
+	in *domain.StakeConcentration,
 ) *pb.GetStakeConcentrationResponse {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
 	pbDate := in.Date
 	pbSumBuyShares := in.SumBuyShares
@@ -300,23 +294,23 @@ func GetStakeConcentrationResponseToPB(
 	pbConcentration60 := in.Concentration60
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.GetStakeConcentrationResponse{
 		StakeConcentration: &pb.StakeConcentration{
-			Id:               pbID.Uint64(),
+			Id:               pbID.String(),
 			StockID:          pbStockID,
 			Date:             pbDate,
 			SumBuyShares:     pbSumBuyShares,
@@ -387,36 +381,36 @@ func ListThreePrimaryResponseToPB(in *ListThreePrimaryResponse) *pb.ListThreePri
 	}
 }
 
-func ThreePrimaryToPB(in *entity.ThreePrimary) *pb.ThreePrimary {
+func ThreePrimaryToPB(in *domain.ThreePrimary) *pb.ThreePrimary {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbForeignTradeShares := in.ForeignTradeShares
 	pbTrustTradeShares := in.TrustTradeShares
 	pbDealerTradeShares := in.DealerTradeShares
 	pbHedgingTradeShares := in.HedgingTradeShares
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.ThreePrimary{
-		Id:                 pbID.Uint64(),
+		Id:                 pbID.String(),
 		StockID:            pbStockID,
 		Date:               pbDate,
 		ForeignTradeShares: pbForeignTradeShares,
@@ -473,13 +467,13 @@ func ListPickedStocksResponseToPB(in *ListPickedStocksResponse) *pb.ListPickedSt
 	}
 }
 
-func SelectionToPB(in *entity.Selection) *pb.Selection {
+func SelectionToPB(in *domain.Selection) *pb.Selection {
 	if in == nil {
 		return nil
 	}
 
 	pbStockID := in.StockID
-	pbDate := in.Date
+	pbDate := in.ExchangeDate
 	pbName := in.Name
 	pbCategory := in.Category
 	pbConcentration1 := in.Concentration1
@@ -589,6 +583,7 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 	pbFirstName := in.FirstName
 	pbLastName := in.LastName
 	pbPassword := in.Password
+	pbRecaptcha := in.Recaptcha
 
 	return &CreateUserRequest{
 		Email:     pbEmail,
@@ -596,6 +591,7 @@ func CreateUserRequestFromPB(in *pb.CreateUserRequest) *CreateUserRequest {
 		FirstName: pbFirstName,
 		LastName:  pbLastName,
 		Password:  pbPassword,
+		Recaptcha: pbRecaptcha,
 	}
 }
 
@@ -647,34 +643,34 @@ func ListUsersResponseToPB(in *ListUsersResponse) *pb.ListUsersResponse {
 	}
 }
 
-func UserToPB(in *entity.User) *pb.User {
+func UserToPB(in *domain.User) *pb.User {
 	if in == nil {
 		return nil
 	}
 
-	pbID := in.ID
+	pbID := in.ID.ID
 	pbEmail := in.Email
 	pbPhone := in.Phone
 	pbFirstName := in.FirstName
 	pbLastName := in.LastName
 
 	var pbCreatedAt *timestamppb.Timestamp
-	if in.CreatedAt != nil {
-		pbCreatedAt = timestamppb.New(*in.CreatedAt)
+	if in.Time.CreatedAt != nil {
+		pbCreatedAt = timestamppb.New(*in.Time.CreatedAt)
 	}
 
 	var pbUpdatedAt *timestamppb.Timestamp
-	if in.UpdatedAt != nil {
-		pbUpdatedAt = timestamppb.New(*in.UpdatedAt)
+	if in.Time.UpdatedAt != nil {
+		pbUpdatedAt = timestamppb.New(*in.Time.UpdatedAt)
 	}
 
 	var pbDeletedAt *timestamppb.Timestamp
-	if in.DeletedAt.Valid {
-		pbDeletedAt = timestamppb.New(in.DeletedAt.Time)
+	if in.Time.DeletedAt != nil {
+		pbDeletedAt = timestamppb.New(*in.Time.DeletedAt)
 	}
 
 	return &pb.User{
-		Id:        pbID.Uint64(),
+		Id:        pbID.String(),
 		Email:     pbEmail,
 		Phone:     pbPhone,
 		FirstName: pbFirstName,
@@ -693,7 +689,7 @@ func GetBalanceRequestFromPB(in *pb.GetBalanceRequest) *GetBalanceViewRequest {
 	return &GetBalanceViewRequest{}
 }
 
-func BalanceToPB(in *entity.BalanceView) *pb.Balance {
+func BalanceToPB(in *domain.BalanceView) *pb.Balance {
 	if in == nil {
 		return nil
 	}
@@ -706,7 +702,7 @@ func BalanceToPB(in *entity.BalanceView) *pb.Balance {
 	pbUpdatedAt := timestamppb.New(in.UpdatedAt)
 
 	return &pb.Balance{
-		Id:        pbID,
+		Id:        pbID.String(),
 		Balance:   pbBalance,
 		Available: pbAvailable,
 		Pending:   pbPending,
@@ -715,7 +711,7 @@ func BalanceToPB(in *entity.BalanceView) *pb.Balance {
 	}
 }
 
-func GetBalanceResponseToPB(in *entity.BalanceView) *pb.GetBalanceResponse {
+func GetBalanceResponseToPB(in *domain.BalanceView) *pb.GetBalanceResponse {
 	if in == nil {
 		return nil
 	}
@@ -854,7 +850,7 @@ func ListOrderResponseToPB(in *ListOrderResponse) *pb.ListOrderResponse {
 	}
 }
 
-func OrderToPB(in *entity.Order) *pb.Order {
+func OrderToPB(in *domain.Order) *pb.Order {
 	if in == nil {
 		return nil
 	}
@@ -875,7 +871,7 @@ func OrderToPB(in *entity.Order) *pb.Order {
 	pbCurrentPrice := in.CurrentPrice
 
 	return &pb.Order{
-		Id:                pbID,
+		Id:                pbID.String(),
 		StockID:           pbStockID,
 		BuyPrice:          pbBuyPrice,
 		BuyQuantity:       pbBuyQuantity,

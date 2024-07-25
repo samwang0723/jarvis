@@ -9,10 +9,10 @@ server:
 # Database credentials
 database:
   host: "host.docker.internal"
-  port: 3307
+  port: "3307"
   database: "jarvis"
   maxLifetime:  10
-  maxIdleConns: 20
+  minIdleConns: 20
   maxOpenConns: 200
 
 replica:
@@ -28,9 +28,10 @@ kafka:
   topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
   groupId: "jarvis"
 
-sentry:
-  debug: true
+redis:
+  sentinelAddrs: ["redis-sentinel-headless:26379"]
+  master: "mymaster"
 
 # Logging
 log:
-  level: "DEBUG"
+  level: "error"

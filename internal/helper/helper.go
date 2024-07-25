@@ -14,12 +14,13 @@
 package helper
 
 import (
+	"fmt"
 	"math"
-	"os"
-	"reflect"
 	"strconv"
 	"time"
 	"unsafe"
+
+	"github.com/ericlagergren/decimal"
 )
 
 const (
@@ -30,46 +31,12 @@ const (
 	uintBase    = 10
 )
 
-func GetCurrentEnv() string {
-	env := os.Getenv("ENVIRONMENT")
-	output := "dev"
-
-	switch env {
-	case "local":
-		output = "local"
-	case "development":
-		output = "dev"
-	case "staging":
-		output = "staging"
-	case "production":
-		output = "prod"
-	}
-
-	return output
-}
-
 func Bytes2String(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// Convert a slice or array of a specific type to array of interface{}
-func CastInterfaceSlice(s any) *[]any {
-	v := reflect.ValueOf(s)
-	// There is no need to check, we want to panic if it's not slice or array
-	intf := make([]any, v.Len())
-	for i := 0; i < v.Len(); i++ {
-		intf[i] = v.Index(i).Interface()
-	}
-
-	return &intf
-}
-
 func RoundDecimal(x float32) float32 {
 	return float32(math.Round(float64(x)))
-}
-
-func RoundUpDecimalTwo(x float32) float32 {
-	return float32(math.Ceil(float64(x)*baseDecimal) / baseDecimal)
 }
 
 func RoundDecimalTwo(x float32) float32 {
@@ -96,6 +63,37 @@ func StringToUint64(s string) (uint64, error) {
 	}
 
 	return f, nil
+}
+
+func Uint64ToInt(u uint64) (int, error) {
+	// Check if the value is within the range of int
+	if u > math.MaxInt {
+		return 0, fmt.Errorf("overflow: cannot convert %d to int", u)
+	}
+	return int(u), nil
+}
+
+func Float32ToDecimal(f float32) decimal.Big {
+	// Convert float32 to string
+	fStr := strconv.FormatFloat(float64(f), 'f', -1, 32)
+	// Create a new decimal.Big
+	var d decimal.Big
+	// Set the value of decimal.Big from the string
+	if _, ok := d.SetString(fStr); !ok {
+		return decimal.Big{}
+	}
+	return d
+}
+
+func DecimalToFloat32(d decimal.Big) float32 {
+	// Convert decimal.Big to string
+	dStr := d.String()
+	// Convert string to float32
+	f, err := strconv.ParseFloat(dStr, 32)
+	if err != nil {
+		return 0
+	}
+	return float32(f)
 }
 
 func Today() string {

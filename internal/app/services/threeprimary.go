@@ -18,19 +18,17 @@ import (
 	"context"
 	"errors"
 
-	"github.com/getsentry/sentry-go"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/app/services/convert"
 )
 
 var errCannotCastThreePrimary = errors.New("cannot cast interface to *dto.ThreePrimary")
 
 func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]any) error {
-	// Replicate the value from interface to *entity.ThreePrimary
-	threePrimary := []*entity.ThreePrimary{}
+	// Replicate the value from interface to *domain.ThreePrimary
+	threePrimary := []*domain.ThreePrimary{}
 	for _, v := range *objs {
-		if val, ok := v.(*entity.ThreePrimary); ok {
+		if val, ok := v.(*domain.ThreePrimary); ok {
 			threePrimary = append(threePrimary, val)
 		} else {
 			return errCannotCastThreePrimary
@@ -43,18 +41,21 @@ func (s *serviceImpl) BatchUpsertThreePrimary(ctx context.Context, objs *[]any) 
 func (s *serviceImpl) ListThreePrimary(
 	ctx context.Context,
 	req *dto.ListThreePrimaryRequest,
-) ([]*entity.ThreePrimary, int64, error) {
-	objs, totalCount, err := s.dal.ListThreePrimary(
-		ctx,
-		req.Offset,
-		req.Limit,
-		convert.ListThreePrimarySearchParamsDTOToDAL(req.SearchParams),
-	)
-	if err != nil {
-		sentry.CaptureException(err)
+) ([]*domain.ThreePrimary, int64, error) {
+	param := &domain.ListThreePrimaryParams{
+		Offset:    req.Offset,
+		Limit:     req.Limit,
+		StockID:   req.SearchParams.StockID,
+		StartDate: req.SearchParams.Start,
+	}
 
+	if req.SearchParams.End != nil {
+		param.EndDate = *req.SearchParams.End
+	}
+	objs, err := s.dal.ListThreePrimary(ctx, param)
+	if err != nil {
 		return nil, 0, err
 	}
 
-	return objs, totalCount, nil
+	return objs, int64(len(objs)), nil
 }

@@ -35,7 +35,7 @@ type Config struct {
 }
 
 type kafkaImpl struct {
-	instance *kafka.Reader
+	instance Reader
 	cfg      Config
 }
 
@@ -48,10 +48,16 @@ const (
 	maxBytes         = 10e6 // 10MB
 )
 
+//go:generate mockgen -source=consumer.go -destination=mocks/kafka.go -package=kafka
+type Reader interface {
+	ReadMessage(ctx context.Context) (kafka.Message, error)
+	Close() error
+}
+
 //nolint:nolintlint, gomnd
-func New(cfg Config) ikafka.IKafka {
-	return &kafkaImpl{
-		instance: kafka.NewReader(kafka.ReaderConfig{
+func New(cfg Config, reader Reader) ikafka.IKafka {
+	if reader == nil {
+		reader = kafka.NewReader(kafka.ReaderConfig{
 			Brokers:          cfg.Brokers,
 			GroupTopics:      cfg.Topics,
 			GroupID:          cfg.GroupID, // having consumer group id to prevent duplication of message consumption
@@ -67,15 +73,19 @@ func New(cfg Config) ikafka.IKafka {
 				DualStack:     true,
 				FallbackDelay: 10 * time.Millisecond,
 			},
-		}),
-		cfg: cfg,
+		})
+	}
+	return &kafkaImpl{
+		instance: reader,
+		cfg:      cfg,
 	}
 }
 
 func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, error) {
 	msg, err := k.instance.ReadMessage(ctx)
 
-	k.cfg.Logger.Info().Msgf("Kafka:ReadMessage: read data: %s, err: %s", helper.Bytes2String(msg.Value), err)
+	k.cfg.Logger.Info().Str("component", "kafka").
+		Msgf("message: %s, err: %s", helper.Bytes2String(msg.Value), err)
 
 	return ikafka.ReceivedMessage{
 		Topic:   msg.Topic,
@@ -84,11 +94,11 @@ func (k *kafkaImpl) ReadMessage(ctx context.Context) (ikafka.ReceivedMessage, er
 }
 
 func (k *kafkaImpl) Close() error {
-	k.cfg.Logger.Info().Msg("Kafka:Close")
+	k.cfg.Logger.Info().Str("component", "kafka").Msg("closing")
 
 	err := k.instance.Close()
 	if err != nil {
-		k.cfg.Logger.Error().Msgf("Kafka:Close: Close failed: %s", err)
+		k.cfg.Logger.Error().Str("component", "kafka").Err(err).Msg("close failed")
 	}
 
 	return err

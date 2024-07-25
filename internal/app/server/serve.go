@@ -23,26 +23,25 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/heptiolabs/healthcheck"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/app/adapter"
+	"github.com/samwang0723/jarvis/internal/app/adapter/sqlc"
 	"github.com/samwang0723/jarvis/internal/app/handlers"
 	"github.com/samwang0723/jarvis/internal/app/middleware"
 	pb "github.com/samwang0723/jarvis/internal/app/pb"
 	gatewaypb "github.com/samwang0723/jarvis/internal/app/pb/gateway"
 	"github.com/samwang0723/jarvis/internal/app/services"
-	"github.com/samwang0723/jarvis/internal/database"
-	"github.com/samwang0723/jarvis/internal/database/dal"
+	"github.com/samwang0723/jarvis/internal/db/pginit"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -55,7 +54,6 @@ const (
 	readTimeout            = 5 * time.Second
 	writeTimeout           = 10 * time.Second
 	defaultHTTPTimeout     = 10 * time.Second
-	smartproxy             = "SMART_PROXY"
 )
 
 type IServer interface {
@@ -75,101 +73,114 @@ type server struct {
 
 //nolint:gosec //skip tls verification
 func Serve(cfg *config.Config, logger *zerolog.Logger) {
-	// sequence: handler(dto) -> service(dto to dao) -> DAL(dao) -> dbPool
+	ctx := context.Background()
+
+	// sequence: handler(proto to dto) -> service(dto to dao) -> DAL(dao) -> pgxpool
 	// initialize DAL layer
-	dbPool := database.GormFactory(cfg)
-	dalService := dal.New(
-		dal.WithDB(dbPool),
-		dal.WithBalanceRepository(dal.NewBalanceRepository(dbPool)),
-		dal.WithTransactionRepository(dal.NewTransactionRepository(dbPool)),
-		dal.WithOrderRepository(dal.NewOrderRepository(dbPool)),
+	pgConfig := &pginit.Config{
+		User:         cfg.Database.User,
+		Password:     cfg.Database.Password,
+		Host:         cfg.Database.Host,
+		Port:         cfg.Database.Port,
+		Database:     cfg.Database.Database,
+		MaxConns:     int32(cfg.Database.MaxOpenConns),
+		MaxIdleConns: int32(cfg.Database.MaxIdleConns),
+		MaxLifeTime:  time.Duration(cfg.Database.MaxLifetime) * time.Second,
+	}
+	pgi, err := pginit.New(pgConfig,
+		pginit.WithLogLevel(zerolog.WarnLevel),
+		pginit.WithLogger(logger, "request-id"),
+		pginit.WithUUIDType(),
+		pginit.WithDecimalType(),
 	)
-
-	// Initialize a HTTP client with proxy
-	smartProxy := ""
-	if proxy := os.Getenv(smartproxy); proxy != "" {
-		smartProxy = proxy
+	if err != nil {
+		logger.Fatal().Err(err).Msg("could not init database")
 	}
-	proxyURL, pErr := url.Parse(smartProxy)
-	if pErr != nil {
-		logger.Fatal().Err(pErr).Msg("failed to parse proxy url")
-	}
-	proxy := &http.Client{
-		Timeout: defaultHTTPTimeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			Proxy:           http.ProxyURL(proxyURL),
-		},
+	pool, err := pgi.ConnPool(ctx)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("unable to create connection pool")
 	}
 
-	// bind DAL layer with service
-	dataService := services.New(
-		services.WithDAL(dalService),
-		services.WithKafka(services.KafkaConfig{
+	repo := sqlc.NewSqlcRepository(pool, logger)
+	adapter := adapter.NewAdapterImp(repo)
+
+	// Common service options
+	options := []services.Option{
+		services.WithDAL(adapter),
+		services.WithLogger(logger),
+	}
+
+	// Conditionally add the WithKafka option if the environment is not local
+	if cfg.Kafka.GroupID != "" {
+		options = append(options, services.WithKafka(services.KafkaConfig{
 			GroupID: cfg.Kafka.GroupID,
 			Brokers: cfg.Kafka.Brokers,
 			Topics:  cfg.Kafka.Topics,
 			Logger:  logger,
-		}),
-		services.WithRedis(services.RedisConfig{
+		}))
+	}
+
+	if cfg.RedisCache.Master != "" {
+		options = append(options, services.WithRedis(services.RedisConfig{
 			Master:        cfg.RedisCache.Master,
 			SentinelAddrs: cfg.RedisCache.SentinelAddrs,
 			Logger:        logger,
 			Password:      cfg.RedisCache.Password,
-		}),
-		services.WithCronJob(services.CronjobConfig{
+		}))
+
+		options = append(options, services.WithCronJob(services.CronjobConfig{
 			Logger: logger,
-		}),
-		services.WithLogger(logger),
-		services.WithProxy(proxy),
-	)
+		}))
+
+		// Initialize a HTTP client with proxy
+		smartProxy := ""
+		if proxy := os.Getenv(config.SmartProxy); proxy != "" {
+			smartProxy = proxy
+		}
+		proxyURL, pErr := url.Parse(smartProxy)
+		if pErr != nil {
+			logger.Fatal().Err(pErr).Msg("failed to parse proxy url")
+		}
+		proxy := &http.Client{
+			Timeout: defaultHTTPTimeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				Proxy:           http.ProxyURL(proxyURL),
+			},
+		}
+		options = append(options, services.WithProxy(proxy))
+	}
+
+	// bind DAL layer with service
+	dataService := services.New(options...)
 	// associate service with handler
 	handler := handlers.New(dataService, logger)
-
+	// configure gRPC-gateway with middleware
 	gRPCServer := grpc.NewServer(
 		grpc.ChainStreamInterceptor(
 			selector.StreamServerInterceptor(
-				auth.StreamServerInterceptor(middleware.Authenticate),
+				auth.StreamServerInterceptor(middleware.Authenticate(dataService)),
 				selector.MatchFunc(middleware.AuthRoutes),
-			),
-			grpc_middleware.ChainStreamServer(
-				grpc_sentry.StreamServerInterceptor(),
 			),
 		),
 		grpc.ChainUnaryInterceptor(
 			selector.UnaryServerInterceptor(
-				auth.UnaryServerInterceptor(middleware.Authenticate),
+				auth.UnaryServerInterceptor(middleware.Authenticate(dataService)),
 				selector.MatchFunc(middleware.AuthRoutes),
-			),
-			grpc_middleware.ChainUnaryServer(
-				grpc_sentry.UnaryServerInterceptor(),
 			),
 		),
 	)
 
 	// health check
 	health := healthcheck.NewHandler()
-	// Our app is not happy if we've got more than 100 goroutines running.
+	// Our app is not happy if we've got more than 10000 goroutines running.
 	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(maxGoRoutines))
-	// Our app is not ready if we can't resolve our upstream dependency in DNS.
-	health.AddReadinessCheck(
-		"upstream-database-read-dns",
-		healthcheck.DNSResolveCheck(cfg.Replica.Host, dnsResolveTimeout),
-	)
-	health.AddReadinessCheck(
-		"upstream-database-write-dns",
-		healthcheck.DNSResolveCheck(cfg.Database.Host, dnsResolveTimeout),
-	)
-
 	// Our app is not ready if we can't connect to our database (`var db *sql.DB`) in <1s.
-	genericDB, dbErr := dbPool.DB()
-	if dbErr != nil {
-		logger.Fatal().Err(dbErr).Msg("failed to get db")
-	}
-
+	// Convert pgxpool.Pool to *sql.DB
+	sqlDB := stdlib.OpenDB(*pgi.ConnConfig())
 	health.AddReadinessCheck(
-		"database",
-		healthcheck.DatabasePingCheck(genericDB, databasePingTimeout),
+		"database-connection",
+		healthcheck.DatabasePingCheck(sqlDB, databasePingTimeout),
 	)
 
 	s := newServer(
@@ -179,33 +190,43 @@ func Serve(cfg *config.Config, logger *zerolog.Logger) {
 		Handler(handler),
 		GRPCServer(gRPCServer),
 		HealthCheck(health),
-		BeforeStart(func() error {
-			dataService.StartCron()
+		BeforeStart(func(ctx context.Context) error {
+			if cfg.RedisCache.Master != "" {
+				dataService.StartCron()
+			}
 
 			return nil
 		}),
-		BeforeStop(func() error {
-			dataService.StopCron()
-			err := dataService.StopRedis()
-			if err != nil {
-				return fmt.Errorf("stop_redis: failed, reason: %w", err)
+		AfterStart(func(ctx context.Context) error {
+			if cfg.Kafka.GroupID != "" {
+				// listening kafka
+				handler.ListeningKafkaInput(ctx)
 			}
 
-			err = dataService.StopKafka()
-			if err != nil {
-				logger.Error().Err(err).Msg("StopKafka error")
+			return nil
+		}),
+		BeforeStop(func(ctx context.Context) error {
+			if cfg.RedisCache.Master != "" {
+				dataService.StopCron()
+				err = dataService.StopRedis()
+				if err != nil {
+					return fmt.Errorf("stop_redis: failed, reason: %w", err)
+				}
 			}
-			sqlDB, err := dbPool.DB()
-			if err != nil {
-				return err
+
+			if cfg.Kafka.GroupID != "" {
+				err = dataService.StopKafka()
+				if err != nil {
+					return fmt.Errorf("StopKafka error: %w", err)
+				}
 			}
-			defer sqlDB.Close()
+			defer pool.Close()
 
 			return nil
 		}),
 	)
 
-	err := s.Run(context.Background())
+	err = s.Run(ctx)
 	if err != nil {
 		s.Logger().Error().Err(err).Msg("server run failed")
 	}
@@ -224,7 +245,7 @@ func newServer(opts ...Option) IServer {
 
 func (s *server) Start(ctx context.Context) error {
 	for _, fn := range s.opts.BeforeStart {
-		if err := fn(); err != nil {
+		if err := fn(ctx); err != nil {
 			return err
 		}
 	}
@@ -232,7 +253,21 @@ func (s *server) Start(ctx context.Context) error {
 	// print server start message with name, version and env
 	s.Logger().
 		Info().
-		Msgf("Server [%s] started. Version: (%s). Environment: (%s)", s.Name(), s.Config().Server.Version, s.Config().Environment)
+		Msgf("Server [%s] started. Version: (%s). Environment: (%s)",
+			s.Name(), s.Config().Server.Version, config.GetCurrentEnv())
+
+	// schedule to preset the stocks met expectation condition yesterday for realtime tracking
+	if config.GetCurrentConfig().RedisCache.Master != "" {
+		err := s.Handler().CronjobPresetRealtimeMonitoringKeys(ctx, "40 8 * * 1-5")
+		if err != nil {
+			s.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
+		}
+
+		err = s.Handler().CrawlingRealTimePrice(ctx, "*/3 9-13 * * 1-5")
+		if err != nil {
+			s.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
+		}
+	}
 
 	// start gRPC server
 	cfg := config.GetCurrentConfig()
@@ -255,8 +290,11 @@ func (s *server) Start(ctx context.Context) error {
 		}
 	}()
 
-	// listening kafka
-	s.Handler().ListeningKafkaInput(ctx)
+	for _, fn := range s.opts.AfterStart {
+		if err = fn(ctx); err != nil {
+			return err
+		}
+	}
 
 	return err
 }
@@ -264,7 +302,7 @@ func (s *server) Start(ctx context.Context) error {
 func (s *server) Stop() error {
 	var err error
 	for _, fn := range s.opts.BeforeStop {
-		if err = fn(); err != nil {
+		if err = fn(context.Background()); err != nil {
 			break
 		}
 	}
@@ -279,38 +317,16 @@ func (s *server) Stop() error {
 
 // Run starts the server and shut down gracefully afterwards
 func (s *server) Run(ctx context.Context) error {
+	// Create a cancellable context
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	if err := s.Start(childCtx); err != nil {
 		return err
 	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	if s.Config().Environment != "local" {
-		// schedule to preset the stocks met expectation condition yesterday for realtime tracking
-		var waitGroup sync.WaitGroup
-		waitGroup.Add(1)
-
-		go func(ctx context.Context, svc *server) {
-			defer waitGroup.Done()
-
-			err := svc.Handler().CronjobPresetRealtimeMonitoringKeys(childCtx, "40 8 * * 1-5")
-			if err != nil {
-				svc.Logger().Error().Err(err).Msg("CronjobPresetRealtimeMonitoringKeys error")
-			}
-
-			err = svc.Handler().CrawlingRealTimePrice(childCtx, "*/3 9-13 * * 1-5")
-			if err != nil {
-				svc.Logger().Error().Err(err).Msg("RetrieveRealTimePrice error")
-			}
-
-			<-ctx.Done()
-		}(childCtx, s)
-
-		waitGroup.Wait()
-	}
 
 	select {
 	case <-quit:

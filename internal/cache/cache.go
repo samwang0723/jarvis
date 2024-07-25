@@ -73,14 +73,14 @@ func (r *redisImpl) SetExpire(ctx context.Context, key string, expired time.Time
 	expire, err := r.instance.ExpireAt(ctx, key, expired).Result()
 	if err != nil {
 		return xerrors.Errorf(
-			"cache.SetExpire: failed, key=%s; expired=%s; err=%w;",
+			"cache SetExpire failed, key=%s; expired=%s; err=%w;",
 			key,
 			expired,
 			err,
 		)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.SetExpire: success, key=%s; expired=%t;", key, expire)
+	r.cfg.Logger.Info().Msgf("cache SetExpire succeed, key=%s; expired=%t;", key, expire)
 
 	return nil
 }
@@ -88,10 +88,10 @@ func (r *redisImpl) SetExpire(ctx context.Context, key string, expired time.Time
 func (r *redisImpl) SAdd(ctx context.Context, key string, value []string) error {
 	err := r.instance.SAdd(ctx, key, value).Err()
 	if err != nil {
-		return xerrors.Errorf("cache.SAdd: failed, key=%s; value=%s; err=%w;", key, value, err)
+		return xerrors.Errorf("cache SAdd failed, key=%s; value=%s; err=%w;", key, value, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.SAdd: success, key=%s; value=%s;", key, value)
+	r.cfg.Logger.Info().Msgf("cache SAdd succeed, key=%s; value=%s;", key, value)
 
 	return nil
 }
@@ -99,10 +99,10 @@ func (r *redisImpl) SAdd(ctx context.Context, key string, value []string) error 
 func (r *redisImpl) SMembers(ctx context.Context, key string) ([]string, error) {
 	res, err := r.instance.SMembers(ctx, key).Result()
 	if err != nil {
-		return nil, xerrors.Errorf("cache.SMembers: failed, key=%s; err=%w;", key, err)
+		return nil, xerrors.Errorf("cache SMembers failed, key=%s; err=%w;", key, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.SMembers: success, count=%d;", len(res))
+	r.cfg.Logger.Info().Msgf("cache SMembers succeed, count=%d;", len(res))
 
 	return res, nil
 }
@@ -110,10 +110,10 @@ func (r *redisImpl) SMembers(ctx context.Context, key string) ([]string, error) 
 func (r *redisImpl) Set(ctx context.Context, key, val string, expired time.Duration) error {
 	res, err := r.instance.Set(ctx, key, val, expired).Result()
 	if err != nil {
-		return xerrors.Errorf("cache.Set: failed, key=%s; err=%w;", key, err)
+		return xerrors.Errorf("cache Set failed, key=%s; err=%w;", key, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.Set: success, res=%+v; key=%s", res, key)
+	r.cfg.Logger.Info().Msgf("cache Set succeed, res=%+v; key=%s", res, key)
 
 	return nil
 }
@@ -121,7 +121,7 @@ func (r *redisImpl) Set(ctx context.Context, key, val string, expired time.Durat
 func (r *redisImpl) MGet(ctx context.Context, keys ...string) ([]string, error) {
 	res, err := r.instance.MGet(ctx, keys...).Result()
 	if err != nil {
-		return nil, xerrors.Errorf("cache.MGet: failed, key=%v; err=%w;", keys, err)
+		return nil, xerrors.Errorf("cache MGet failed, key=%v; err=%w;", keys, err)
 	}
 
 	output := make([]string, len(res))
@@ -131,7 +131,7 @@ func (r *redisImpl) MGet(ctx context.Context, keys ...string) ([]string, error) 
 		}
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.MGet: success, count=%d;", len(output))
+	r.cfg.Logger.Info().Msgf("cache MGet succeed, count=%d;", len(output))
 
 	return output, nil
 }
@@ -139,10 +139,10 @@ func (r *redisImpl) MGet(ctx context.Context, keys ...string) ([]string, error) 
 func (r *redisImpl) Get(ctx context.Context, key string) (string, error) {
 	res, err := r.instance.Get(ctx, key).Result()
 	if err != nil {
-		return "", xerrors.Errorf("cache.Get: failed, key=%s; err=%w;", key, err)
+		return "", xerrors.Errorf("cache Get failed, key=%s; err=%w;", key, err)
 	}
 
-	r.cfg.Logger.Info().Msgf("cache.Get: success, res=%+v;", res)
+	r.cfg.Logger.Info().Msgf("cache Get succeed, res=%+v;", res)
 
 	return res, nil
 }
@@ -158,21 +158,21 @@ func (r *redisImpl) ObtainLock(
 	// Try to obtain lock.
 	lock, err := locker.Obtain(ctx, key, expire, nil)
 	if errors.Is(err, redislock.ErrNotObtained) {
-		r.cfg.Logger.Error().Err(err).Msg("cache.ObtainLock: failed, could not obtain lock!")
+		r.cfg.Logger.Error().Err(err).Msg("cache ObtainLock failed, could not obtain lock!")
 
 		return nil
 	} else if err != nil {
 		return nil
 	}
 
-	r.cfg.Logger.Debug().Msgf("cache.ObtainLock: success, key=%s;", key)
+	r.cfg.Logger.Debug().Msgf("cache ObtainLock succeed, key=%s;", key)
 
 	return lock
 }
 
 func (r *redisImpl) Close() error {
 	if err := r.instance.Close(); err != nil {
-		return xerrors.Errorf("cache.Close: failed, err=%w;", err)
+		return xerrors.Errorf("cache Close failed, err=%w;", err)
 	}
 
 	return nil

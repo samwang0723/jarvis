@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
+	"time"
 
 	"github.com/cristalhq/jwt/v5"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/helper"
 )
 
 func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.LoginResponse {
@@ -29,13 +29,14 @@ func (h *handlerImpl) Login(ctx context.Context, req *dto.LoginRequest) *dto.Log
 		}
 	}
 
-	// create claims (you can create your own, see: ExampleBuilder_withUserClaims)
+	// create claims
 	claims := &jwt.RegisteredClaims{
 		Audience:  []string{"jarvis"},
 		ID:        user.SessionID,
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		ExpiresAt: jwt.NewNumericDate(*user.SessionExpiredAt),
 		Issuer:    user.Email,
-		Subject:   helper.Uint64ToString(user.ID.Uint64()),
+		Subject:   user.ID.ID.String(),
 	}
 
 	// create a Builder

@@ -15,6 +15,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/heptiolabs/healthcheck"
 	"github.com/rs/zerolog"
 	config "github.com/samwang0723/jarvis/configs"
@@ -32,21 +34,28 @@ type Options struct {
 	HealthCheck healthcheck.Handler
 
 	// Before funcs
-	BeforeStart []func() error
-	BeforeStop  []func() error
+	BeforeStart []func(ctx context.Context) error
+	AfterStart  []func(ctx context.Context) error
+	BeforeStop  []func(ctx context.Context) error
 
 	ProfilingEnabled bool
 }
 
 type Option func(o *Options)
 
-func BeforeStart(fn func() error) Option {
+func BeforeStart(fn func(ctx context.Context) error) Option {
 	return func(o *Options) {
 		o.BeforeStart = append(o.BeforeStart, fn)
 	}
 }
 
-func BeforeStop(fn func() error) Option {
+func AfterStart(fn func(ctx context.Context) error) Option {
+	return func(o *Options) {
+		o.AfterStart = append(o.AfterStart, fn)
+	}
+}
+
+func BeforeStop(fn func(ctx context.Context) error) Option {
 	return func(o *Options) {
 		o.BeforeStop = append(o.BeforeStop, fn)
 	}

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: application
-        image: samwang0723/jarvis-api:v2.0.1
+        image: samwang0723/jarvis-api:latest
         imagePullPolicy: Always
         ports:
         - name: rest-api-port
@@ -59,29 +59,17 @@ spec:
             fieldRef:
               fieldPath: status.podIP
         - name: ENVIRONMENT
-          value: "development"
-        - name: START_CRON
-          value: "true"
-        - name: SECRET_USERNAME
+          value: "dev"
+        - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
               name: database-secret
               key: username
-        - name: SECRET_PASSWORD
+        - name: DB_PASSWD
           valueFrom:
             secretKeyRef:
               name: database-secret
               key: password
-        - name: WEB_SCRAPING
-          valueFrom:
-            secretKeyRef:
-              name: proxy-secret-webscraping
-              key: token
-        - name: WEB_SCRAPING_BACKUP
-          valueFrom:
-            secretKeyRef:
-              name: proxy-secret-proxycrawl
-              key: token
         - name: SMART_PROXY
           valueFrom:
             secretKeyRef:
@@ -92,13 +80,14 @@ spec:
             secretKeyRef:
               name: redis-secret
               key: redis-password
-        - name: SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              name: sentry-dsn
-              key: dsn
         - name: JWT_SECRET
           valueFrom:
               secretKeyRef:
                 name: jwt-secret
                 key: token
+        - name: RECAPTCHA_SECRET
+          valueFrom:
+              secretKeyRef:
+                name: recaptcha-secret
+                key: token
+

@@ -42,9 +42,8 @@ vendor/
 logs/
 
 # Project customized files
-config.dev.yaml
-config.prod.yaml
 secrets.yaml
+.env
 
 # Generated files
 coverage.txt

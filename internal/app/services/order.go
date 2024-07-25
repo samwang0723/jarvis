@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 
-	"github.com/getsentry/sentry-go"
+	"github.com/gofrs/uuid/v5"
+	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/app/services/convert"
 	"github.com/samwang0723/jarvis/internal/helper"
 )
 
@@ -19,7 +19,7 @@ const (
 )
 
 type processedOrder struct {
-	order            *entity.Order
+	order            *domain.Order
 	exchangeQuantity uint64
 }
 
@@ -27,22 +27,28 @@ type processedOrder struct {
 func (s *serviceImpl) ListOrders(
 	ctx context.Context,
 	req *dto.ListOrderRequest,
-) (objs []*entity.Order, totalCount int64, err error) {
-	searchParams := convert.ListOrderSearchParamsDTOToDAL(req.SearchParams)
-	searchParams.UserID = s.currentUserID
-	objs, totalCount, err = s.dal.ListOrders(
-		ctx,
-		req.Offset,
-		req.Limit,
-		searchParams,
-	)
-	if err != nil {
-		sentry.CaptureException(err)
+) (objs []*domain.Order, totalCount int64, err error) {
+	params := &domain.ListOrdersParams{
+		UserID: s.currentUserID,
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+	if req.SearchParams.ExchangeMonth != nil {
+		params.ExchangeMonth = *req.SearchParams.ExchangeMonth
+	}
+	if req.SearchParams.Status != nil {
+		params.Status = *req.SearchParams.Status
+	}
+	if req.SearchParams.StockIDs != nil {
+		params.StockIDs = *req.SearchParams.StockIDs
+	}
 
+	objs, err = s.dal.ListOrders(ctx, params)
+	if err != nil {
 		return nil, 0, err
 	}
 
-	m := helper.SliceToMap(objs, func(order *entity.Order) string {
+	m := helper.SliceToMap(objs, func(order *domain.Order) string {
 		return order.StockID
 	})
 
@@ -68,7 +74,7 @@ func (s *serviceImpl) ListOrders(
 	// calculate settled profit loss
 	for _, order := range objs {
 		for _, stock := range stocks {
-			if stock.StockID == order.StockID {
+			if stock.ID == order.StockID {
 				order.StockName = stock.Name
 
 				break
@@ -86,19 +92,16 @@ func (s *serviceImpl) ListOrders(
 		}
 	}
 
-	err = s.fillRealtimePrice(ctx, objs)
-	if err != nil {
-		return nil, 0, err
+	// skip redis fetch if no redis in cluster
+	if config.GetCurrentConfig().RedisCache.Master != "" {
+		s.fillRealtimePrice(ctx, objs)
 	}
 
-	return objs, totalCount, nil
+	return objs, int64(len(objs)), nil
 }
 
-func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*entity.Order) error {
-	realtimeList, err := s.fetchRealtimePrice(ctx)
-	if err != nil {
-		return err
-	}
+func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*domain.Order) {
+	realtimeList := s.fetchRealtimePrice(ctx)
 	for _, order := range objs {
 		// override realtime data with history record.
 		realtime, ok := realtimeList[order.StockID]
@@ -106,8 +109,6 @@ func (s *serviceImpl) fillRealtimePrice(ctx context.Context, objs []*entity.Orde
 			order.CalculateUnrealizedProfitLoss(realtime.Close)
 		}
 	}
-
-	return nil
 }
 
 func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) error {
@@ -136,7 +137,7 @@ func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderReque
 
 	// cannot fulfill based on existing open orders
 	if pendingQuantity > 0 {
-		order, err := entity.NewOrder(
+		order, err := domain.NewOrder(
 			s.currentUserID,
 			req.OrderType,
 			req.StockID,
@@ -155,8 +156,8 @@ func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderReque
 		})
 	}
 
-	saveOrders := []*entity.Order{}
-	processedTrans := []*entity.Transaction{}
+	saveOrders := []*domain.Order{}
+	processedTrans := []*domain.Transaction{}
 	for _, po := range processedOrders {
 		order := po.order
 		dayTrade := order.BuyExchangeDate == order.SellExchangeDate
@@ -181,7 +182,7 @@ func (s *serviceImpl) CreateOrder(ctx context.Context, req *dto.CreateOrderReque
 }
 
 func (s *serviceImpl) mergeOrderQuantity(
-	order *entity.Order,
+	order *domain.Order,
 	req *dto.CreateOrderRequest,
 	pendingQuantity uint64,
 ) (mergedQuantity, leftQuantity uint64) {
@@ -192,7 +193,7 @@ func (s *serviceImpl) mergeOrderQuantity(
 	price := float32(0.0)
 
 	switch req.OrderType {
-	case entity.OrderTypeBuy:
+	case domain.OrderTypeBuy:
 		eventQuantity = order.BuyQuantity
 		gap := order.SellQuantity - order.BuyQuantity
 		if gap >= leftQuantity {
@@ -207,7 +208,7 @@ func (s *serviceImpl) mergeOrderQuantity(
 			leftQuantity -= gap
 		}
 		eventQuantity += mergedQuantity
-	case entity.OrderTypeSell:
+	case domain.OrderTypeSell:
 		eventQuantity = order.SellQuantity
 		gap := order.BuyQuantity - order.SellQuantity
 		if gap >= leftQuantity {
@@ -239,23 +240,23 @@ func (s *serviceImpl) mergeOrderQuantity(
 }
 
 func (s *serviceImpl) chainTransactions(
-	orderID uint64,
-	userID uint64,
+	orderID uuid.UUID,
+	userID uuid.UUID,
 	price float32,
 	quantity uint64,
 	orderType string,
 	partialCloseOrClose bool,
 	dayTrade bool,
-) (chainedTransactions []*entity.Transaction, err error) {
+) (chainedTransactions []*domain.Transaction, err error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch orderType {
-	case entity.OrderTypeBuy:
+	case domain.OrderTypeBuy:
 		debitAmount = price * float32(quantity) * taiwanStockQuantity
-	case entity.OrderTypeSell:
+	case domain.OrderTypeSell:
 		creditAmount = price * float32(quantity) * taiwanStockQuantity
 	}
 
-	transaction, err := entity.NewTransaction(
+	transaction, err := domain.NewTransaction(
 		userID,
 		orderType,
 		creditAmount,
@@ -294,29 +295,29 @@ func (s *serviceImpl) chainTransactions(
 }
 
 func (s *serviceImpl) genTaxTransaction(
-	orderID uint64,
-	userID uint64,
+	orderID uuid.UUID,
+	userID uuid.UUID,
 	price float32,
 	quantity uint64,
 	orderType string,
 	partialCloseOrClose bool,
 	dayTrade bool,
-) (*entity.Transaction, error) {
+) (*domain.Transaction, error) {
 	// only charge tax on partial order close or complete order close
 	if partialCloseOrClose {
 		debitAmount := float32(0.0)
-		if orderType == entity.OrderTypeBuy {
+		if orderType == domain.OrderTypeBuy {
 			debitAmount = price * float32(quantity) * taiwanStockQuantity * taxRate
-		} else if orderType == entity.OrderTypeSell {
+		} else if orderType == domain.OrderTypeSell {
 			debitAmount = price * float32(quantity) * taiwanStockQuantity * taxRate
 		}
 		if dayTrade {
 			debitAmount *= dayTradeTaxRate
 		}
 
-		output, err := entity.NewTransaction(
+		output, err := domain.NewTransaction(
 			userID,
-			entity.OrderTypeTax,
+			domain.OrderTypeTax,
 			0,
 			debitAmount,
 			orderID,
@@ -330,22 +331,22 @@ func (s *serviceImpl) genTaxTransaction(
 }
 
 func (s *serviceImpl) genFeeTransaction(
-	orderID uint64,
-	userID uint64,
+	orderID uuid.UUID,
+	userID uuid.UUID,
 	price float32,
 	quantity uint64,
 	orderType string,
-) (*entity.Transaction, error) {
+) (*domain.Transaction, error) {
 	debitAmount := float32(0.0)
-	if orderType == entity.OrderTypeBuy {
+	if orderType == domain.OrderTypeBuy {
 		debitAmount = price * float32(quantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount
-	} else if orderType == entity.OrderTypeSell {
+	} else if orderType == domain.OrderTypeSell {
 		debitAmount = price * float32(quantity) * taiwanStockQuantity * feeRate * brokerFeeDiscount
 	}
 
-	output, err := entity.NewTransaction(
+	output, err := domain.NewTransaction(
 		userID,
-		entity.OrderTypeFee,
+		domain.OrderTypeFee,
 		0,
 		debitAmount,
 		orderID,

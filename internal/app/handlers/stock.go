@@ -20,8 +20,11 @@ import (
 	"github.com/samwang0723/jarvis/internal/app/dto"
 )
 
-func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) (*dto.ListStockResponse, error) {
-	entries, totalCount, err := h.dataService.ListStock(ctx, req)
+func (h *handlerImpl) ListStock(
+	ctx context.Context,
+	req *dto.ListStockRequest,
+) (*dto.ListStockResponse, error) {
+	entries, totalCount, err := h.dataService.WithUserID(ctx).ListStock(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -35,12 +38,17 @@ func (h *handlerImpl) ListStock(ctx context.Context, req *dto.ListStockRequest) 
 }
 
 func (h *handlerImpl) ListCategories(ctx context.Context) (*dto.ListCategoriesResponse, error) {
-	entries, err := h.dataService.ListCategories(ctx)
+	entries, err := h.dataService.WithUserID(ctx).ListCategories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	resp := make([]string, len(entries))
+	for i, v := range entries {
+		resp[i] = v
+	}
+
 	return &dto.ListCategoriesResponse{
-		Entries: entries,
+		Entries: resp,
 	}, nil
 }

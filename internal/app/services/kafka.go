@@ -15,10 +15,12 @@ package services
 
 import (
 	"context"
+	"io"
 
+	"github.com/gofrs/uuid/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog"
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/kafka/ikafka"
 	"golang.org/x/xerrors"
 )
@@ -42,15 +44,15 @@ type KafkaConfig struct {
 
 func (cfg *KafkaConfig) validate() error {
 	if cfg.GroupID == "" {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid groupId")
+		return xerrors.Errorf("invalid kafka groupId")
 	}
 
 	if len(cfg.Brokers) == 0 {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid brokers")
+		return xerrors.Errorf("invalid kafka brokers")
 	}
 
 	if len(cfg.Topics) == 0 {
-		return xerrors.Errorf("service.kafka.validate: failed, reason: invalid topics")
+		return xerrors.Errorf("invalid kafka topics")
 	}
 
 	return nil
@@ -59,43 +61,48 @@ func (cfg *KafkaConfig) validate() error {
 //nolint:nolintlint, cyclop
 func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 	respChan := make(chan data)
+
 	go func() {
+		s.logger.Info().Str("component", "kafka").Msg("goroutine starting")
+		defer s.logger.Info().Str("component", "kafka").Msg("goroutine exited")
 		for {
-			msg, err := s.consumer.ReadMessage(ctx)
-			if err != nil {
-				s.logger.Error().Msgf("Kafka:ReadMessage error: %s", err.Error())
-
-				continue
-			}
-
-			ent, err := unmarshalMessageToEntity(msg)
-			if err != nil {
-				s.logger.Error().Msgf("Kafka:unmarshalMessageToEntity error: %s", err.Error())
-
-				continue
-			}
-			respChan <- data{
-				topic:  msg.Topic,
-				values: &[]any{ent},
-			}
-
 			select {
 			case <-ctx.Done():
-				s.logger.Warn().Msg("ListeningKafkaInput: context cancel")
-
 				return
 			default:
+				msg, err := s.consumer.ReadMessage(ctx)
+				if err != nil {
+					if err == context.Canceled || err == io.EOF {
+						return
+					}
+					s.logger.Error().
+						Str("component", "kafka").Err(err).
+						Msgf("read message")
+					continue
+				}
+
+				ent, err := unmarshalMessageTodomain(msg)
+				if err != nil {
+					s.logger.Error().
+						Str("component", "kafka").Err(err).
+						Msg("domain model unmarshal")
+					continue
+				}
+				respChan <- data{
+					topic:  msg.Topic,
+					values: &[]any{ent},
+				}
 			}
 		}
 	}()
 
 	// handler goroutine to insert message from Kafka to database
 	go func() {
+		s.logger.Info().Str("component", "handler").Msg("goroutine starting")
+		defer s.logger.Info().Str("component", "handler").Msg("goroutine exited")
 		for {
 			select {
 			case <-ctx.Done():
-				s.logger.Warn().Msg("ListeningKafkaInput(respChan): context cancel")
-
 				return
 			case obj, ok := <-respChan:
 				var err error
@@ -112,7 +119,9 @@ func (s *serviceImpl) ListeningKafkaInput(ctx context.Context) {
 					}
 
 					if err != nil {
-						s.logger.Error().Msgf("BatchUpsert (%s) failed: %s", obj.topic, err.Error())
+						s.logger.Error().
+							Str("component", "kafka").
+							Msgf("batch upsert (%s) failed: %s", obj.topic, err.Error())
 					}
 				}
 			}
@@ -124,27 +133,30 @@ func (s *serviceImpl) StopKafka() error {
 	return s.consumer.Close()
 }
 
-func unmarshalMessageToEntity(msg ikafka.ReceivedMessage) (any, error) {
+func unmarshalMessageTodomain(msg ikafka.ReceivedMessage) (any, error) {
 	var err error
 
 	var output any
 
 	switch msg.Topic {
 	case ikafka.DailyClosesV1:
-		var obj entity.DailyClose
+		var obj domain.DailyClose
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	case ikafka.StakeConcentrationV1:
-		var obj entity.StakeConcentration
+		var obj domain.StakeConcentration
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	case ikafka.StocksV1:
-		var obj entity.Stock
+		var obj domain.Stock
 		err = json.Unmarshal(msg.Message, &obj)
 		output = &obj
 	case ikafka.ThreePrimaryV1:
-		var obj entity.ThreePrimary
+		var obj domain.ThreePrimary
 		err = json.Unmarshal(msg.Message, &obj)
+		obj.ID.ID = uuid.Must(uuid.NewV4())
 		output = &obj
 	}
 

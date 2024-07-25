@@ -1,52 +1,72 @@
-# syntax=docker/dockerfile:1
-FROM golang:1.22-alpine AS build_base
+ARG GO_VERSION=1.22.5
+
+###########
+# MODULES #
+###########
+
+FROM --platform=${BUILDPLATFORM} public.ecr.aws/docker/library/golang:${GO_VERSION}-alpine AS modules
+
+WORKDIR /src
+
+COPY ./go.mod ./go.sum ./
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+RUN go mod download
+
+###########
+# BUILDER #
+###########
+
+FROM --platform=${BUILDPLATFORM} public.ecr.aws/docker/library/golang:${GO_VERSION}-alpine AS builder
+
+COPY --from=modules /go/pkg /go/pkg
+
+RUN adduser -D -u 10001 nonroot
+
+WORKDIR /src
+
+COPY ./ ./
 
 # Add Maintainer Info
 LABEL maintainer="Sam Wang <sam.wang.0723@gmail.com>"
 
-RUN apk add --no-cache git
-RUN apk update && apk add ca-certificates && apk add tzdata
+ARG COMPILATION_MAIN_FILES
+ARG GLOBAL_VAR_PKG
 
-# Set the Current Working Directory inside the container
-WORKDIR /app
+ARG TARGETOS
+ARG TARGETARCH
 
-# We want to populate the module cache based on the go.{mod,sum} files.
-COPY go.mod .
-COPY go.sum .
+ARG LAST_MAIN_COMMIT_HASH
+ARG LAST_MAIN_COMMIT_TIME
+ARG RELEASE_TAG
 
-RUN go mod download
+ENV FLAG="-X ${GLOBAL_VAR_PKG}.CommitTime=${LAST_MAIN_COMMIT_TIME}"
+ENV FLAG="$FLAG -X ${GLOBAL_VAR_PKG}.CommitHash=${LAST_MAIN_COMMIT_HASH}"
+ENV FLAG="$FLAG -X ${GLOBAL_VAR_PKG}.ReleaseTag=${RELEASE_TAG}"
 
-# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
-COPY . .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
+    -installsuffix 'static' \
+    -ldflags "-s -w $FLAG" \
+    -buildvcs=true \
+    -o /app ${COMPILATION_MAIN_FILES}
 
-# Unit tests
-RUN CGO_ENABLED=0 go test -v -tags all_tests -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v /third_party/)
+#########
+# FINAL #
+#########
 
-# Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /jarvis-api cmd/main.go
+FROM scratch AS final
 
-# Start fresh from a smaller image
-FROM scratch
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=modules /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=modules /usr/share/zoneinfo /usr/share/zoneinfo
 
-#RUN apk add ca-certificates
-#RUN apk add --no-cache tzdata
+COPY ./configs /configs
 
-WORKDIR /
+COPY --from=builder /app /app
 
-COPY --from=build_base /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=build_base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-COPY --from=build_base /app/configs/config.prod.yaml /configs/config.prod.yaml
-COPY --from=build_base /jarvis-api /jarvis-api
-
-# This container exposes ports to the outside world
-EXPOSE 8080 8081 80 443 22 3306 6379
-
-#USER nonroot:nonroot
-#RUN chmod +x /jarvis-api
 ENV TZ=Asia/Taipei
 
-# Run the binary program
-ENTRYPOINT [ "/jarvis-api" ]
+USER nonroot
 
-#docker buildx build --load --platform=linux/amd64 -t samwang0723/jarvis-api:latest -f Dockerfile .
+CMD ["/app"]

@@ -23,7 +23,7 @@ func (h *handlerImpl) ListDailyClose(
 	ctx context.Context,
 	req *dto.ListDailyCloseRequest,
 ) (*dto.ListDailyCloseResponse, error) {
-	entries, totalCount, err := h.dataService.ListDailyClose(ctx, req)
+	entries, totalCount, err := h.dataService.WithUserID(ctx).ListDailyClose(ctx, req)
 	if err != nil {
 		return nil, err
 	}

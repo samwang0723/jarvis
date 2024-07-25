@@ -17,17 +17,17 @@ package handlers
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
 func (h *handlerImpl) InsertPickedStocks(
 	ctx context.Context,
 	req *dto.InsertPickedStocksRequest,
 ) (*dto.InsertPickedStocksResponse, error) {
-	objs := []*entity.PickedStock{}
+	objs := []*domain.PickedStock{}
 	for _, stock := range req.StockIDs {
-		objs = append(objs, &entity.PickedStock{
+		objs = append(objs, &domain.PickedStock{
 			StockID: stock,
 		})
 	}

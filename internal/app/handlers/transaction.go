@@ -3,30 +3,28 @@ package handlers
 import (
 	"context"
 
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"github.com/samwang0723/jarvis/internal/app/dto"
-	"github.com/samwang0723/jarvis/internal/app/entity"
 )
 
-func (h *handlerImpl) CreateTransaction(
-	ctx context.Context,
-	req *dto.CreateTransactionRequest,
-) (*dto.CreateTransactionResponse, error) {
+func (h *handlerImpl) CreateTransaction(ctx context.Context, req *dto.CreateTransactionRequest) (*dto.CreateTransactionResponse, error) {
 	debitAmount, creditAmount := float32(0.0), float32(0.0)
 	switch req.OrderType {
-	case entity.OrderTypeDeposit:
+	case domain.OrderTypeDeposit:
 		creditAmount = req.Amount
-	case entity.OrderTypeWithdraw:
+	case domain.OrderTypeWithdraw:
 		debitAmount = req.Amount
 	default:
 		return &dto.CreateTransactionResponse{
 			Status:       dto.StatusError,
 			ErrorCode:    "",
-			ErrorMessage: "invalid order type",
+			ErrorMessage: errOrderTypeNotAllowed.Error(),
 			Success:      false,
 		}, errOrderTypeNotAllowed
 	}
 
-	err := h.dataService.WithUserID(ctx).CreateTransaction(ctx, req.OrderType, creditAmount, debitAmount)
+	err := h.dataService.WithUserID(ctx).
+		CreateTransaction(ctx, req.OrderType, creditAmount, debitAmount)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to create transaction")
 

@@ -33,7 +33,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       - name: Make build
-        run: make build
+        run: go build -o jarvis-api cmd/api/main.go
   lint:
     name: Lint
     timeout-minutes: 15
@@ -65,7 +65,49 @@ jobs:
       - build
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: public.ecr.aws/docker/library/postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --name postgres
+      kafka:
+        image: public.ecr.aws/bitnami/kafka:3.2.1
+        ports:
+          - 19092:19092
+        env:
+          KAFKA_ENABLE_KRAFT: yes
+          KAFKA_KRAFT_CLUSTER_ID: MYeBe-RHQ3qDDAHDex_0xA
+          KAFKA_CFG_BROKER_ID: 1
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@127.0.0.1:9093
+          KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CFG_PROCESS_ROLES: broker,controller
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CFG_LISTENERS: PLAINTEXT://:19092,CONTROLLER://:9093
+          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:19092
+          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
+          ALLOW_PLAINTEXT_LISTENER: yes
     steps:
+      - name: Install psql
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Alter max connections
+        run: |
+          docker exec -i postgres bash << EOF
+            sed -i -s 's/max_connections = 100/max_connections = 3000/' /var/lib/postgresql/data/postgresql.conf
+          EOF
+          docker restart --time 0 postgres
+          time sleep 5
+      - run: psql -c 'SHOW max_connections;'
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
       - name: Check out code
         uses: actions/checkout@v3
       - name: Set up Go

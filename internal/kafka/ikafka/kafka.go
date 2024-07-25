@@ -13,7 +13,9 @@
 // limitations under the License.
 package ikafka
 
-import "context"
+import (
+	"context"
+)
 
 const (
 	DailyClosesV1        = "dailycloses-v1"

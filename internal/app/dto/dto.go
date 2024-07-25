@@ -14,7 +14,7 @@
 package dto
 
 import (
-	"github.com/samwang0723/jarvis/internal/app/entity"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 )
 
 const (
@@ -37,7 +37,7 @@ type ListDailyCloseRequest struct {
 }
 
 type ListDailyCloseResponse struct {
-	Entries    []*entity.DailyClose `json:"entries"`
+	Entries    []*domain.DailyClose `json:"entries"`
 	Offset     int32                `json:"offset"`
 	Limit      int32                `json:"limit"`
 	TotalCount int64                `json:"totalCount"`
@@ -56,7 +56,7 @@ type ListThreePrimaryRequest struct {
 }
 
 type ListThreePrimaryResponse struct {
-	Entries    []*entity.ThreePrimary `json:"entries"`
+	Entries    []*domain.ThreePrimary `json:"entries"`
 	Offset     int32                  `json:"offset"`
 	Limit      int32                  `json:"limit"`
 	TotalCount int64                  `json:"totalCount"`
@@ -76,7 +76,7 @@ type ListStockRequest struct {
 }
 
 type ListStockResponse struct {
-	Entries    []*entity.Stock `json:"entries"`
+	Entries    []*domain.Stock `json:"entries"`
 	Offset     int32           `json:"offset"`
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`
@@ -97,11 +97,11 @@ type ListSelectionRequest struct {
 }
 
 type ListSelectionResponse struct {
-	Entries []*entity.Selection `json:"entries"`
+	Entries []*domain.Selection `json:"entries"`
 }
 
 type ListPickedStocksResponse struct {
-	Entries []*entity.Selection `json:"entries"`
+	Entries []*domain.Selection `json:"entries"`
 }
 
 type InsertPickedStocksRequest struct {
@@ -132,7 +132,7 @@ type ListUsersRequest struct {
 }
 
 type ListUsersResponse struct {
-	Entries    []*entity.User `json:"entries"`
+	Entries    []*domain.User `json:"entries"`
 	Offset     int32          `json:"offset"`
 	Limit      int32          `json:"limit"`
 	TotalCount int64          `json:"totalCount"`
@@ -164,6 +164,7 @@ type CreateUserRequest struct {
 	LastName  string `json:"lastName"`
 	Phone     string `json:"phone"`
 	Password  string `json:"password"`
+	Recaptcha string `json:"recaptcha"`
 }
 
 type CreateUserResponse struct {
@@ -176,7 +177,7 @@ type CreateUserResponse struct {
 type GetBalanceViewRequest struct{}
 
 type GetBalanceViewResponse struct {
-	Balance *entity.BalanceView `json:"balance"`
+	Balance *domain.BalanceView `json:"balance"`
 }
 
 type CreateTransactionRequest struct {
@@ -219,7 +220,7 @@ type ListOrderRequest struct {
 }
 
 type ListOrderResponse struct {
-	Entries    []*entity.Order `json:"entries"`
+	Entries    []*domain.Order `json:"entries"`
 	Offset     int32           `json:"offset"`
 	Limit      int32           `json:"limit"`
 	TotalCount int64           `json:"totalCount"`

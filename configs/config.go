@@ -14,39 +14,53 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"sync"
 
-	"github.com/samwang0723/jarvis/internal/helper"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	SecretUsername = "SECRET_USERNAME"
-	SecretPassword = "SECRET_PASSWORD"
-	RedisPassword  = "REDIS_PASSWD"
-	SentryDSN      = "SENTRY_DSN"
+	DbUsername    = "DB_USERNAME"
+	DbPassword    = "DB_PASSWD"
+	RedisPassword = "REDIS_PASSWD"
+	SmartProxy    = "SMART_PROXY"
+	JwtSecret     = "JWT_SECRET"
+	Recaptcha     = "RECAPTCHA_SECRET"
+	EnvCoreKey    = "ENVIRONMENT"
+	EnvLocal      = "local"
+	EnvDev        = "dev"
+	EnvStaging    = "staging"
+	EnvProd       = "prod"
 )
 
+type contextKey string
+
+func (c contextKey) String() string {
+	return string(c)
+}
+
+//nolint:gochecknoglobals // for jwt secret encryption/decryption
+var JwtClaimsKey = contextKey("jwtClaims")
+
 type Config struct {
+	Log struct {
+		Level string `yaml:"level"`
+	} `yaml:"log"`
+	JwtSecret       string
+	RecaptchaSecret string
+	Kafka           struct {
+		GroupID string   `yaml:"groupId"`
+		Brokers []string `yaml:"brokers"`
+		Topics  []string `yaml:"topics"`
+	} `yaml:"kafka"`
 	RedisCache struct {
 		Master        string   `yaml:"master"`
 		Password      string   `yaml:"password"`
 		SentinelAddrs []string `yaml:"sentinelAddrs"`
 	} `yaml:"redis"`
-	Log struct {
-		Level string `yaml:"level"`
-	} `yaml:"log"`
-	Environment string
-	Kafka       struct {
-		GroupID string   `yaml:"groupId"`
-		Brokers []string `yaml:"brokers"`
-		Topics  []string `yaml:"topics"`
-	} `yaml:"kafka"`
-	Sentry struct {
-		DSN   string `yaml:"dsn"`
-		Debug bool   `yaml:"debug"`
-	} `yaml:"sentry"`
 	Server struct {
 		Name     string `yaml:"name"`
 		Host     string `yaml:"host"`
@@ -64,7 +78,7 @@ type Config struct {
 		Password     string `yaml:"password"`
 		Host         string `yaml:"host"`
 		Database     string `yaml:"database"`
-		Port         int    `yaml:"port"`
+		Port         string `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
 		MaxIdleConns int    `yaml:"maxIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
@@ -76,16 +90,57 @@ type Config struct {
 		Database     string `yaml:"database"`
 		Port         int    `yaml:"port"`
 		MaxLifetime  int    `yaml:"maxLifetime"`
-		MaxIdleConns int    `yaml:"maxIdleConns"`
+		MinIdleConns int    `yaml:"minIdleConns"`
 		MaxOpenConns int    `yaml:"maxOpenConns"`
 	} `yaml:"replica"`
 }
 
 //nolint:nolintlint, gochecknoglobals
-var instance Config
+var (
+	instance        Config
+	env             string
+	dbuser          string
+	dbpasswd        string
+	jwtsecretLocal  string
+	recaptchaSecret string
+	migrationDown   bool
+	envOnce         sync.Once
+)
+
+func GetCurrentEnv() string {
+	envOnce.Do(func() {
+		inputEnv := os.Getenv(EnvCoreKey)
+		if inputEnv == "" {
+			flag.StringVar(&inputEnv, "env", "local", "environment you want start the server")
+			flag.StringVar(&dbuser, "dbuser", "", "database username")
+			flag.StringVar(&jwtsecretLocal, "jwtsecret", "", "jwt secret key")
+			flag.StringVar(&dbpasswd, "dbpasswd", "", "database password")
+			flag.BoolVar(&migrationDown, "down", false, "migrate down")
+			flag.StringVar(&recaptchaSecret, "recaptcha", "", "reCaptcha secret")
+
+			flag.Parse()
+		}
+		switch inputEnv {
+		case "dev":
+			env = EnvDev
+		case "staging":
+			env = EnvStaging
+		case "prod":
+			env = EnvProd
+		default:
+			env = EnvLocal
+		}
+	})
+
+	return env
+}
+
+func IsMigrationDown() bool {
+	return migrationDown
+}
 
 func Load() {
-	env := helper.GetCurrentEnv()
+	env := GetCurrentEnv()
 	yamlFile := fmt.Sprintf("./configs/config.%s.yaml", env)
 
 	configFile, err := os.Open(yamlFile)
@@ -101,25 +156,37 @@ func Load() {
 		panic(err)
 	}
 
-	if user := os.Getenv(SecretUsername); user != "" {
+	if user := os.Getenv(DbUsername); user != "" {
 		instance.Database.User = user
 		instance.Replica.User = user
+	} else {
+		instance.Database.User = dbuser
+		instance.Replica.User = dbuser
 	}
 
-	if passwd := os.Getenv(SecretPassword); passwd != "" {
+	if passwd := os.Getenv(DbPassword); passwd != "" {
 		instance.Database.Password = passwd
 		instance.Replica.Password = passwd
+	} else {
+		instance.Database.Password = dbpasswd
+		instance.Replica.Password = dbpasswd
 	}
 
 	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
 	}
 
-	if dsn := os.Getenv(SentryDSN); dsn != "" {
-		instance.Sentry.DSN = dsn
+	if jwtsecret := os.Getenv(JwtSecret); jwtsecret != "" {
+		instance.JwtSecret = jwtsecret
+	} else {
+		instance.JwtSecret = jwtsecretLocal
 	}
 
-	instance.Environment = env
+	if recaptcha := os.Getenv(Recaptcha); recaptcha != "" {
+		instance.RecaptchaSecret = recaptcha
+	} else {
+		instance.RecaptchaSecret = recaptchaSecret
+	}
 }
 
 func GetCurrentConfig() *Config {

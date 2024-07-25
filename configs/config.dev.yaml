@@ -1,0 +1,29 @@
+# Server configurations
+server:
+  name: "jarvis-api"
+  version: "v3.0.0"
+  host: "0.0.0.0"
+  port: 8080
+  grpcPort: 8081
+
+# Database credentials
+database:
+  host: "postgres-postgresql"
+  port: "5432"
+  database: "jarvis_main"
+  maxLifetime:  10
+  minIdleConns: 10
+  maxOpenConns: 50
+
+kafka:
+  brokers: ["kafka-headless.default.svc.cluster.local:9092"]
+  topics: ["dailycloses-v1", "stocks-v1", "threeprimary-v1", "stakeconcentration-v1"]
+  groupId: "jarvis"
+
+redis:
+  sentinelAddrs: ["redis-sentinel-headless.default.svc.cluster.local:26379"]
+  master: "mymaster"
+
+# Logging
+log:
+  level: "info"

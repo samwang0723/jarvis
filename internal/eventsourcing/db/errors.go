@@ -3,16 +3,17 @@ package db
 import (
 	"fmt"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/samwang0723/jarvis/internal/eventsourcing"
 )
 
 type AggregateNotFoundError struct {
 	err         error
-	aggregateID uint64
+	aggregateID uuid.UUID
 }
 
 func (anfe AggregateNotFoundError) Error() string {
-	return fmt.Sprintf("aggregate not found: %s (id %d)", anfe.err, anfe.aggregateID)
+	return fmt.Sprintf("aggregate not found: %s (id %s)", anfe.err, anfe.aggregateID)
 }
 
 type LoadEventError struct {
@@ -25,11 +26,11 @@ func (lee LoadEventError) Error() string {
 
 type ApplyEventError struct {
 	err         error
-	aggregateID uint64
+	aggregateID uuid.UUID
 }
 
 func (aee ApplyEventError) Error() string {
-	return fmt.Sprintf("apply event error: %s (aggregate_id %d)", aee.err, aee.aggregateID)
+	return fmt.Sprintf("apply event error: %s (aggregate_id %s)", aee.err, aee.aggregateID)
 }
 
 type EventPublishError struct {
@@ -38,7 +39,7 @@ type EventPublishError struct {
 }
 
 func (epe EventPublishError) Error() string {
-	return fmt.Sprintf("failed to publish event : %s (aggregate_id %d, event %s)",
+	return fmt.Sprintf("failed to publish event : %s (aggregate_id %s, event %s)",
 		epe.err, epe.event.GetAggregateID(), epe.event.EventType())
 }
 
@@ -48,7 +49,7 @@ type EventProjectorError struct {
 }
 
 func (epe EventProjectorError) Error() string {
-	return fmt.Sprintf("failed to project event : %s (aggregate_id %d, event %s)",
+	return fmt.Sprintf("failed to project event : %s (aggregate_id %s, event %s)",
 		epe.err, epe.event.GetAggregateID(), epe.event.EventType())
 }
 
@@ -58,13 +59,13 @@ type AggregateSaverError struct {
 }
 
 func (ale AggregateSaverError) Error() string {
-	return fmt.Sprintf("failed to save aggregate: %s (aggregate_id %d)",
+	return fmt.Sprintf("failed to save aggregate: %s (aggregate_id %s)",
 		ale.err, ale.aggregate.GetAggregateID())
 }
 
 type AggregateLoaderError struct {
 	err         error
-	aggregateID uint64
+	aggregateID uuid.UUID
 }
 
 func (ale AggregateLoaderError) Unwrap() error {
@@ -72,7 +73,7 @@ func (ale AggregateLoaderError) Unwrap() error {
 }
 
 func (ale AggregateLoaderError) Error() string {
-	return fmt.Sprintf("failed to load aggregate: %s (aggregate_id %d)",
+	return fmt.Sprintf("failed to load aggregate: %s (aggregate_id %s)",
 		ale.err, ale.aggregateID)
 }
 

@@ -1,6 +1,8 @@
 package eventsourcing
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type NoTransitionError struct {
 	event Event
@@ -8,13 +10,28 @@ type NoTransitionError struct {
 }
 
 func (nte *NoTransitionError) Error() string {
-	return fmt.Sprintf("no valid transition: event %s, state %s", nte.event.EventType(), nte.state)
+	return fmt.Sprintf("no valid transition: state %s, event %s",
+		nte.state,
+		nte.event.EventType())
 }
 
 type EventNotRegisteredError struct {
-	eventType EventType
+	event EventType
 }
 
 func (enre *EventNotRegisteredError) Error() string {
-	return fmt.Sprintf("event not registered: %s", enre.eventType)
+	return fmt.Sprintf("event not registered: %s", enre.event)
+}
+
+type InvalidEventError struct {
+	Err  error
+	Type EventType
+}
+
+func (e *InvalidEventError) Error() string {
+	return fmt.Sprintf("invalid event: %s : %s", e.Type, e.Err)
+}
+
+func (e *InvalidEventError) Unwrap() error {
+	return e.Err
 }

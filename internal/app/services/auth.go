@@ -2,18 +2,22 @@ package services
 
 import (
 	"context"
+	"time"
 
-	"github.com/cristalhq/jwt/v5"
-	"github.com/samwang0723/jarvis/internal/app/entity"
-	"github.com/samwang0723/jarvis/internal/app/middleware"
-	"github.com/samwang0723/jarvis/internal/helper"
+	"github.com/gofrs/uuid/v5"
+	config "github.com/samwang0723/jarvis/configs"
+	"github.com/samwang0723/jarvis/internal/app/domain"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	sessionExpiredDays = 5
 )
 
 func (s *serviceImpl) Login(
 	ctx context.Context,
 	email, password string,
-) (obj *entity.User, err error) {
+) (obj *domain.User, err error) {
 	obj, err = s.dal.GetUserByEmail(ctx, email)
 	if err != nil || obj == nil {
 		return nil, errUserNotFound
@@ -25,7 +29,15 @@ func (s *serviceImpl) Login(
 	}
 
 	// generate session_id
-	err = s.dal.UpdateSessionID(ctx, obj)
+	newSessionID := uuid.Must(uuid.NewV4())
+	newExpiredAt := time.Now().AddDate(0, 0, sessionExpiredDays)
+	err = s.dal.UpdateSessionID(ctx, &domain.UpdateSessionIDParams{
+		ID:               obj.ID.ID,
+		SessionID:        newSessionID.String(),
+		SessionExpiredAt: newExpiredAt,
+	})
+	obj.SessionID = newSessionID.String()
+	obj.SessionExpiredAt = &newExpiredAt
 	if err != nil {
 		return nil, err
 	}
@@ -33,27 +45,13 @@ func (s *serviceImpl) Login(
 	return obj, nil
 }
 
-func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uint64, err error) {
-	// get user_id from context
-	claims, ok := ctx.Value(middleware.JwtClaimsKey).(jwt.RegisteredClaims)
+func (s *serviceImpl) getCurrentUserID(ctx context.Context) (userID uuid.UUID, err error) {
+	user, ok := ctx.Value(config.JwtClaimsKey).(*domain.User)
 	if !ok {
-		return 0, errInvalidJWTToken
+		return uuid.Nil, errUserNotFound
 	}
 
-	s.logger.Info().Msgf("claims: %+v", claims)
-
-	sessionID := claims.ID
-	userID, err = helper.StringToUint64(claims.Subject)
-	if err != nil || userID == 0 {
-		return 0, err
-	}
-
-	user, err := s.dal.GetUserByID(ctx, userID)
-	if err != nil || user.SessionID != sessionID {
-		return 0, err
-	}
-
-	return userID, nil
+	return user.ID.ID, nil
 }
 
 func (s *serviceImpl) Logout(ctx context.Context) error {

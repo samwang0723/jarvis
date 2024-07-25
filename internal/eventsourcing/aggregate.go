@@ -1,30 +1,68 @@
 package eventsourcing
 
+import "github.com/gofrs/uuid/v5"
+
 type Aggregate interface {
+	// Appply updates aggregate based on event.
 	Apply(event Event) error
+
+	// Changes returns a list of uncommitted events.
 	GetChanges() []Event
-	AppendChange(events Event)
-	SetAggregateID(aggregateID uint64)
-	GetAggregateID() uint64
+
+	// AppendChanges add a event to a uncommitted event list.
+	AppendChanges(event Event)
+
+	// SetAggregateID assigns identifier to aggregate.
+	SetAggregateID(uuid.UUID)
+
+	// GetAggregateID returns unique identifier of aggregate.
+	GetAggregateID() uuid.UUID
+
+	// GetVersion return current version of the aggregate.
 	GetVersion() int
-	SetVersion(version int)
+
+	// SetVersion sets current version of the aggregate.
+	SetVersion(int)
+
+	// EventTable return the table name.
 	EventTable() string
 
 	StateMachine
 }
 
+// BaseAggregate implements common functionality for Aggregate interface.
+//
+// It doesn't implement Apply, EventTable.
 type BaseAggregate struct {
-	ID                uint64 `gorm:"column:id"`
-	Version           int    `gorm:"column:version"` // event version number, used for ordering events
 	uncommittedEvents []Event
+	Version           int
+	ID                uuid.UUID
 }
 
-func (ba *BaseAggregate) AppendChange(event Event) {
-	ba.uncommittedEvents = append(ba.uncommittedEvents, event)
+var _ Aggregate = (*BaseAggregate)(nil)
+
+func (ba *BaseAggregate) GetAggregateID() uuid.UUID {
+	return ba.ID
+}
+
+func (*BaseAggregate) Apply(_ Event) error {
+	panic("implement me in derived aggregate")
+}
+
+func (*BaseAggregate) EventTable() string {
+	panic("implement me in derived aggregate")
+}
+
+func (ba *BaseAggregate) SetAggregateID(id uuid.UUID) {
+	ba.ID = id
 }
 
 func (ba *BaseAggregate) GetChanges() []Event {
 	return ba.uncommittedEvents
+}
+
+func (ba *BaseAggregate) AppendChanges(event Event) {
+	ba.uncommittedEvents = append(ba.uncommittedEvents, event)
 }
 
 func (ba *BaseAggregate) GetVersion() int {
@@ -35,14 +73,6 @@ func (ba *BaseAggregate) SetVersion(version int) {
 	ba.Version = version
 }
 
-func (ba *BaseAggregate) GetAggregateID() uint64 {
-	return ba.ID
-}
-
-func (ba *BaseAggregate) SetAggregateID(aggregateID uint64) {
-	ba.ID = aggregateID
-}
-
 func (ba *BaseAggregate) GetCurrentState() State {
 	return ""
 }
@@ -51,6 +81,6 @@ func (ba *BaseAggregate) GetTransitions() []Transition {
 	return []Transition{}
 }
 
-func (ba *BaseAggregate) SkipTransition(_ Event) bool {
+func (ba *BaseAggregate) SkipTransition(Event) bool {
 	return false
 }
