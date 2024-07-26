@@ -101,6 +101,7 @@ var (
 	env             string
 	dbuser          string
 	dbpasswd        string
+	rdpasswd        string
 	jwtsecretLocal  string
 	recaptchaSecret string
 	migrationDown   bool
@@ -115,6 +116,7 @@ func GetCurrentEnv() string {
 			flag.StringVar(&dbuser, "dbuser", "", "database username")
 			flag.StringVar(&jwtsecretLocal, "jwtsecret", "", "jwt secret key")
 			flag.StringVar(&dbpasswd, "dbpasswd", "", "database password")
+			flag.StringVar(&rdpasswd, "rdpasswd", "", "redis password")
 			flag.BoolVar(&migrationDown, "down", false, "migrate down")
 			flag.StringVar(&recaptchaSecret, "recaptcha", "", "reCaptcha secret")
 
@@ -174,6 +176,8 @@ func Load() {
 
 	if redisPasswd := os.Getenv(RedisPassword); redisPasswd != "" {
 		instance.RedisCache.Password = redisPasswd
+	} else {
+		instance.RedisCache.Password = rdpasswd
 	}
 
 	if jwtsecret := os.Getenv(JwtSecret); jwtsecret != "" {

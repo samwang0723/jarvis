@@ -140,7 +140,7 @@ func (repo *Repo) RetrieveDailyCloseHistory(
 		res, _ := repo.primary().
 			RetrieveDailyCloseHistory(ctx, &sqlcdb.RetrieveDailyCloseHistoryParams{
 				StartDate: startDate,
-				EndDate:   endDate,
+				EndDate:   opts[0], // backfill using query date - today
 				StockIds:  stockIDs,
 			})
 		return domain.ConvertDailyCloseList(res), nil
